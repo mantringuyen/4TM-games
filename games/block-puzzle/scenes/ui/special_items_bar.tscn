@@ -1,0 +1,108 @@
+[gd_scene load_steps=5 format=3 uid="uid://bpl07specialitems"]
+
+[ext_resource type="Script" path="res://scripts/ui/special_items_bar.gd" id="1_items"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bomb"]
+bg_color = Color(0.86, 0.20, 0.42, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1.0, 0.86, 0.36, 0.98)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0.24, 0.04, 0.12, 0.55)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_change"]
+bg_color = Color(0.14, 0.54, 0.92, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(0.55, 0.96, 1.0, 0.98)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0.04, 0.14, 0.34, 0.55)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_extralife"]
+bg_color = Color(0.12, 0.74, 0.46, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(0.65, 1.0, 0.78, 0.98)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0.02, 0.26, 0.14, 0.55)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[node name="SpecialItemsBar" type="Control"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 3
+offset_right = 575.0
+offset_bottom = 56.0
+size_flags_horizontal = 3
+mouse_filter = 2
+script = ExtResource("1_items")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BtnBomb" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(185, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.32, 0.04, 0.14, 0.88)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_bomb")
+text = "     BOMB × 2"
+
+[node name="BtnChangeBlock" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(185, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.18, 0.38, 0.88)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_change")
+text = "     CHANGE BLOCK × 2"
+
+[node name="BtnExtraLife" type="Button" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(185, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.28, 0.14, 0.88)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_extralife")
+text = "     EXTRA LIFE × 1"

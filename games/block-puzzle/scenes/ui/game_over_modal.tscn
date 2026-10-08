@@ -1,0 +1,228 @@
+[gd_scene load_steps=7 format=3 uid="uid://bpl04gameover"]
+
+[ext_resource type="Script" path="res://scripts/ui/game_over_modal.gd" id="1_gameover"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
+bg_color = Color(0.18, 0.24, 0.58, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 8
+border_color = Color(1.0, 0.84, 0.24, 0.98)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+shadow_color = Color(0.04, 0.04, 0.18, 0.72)
+shadow_size = 18
+shadow_offset = Vector2(0, 7)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_scorebox"]
+bg_color = Color(0.12, 0.16, 0.42, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 4
+border_color = Color(0.38, 0.88, 1.0, 0.85)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_next"]
+bg_color = Color(0.98, 0.56, 0.12, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 7
+border_color = Color(1.0, 0.94, 0.38, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.34, 0.15, 0.02, 0.65)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_retry"]
+bg_color = Color(0.10, 0.82, 0.44, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 7
+border_color = Color(0.68, 1.0, 0.52, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.02, 0.34, 0.15, 0.65)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_menu"]
+bg_color = Color(0.86, 0.16, 0.24, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1.0, 0.62, 0.66, 1.0)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[node name="GameOverModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gameover")
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.08, 0.24, 0.86)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -310.0
+offset_right = 280.0
+offset_bottom = 310.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="LblGameOver" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.24, 1)
+theme_override_colors/font_shadow_color = Color(0.42, 0.12, 0.28, 0.92)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 28
+text = "LEVEL COMPLETE!"
+horizontal_alignment = 1
+
+[node name="LblStars" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.92, 0.22, 1)
+theme_override_colors/font_shadow_color = Color(0.45, 0.20, 0.02, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 36
+text = "3/3 STARS"
+horizontal_alignment = 1
+
+[node name="LblUnlockStatus" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.52, 1.0, 0.78, 1)
+theme_override_font_sizes/font_size = 18
+text = "LEVEL 2 UNLOCKED!"
+horizontal_alignment = 1
+
+[node name="ScoreCard" type="PanelContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_scorebox")
+
+[node name="Margin" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/ScoreCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 12
+
+[node name="ScoreContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScoreCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="LblFinalScoreTitle" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScoreCard/Margin/ScoreContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.88, 1.0, 1)
+theme_override_font_sizes/font_size = 15
+text = "FINAL SCORE"
+horizontal_alignment = 1
+
+[node name="LblFinalScore" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScoreCard/Margin/ScoreContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.90, 0.22, 1)
+theme_override_colors/font_shadow_color = Color(0.4, 0.2, 0.02, 0.85)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 42
+text = "0"
+horizontal_alignment = 1
+
+[node name="LblHighScore" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScoreCard/Margin/ScoreContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.38, 0.96, 1.0, 1)
+theme_override_font_sizes/font_size = 16
+text = "BEST SCORE: 0"
+horizontal_alignment = 1
+
+[node name="LblRewardCoins" type="Label" parent="Panel/MarginContainer/VBoxContainer/ScoreCard/Margin/ScoreContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 1.0, 0.72, 1)
+theme_override_font_sizes/font_size = 16
+text = "REWARD: +60 COINS"
+horizontal_alignment = 1
+
+[node name="BtnExtraLife" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_next")
+text = "USE EXTRA LIFE"
+
+[node name="BtnWatchAd" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_retry")
+text = "WATCH AD"
+
+[node name="BtnNextLevel" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_next")
+text = "NEXT LEVEL (2)"
+
+[node name="BtnRetry" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_retry")
+text = "PLAY AGAIN"
+
+[node name="BtnMenu" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_menu")
+text = "MAIN MENU"

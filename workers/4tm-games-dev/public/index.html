@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4TM Games — Dev/Test Host (4tm-games-dev)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #090d16;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+    }
+    p.subtitle {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .games-grid {
+      display: grid;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .game-card {
+      background: #131b2e;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .game-card.active:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+    }
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .game-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .status-pill {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+    }
+    .status-ready {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .status-reserved {
+      background: rgba(148, 163, 184, 0.1);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .game-desc {
+      color: #94a3b8;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+    .game-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .meta-tag {
+      font-size: 0.75rem;
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .btn-play {
+      display: inline-block;
+      margin-top: 0.5rem;
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .btn-play:hover {
+      background: #0369a1;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: auto;
+      padding-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">Cloudflare Worker: 4tm-games-dev</div>
+      <h1>4TM Games — Dev/Test Host</h1>
+      <p class="subtitle">Internal development and QA test builds for the 4TM-games suite.<br>Notice: This is a test deployment worker, separate from the public platform.</p>
+    </header>
+
+    <div class="games-grid">
+      <!-- Active Game: Block Puzzle -->
+      <div class="game-card active">
+        <div class="game-header">
+          <div class="game-title">Block Puzzle — 4TM</div>
+          <span class="status-pill status-ready">Active Test Build</span>
+        </div>
+        <p class="game-desc">
+          Modern 8×8 drag-and-drop polyomino block puzzle game with combo chains, clearing mechanics, and portrait viewport scaling.
+        </p>
+        <div class="game-meta">
+          <span class="meta-tag">Path: /block-puzzle/</span>
+          <span class="meta-tag">Godot 4.3 Web</span>
+          <span class="meta-tag">720×1280 Portrait</span>
+          <span class="meta-tag">Mouse & Touch</span>
+        </div>
+        <a href="/block-puzzle/" class="btn-play">Launch /block-puzzle/ &rarr;</a>
+      </div>
+
+      <!-- Future Multi-Game Slots -->
+      <div class="game-card">
+        <div class="game-header">
+          <div class="game-title">Game 2 (Reserved)</div>
+          <span class="status-pill status-reserved">Reserved Slot</span>
+        </div>
+        <p class="game-desc">Infrastructure reserved for the next 4TM game export.</p>
+        <div class="game-meta">
+          <span class="meta-tag">Path: /game-2/</span>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <div class="game-header">
+          <div class="game-title">Game 3 (Reserved)</div>
+          <span class="status-pill status-reserved">Reserved Slot</span>
+        </div>
+        <p class="game-desc">Infrastructure reserved for future multi-game deployment.</p>
+        <div class="game-meta">
+          <span class="meta-tag">Path: /game-3/</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      &copy; 2026 4TM Ecosystem. Dedicated testing worker for 4TM-games repository.
+    </footer>
+  </div>
+</body>
+</html>

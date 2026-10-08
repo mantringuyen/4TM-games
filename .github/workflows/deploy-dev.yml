@@ -1,0 +1,126 @@
+name: Deploy Dev - Block Puzzle (4tm-games-dev)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'games/block-puzzle/**'
+      - 'workers/4tm-games-dev/**'
+      - '.github/workflows/deploy-dev.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev-block-puzzle
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build Godot Web & Deploy to 4tm-games-dev
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache Godot Engine and Export Templates
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/bin/godot
+            ~/.local/share/godot/export_templates
+          key: godot-4.3-web-export-v1
+
+      - name: Install Godot 4.3 with Web Export Templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin ~/.local/share/godot/export_templates/4.3.stable
+          
+          echo "Downloading Godot 4.3-stable binary..."
+          curl -sSL -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot-bin
+          mv /tmp/godot-bin/Godot_v4.3-stable_linux.x86_64 ~/.local/bin/godot
+          chmod +x ~/.local/bin/godot
+          rm -rf /tmp/godot.zip /tmp/godot-bin
+
+          echo "Downloading Godot 4.3-stable export templates..."
+          curl -sSL -o /tmp/templates.tpz https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          cp -r /tmp/godot-templates/templates/* ~/.local/share/godot/export_templates/4.3.stable/
+          rm -rf /tmp/templates.tpz /tmp/godot-templates
+          
+          echo "Godot 4.3 installation complete."
+
+      - name: Add Godot to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Verify Godot Installation
+        run: godot --version
+
+      - name: Run Block Puzzle Automated Tests
+        run: |
+          echo "Running automated game test suite..."
+          godot --headless --path games/block-puzzle scenes/test_runner.tscn
+
+      - name: Export Block Puzzle for Web
+        run: |
+          mkdir -p build/web
+          godot --headless --path games/block-puzzle --export-release "Web (HTML5)" "$GITHUB_WORKSPACE/build/web/index.html"
+
+      - name: Validate Web Build Output
+        run: |
+          echo "Validating generated Web build artifacts..."
+          test -s build/web/index.html || { echo "ERROR: index.html missing or empty"; exit 1; }
+          test -s build/web/index.js || { echo "ERROR: index.js missing or empty"; exit 1; }
+          test -s build/web/index.wasm || { echo "ERROR: index.wasm missing or empty"; exit 1; }
+          test -s build/web/index.pck || { echo "ERROR: index.pck missing or empty"; exit 1; }
+          echo "Build artifacts verified successfully:"
+          ls -lh build/web/
+
+      - name: Stage Game into Cloudflare Worker Public Directory
+        run: |
+          rm -rf workers/4tm-games-dev/public/block-puzzle
+          mkdir -p workers/4tm-games-dev/public/block-puzzle
+          cp -r build/web/* workers/4tm-games-dev/public/block-puzzle/
+          python3 games/block-puzzle/scripts/post_build.py workers/4tm-games-dev/public/block-puzzle
+          # Pre-compress index.wasm to index.wasm.gz to conform with Cloudflare's 25 MiB static asset limit
+          gzip -9 -f -k workers/4tm-games-dev/public/block-puzzle/index.wasm
+          rm workers/4tm-games-dev/public/block-puzzle/index.wasm
+          echo "Staged game assets for /block-puzzle/:"
+          ls -lh workers/4tm-games-dev/public/block-puzzle/
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Deploy to Cloudflare Worker (4tm-games-dev)
+        working-directory: workers/4tm-games-dev
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          bun install --frozen-lockfile
+          bunx wrangler deploy
+
+      - name: Upload Block Puzzle index.pck to Cloudflare R2
+        working-directory: workers/4tm-games-dev
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          R2_BUCKET_NAME="${{ secrets.CLOUDFLARE_R2_BUCKET }}"
+          if [ -z "$R2_BUCKET_NAME" ]; then
+            R2_BUCKET_NAME="4tm-games-dev"
+          fi
+          echo "Uploading index.pck to R2 bucket: $R2_BUCKET_NAME"
+          bunx wrangler r2 object put "$R2_BUCKET_NAME/games/block-puzzle/index.pck" --file=../../build/web/index.pck --remote

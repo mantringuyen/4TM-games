@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3 uid="uid://dfpiecetray4tm"]
+
+[ext_resource type="Script" path="res://scripts/game/piece_tray.gd" id="1_tray"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tray"]
+bg_color = Color(0.18, 0.24, 0.58, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 8
+border_color = Color(1.0, 0.82, 0.24, 0.96)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.04, 0.04, 0.20, 0.58)
+shadow_size = 14
+shadow_offset = Vector2(0, 5)
+
+[node name="PieceTray" type="Control"]
+custom_minimum_size = Vector2(680, 175)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 680.0
+offset_bottom = 175.0
+mouse_filter = 1
+script = ExtResource("1_tray")
+
+[node name="TrayBackground" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tray")
+
+[node name="Slot0" type="Marker2D" parent="."]
+position = Vector2(115, 88)
+
+[node name="Slot1" type="Marker2D" parent="."]
+position = Vector2(340, 88)
+
+[node name="Slot2" type="Marker2D" parent="."]
+position = Vector2(565, 88)

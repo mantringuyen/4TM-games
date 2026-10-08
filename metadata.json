@@ -1,0 +1,6 @@
+{
+  "name": "4TM Games",
+  "description": "Official 4TM Games discovery portal and showcase for 2D cross-platform games and playable arcade demos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

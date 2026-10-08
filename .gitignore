@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build outputs
+build/
+dist/
+
+# Cloudflare Worker cache
+workers/4tm-games-dev/.wrangler/
+
+# Godot engine local cache
+.godot/
+*.import
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+.dev.vars
+
+# Operating system & IDE files
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp

@@ -1,0 +1,30 @@
+{
+  "name": "4tm-games",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite showcase --config showcase/vite.config.ts",
+    "build": "vite build showcase --config showcase/vite.config.ts",
+    "lint": "tsc --noEmit -p showcase/tsconfig.json",
+    "preview": "vite preview showcase --config showcase/vite.config.ts",
+    "build:block-puzzle": "mkdir -p build/web && godot --headless --path games/block-puzzle --export-release \"Web (HTML5)\" ../../build/web/index.html && mkdir -p workers/4tm-games-dev/public/block-puzzle && cp -r build/web/* workers/4tm-games-dev/public/block-puzzle/ && python3 games/block-puzzle/scripts/post_build.py workers/4tm-games-dev/public/block-puzzle && gzip -9 -f -k workers/4tm-games-dev/public/block-puzzle/index.wasm && rm -f workers/4tm-games-dev/public/block-puzzle/index.wasm",
+    "dev:worker": "npm --prefix workers/4tm-games-dev run dev"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "lucide-react": "^1.45.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0"
+  }
+}

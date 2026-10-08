@@ -1,0 +1,50 @@
+[gd_scene load_steps=3 format=3 uid="uid://bpl08modepiecearea"]
+
+[ext_resource type="Script" path="res://scripts/game/mode_piece_area.gd" id="1_mode_piece"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_preview"]
+
+[node name="ModePieceArea" type="Control"]
+custom_minimum_size = Vector2(240, 56)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 520.0
+offset_bottom = 66.0
+mouse_filter = 2
+script = ExtResource("1_mode_piece")
+
+[node name="ClassicPieceArea" type="Control" parent="."]
+visible = false
+layout_mode = 0
+anchors_preset = 0
+offset_right = 520.0
+offset_bottom = 66.0
+
+[node name="Center" type="CenterContainer" parent="ClassicPieceArea"]
+layout_mode = 0
+anchors_preset = 0
+offset_right = 520.0
+offset_bottom = 66.0
+
+[node name="NextBox" type="HBoxContainer" parent="ClassicPieceArea/Center"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="LblTitle" type="Label" parent="ClassicPieceArea/Center/NextBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.92, 0.32, 1)
+theme_override_colors/font_outline_color = Color(0.10, 0.05, 0.28, 0.96)
+theme_override_constants/outline_size = 5
+theme_override_colors/font_shadow_color = Color(0.06, 0.02, 0.18, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 18
+text = "NEXT"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PreviewPanel" type="Panel" parent="ClassicPieceArea/Center/NextBox"]
+custom_minimum_size = Vector2(156, 52)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_preview")

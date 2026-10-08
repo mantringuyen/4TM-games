@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="brand-spectrum-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="12%" stop-color="#06B6D4" />
+      <stop offset="25%" stop-color="#10B981" />
+      <stop offset="37%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#F97316" />
+      <stop offset="62%" stop-color="#EF4444" />
+      <stop offset="75%" stop-color="#EC4899" />
+      <stop offset="87%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer multicolor spectrum ring -->
+  <rect x="0.75" y="0.75" width="30.5" height="30.5" rx="7.25" fill="url(#brand-spectrum-ring)" stroke="none" />
+  
+  <!-- Inner solid near-black core background -->
+  <rect x="2.25" y="2.25" width="27.5" height="27.5" rx="5.75" fill="#090D16" />
+  
+  <!-- Official 4TM vector glyph paths for ThorVG / SVG renderers without system font rasterization -->
+  <path fill="#FFFFFF" d="M 9.2 12.2 L 5.4 17.6 L 5.4 19.0 L 9.4 19.0 L 9.4 20.5 L 11.1 20.5 L 11.1 19.0 L 12.1 19.0 L 12.1 17.4 L 11.1 17.4 L 11.1 12.2 Z M 9.4 14.5 L 9.4 17.4 L 7.3 17.4 Z M 12.5 12.2 L 18.7 12.2 L 18.7 13.9 L 16.5 13.9 L 16.5 20.5 L 14.7 20.5 L 14.7 13.9 L 12.5 13.9 Z M 19.5 12.2 L 21.6 12.2 L 23.1 16.8 L 24.6 12.2 L 26.7 12.2 L 26.7 20.5 L 25.0 20.5 L 25.0 15.2 L 23.7 19.3 L 22.5 19.3 L 21.2 15.2 L 21.2 20.5 L 19.5 20.5 Z" />
+</svg>

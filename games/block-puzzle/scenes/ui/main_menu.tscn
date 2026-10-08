@@ -1,0 +1,837 @@
+[gd_scene load_steps=10 format=3 uid="uid://bpl01mainmenu"]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_mainmenu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_topbar"]
+bg_color = Color(0.14, 0.22, 0.52, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1.0, 0.84, 0.28, 0.98)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.04, 0.06, 0.22, 0.52)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gift"]
+bg_color = Color(0.98, 0.36, 0.58, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1.0, 0.88, 0.36, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0.32, 0.04, 0.18, 0.55)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gear"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+shadow_color = Color(0, 0, 0, 0)
+shadow_size = 0
+shadow_offset = Vector2(0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_levelcard"]
+bg_color = Color(0.14, 0.28, 0.68, 0.98)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 10
+border_color = Color(1.0, 0.88, 0.28, 1.0)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+shadow_color = Color(0.02, 0.04, 0.20, 0.65)
+shadow_size = 20
+shadow_offset = Vector2(0, 8)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lang"]
+bg_color = Color(0.18, 0.56, 0.92, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(0.62, 0.96, 1.0, 1.0)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0.04, 0.08, 0.26, 0.50)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mode"]
+bg_color = Color(0.20, 0.28, 0.64, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 7
+border_color = Color(0.52, 0.72, 1.0, 0.95)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+shadow_color = Color(0.04, 0.06, 0.22, 0.52)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_play"]
+bg_color = Color(0.10, 0.84, 0.44, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 10
+border_color = Color(0.76, 1.0, 0.52, 1)
+corner_radius_top_left = 34
+corner_radius_top_right = 34
+corner_radius_bottom_right = 34
+corner_radius_bottom_left = 34
+shadow_color = Color(0.02, 0.38, 0.16, 0.82)
+shadow_size = 18
+shadow_offset = Vector2(0, 7)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nav"]
+bg_color = Color(0.22, 0.32, 0.70, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(0.68, 0.84, 1.0, 0.92)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0.04, 0.05, 0.22, 0.48)
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_danger_red"]
+bg_color = Color(0.88, 0.18, 0.26, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 7
+border_color = Color(1.0, 0.68, 0.72, 1.0)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0.18, 0.02, 0.04, 0.55)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_spin_blue"]
+bg_color = Color(0.10, 0.48, 0.96, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 7
+border_color = Color(0.56, 0.88, 1.0, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0.04, 0.16, 0.48, 0.65)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mainmenu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.22, 0.46, 0.88, 0.0)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TopStatusBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BtnTopLevel" type="Button" parent="MarginContainer/VBoxContainer/TopStatusBar"]
+custom_minimum_size = Vector2(154, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.92, 0.30, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_topbar")
+text = "     LV. 1"
+
+[node name="TopBarSpacer" type="Control" parent="MarginContainer/VBoxContainer/TopStatusBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnDailyGift" type="Button" parent="MarginContainer/VBoxContainer/TopStatusBar"]
+custom_minimum_size = Vector2(196, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("StyleBoxFlat_gift")
+text = "     DAILY GIFT"
+
+[node name="BtnTopSettings" type="Button" parent="MarginContainer/VBoxContainer/TopStatusBar"]
+custom_minimum_size = Vector2(68, 56)
+layout_mode = 2
+tooltip_text = "Settings"
+theme_override_colors/font_color = Color(1.0, 0.96, 0.78, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_gear")
+text = ""
+
+[node name="Header" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 176)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="LblTitle" type="Label" parent="MarginContainer/VBoxContainer/Header"]
+custom_minimum_size = Vector2(560, 168)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(1.0, 0.95, 0.28, 0)
+theme_override_colors/font_outline_color = Color(0.14, 0.06, 0.38, 0)
+theme_override_colors/font_shadow_color = Color(0.05, 0.02, 0.18, 0)
+theme_override_constants/shadow_offset_x = 4
+theme_override_constants/shadow_offset_y = 9
+theme_override_constants/outline_size = 18
+theme_override_constants/shadow_outline_size = 12
+theme_override_font_sizes/font_size = 82
+text = "Block Puzzle"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ModeSelection" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="LblModeTitle" type="Label" parent="MarginContainer/VBoxContainer/ModeSelection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.92, 0.42, 1)
+theme_override_colors/font_shadow_color = Color(0.15, 0.10, 0.38, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 21
+text = "GAME MODE"
+horizontal_alignment = 1
+
+[node name="GameModeRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/ModeSelection"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnClassic" type="Button" parent="MarginContainer/VBoxContainer/ModeSelection/GameModeRow"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_mode")
+text = "    CLASSIC"
+
+[node name="BtnModern" type="Button" parent="MarginContainer/VBoxContainer/ModeSelection/GameModeRow"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_mode")
+text = "    MODERN"
+
+[node name="LblPlayStyleTitle" type="Label" parent="MarginContainer/VBoxContainer/ModeSelection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 0.96, 1.0, 1)
+theme_override_colors/font_shadow_color = Color(0.08, 0.14, 0.42, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 21
+text = "PLAY STYLE"
+horizontal_alignment = 1
+
+[node name="PlayStyleRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/ModeSelection"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnFalling" type="Button" parent="MarginContainer/VBoxContainer/ModeSelection/PlayStyleRow"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_mode")
+text = "    FALLING"
+
+[node name="BtnDragDrop" type="Button" parent="MarginContainer/VBoxContainer/ModeSelection/PlayStyleRow"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_mode")
+text = "    DRAG & DROP"
+
+[node name="PlayActionContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 22
+
+[node name="BtnStartGame" type="Button" parent="MarginContainer/VBoxContainer/PlayActionContainer"]
+custom_minimum_size = Vector2(560, 108)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.34, 0.14, 0.95)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 38
+theme_override_styles/normal = SubResource("StyleBoxFlat_play")
+text = "START"
+
+[node name="NavActions" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnHowToPlay" type="Button" parent="MarginContainer/VBoxContainer/NavActions"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "    RULES"
+
+[node name="BtnAccount" type="Button" parent="MarginContainer/VBoxContainer/NavActions"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "    STATS"
+
+[node name="Modals" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HowToPlayModal" type="ColorRect" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.10, 0.28, 0.80)
+
+[node name="Panel" type="Panel" parent="Modals/HowToPlayModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -325.0
+offset_top = -340.0
+offset_right = 325.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_levelcard")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/HowToPlayModal/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 26.0
+offset_top = 26.0
+offset_right = -26.0
+offset_bottom = -26.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="LblTitle" type="Label" parent="Modals/HowToPlayModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.88, 0.24, 1)
+theme_override_font_sizes/font_size = 26
+text = "GAME RULES & GUIDE"
+horizontal_alignment = 1
+
+[node name="LblContent" type="Label" parent="Modals/HowToPlayModal/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 17
+text = "Play on a 12x10 board using 4-cell blocks."
+autowrap_mode = 3
+
+[node name="BtnClose" type="Button" parent="Modals/HowToPlayModal/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_danger_red")
+text = "GOT IT"
+
+[node name="SettingsModal" type="ColorRect" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.10, 0.28, 0.80)
+
+[node name="Panel" type="Panel" parent="Modals/SettingsModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -310.0
+offset_right = 300.0
+offset_bottom = 310.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_levelcard")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/SettingsModal/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 26.0
+offset_top = 24.0
+offset_right = -26.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="LblTitle" type="Label" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.88, 0.24, 1)
+theme_override_font_sizes/font_size = 26
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="BtnLanguageModal" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_lang")
+text = "LANGUAGE: EN"
+
+[node name="AudioTogglesRow" type="HBoxContainer" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnMusic" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer/AudioTogglesRow"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "MUSIC: ON"
+
+[node name="BtnSound" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer/AudioTogglesRow"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "SOUND SFX: ON"
+
+[node name="VoiceHapticsRow" type="HBoxContainer" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnVoice" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer/VoiceHapticsRow"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "VOICE: Male"
+
+[node name="BtnHaptics" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer/VoiceHapticsRow"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "HAPTIC: ON"
+
+[node name="BtnAccountSettings" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "    ACCOUNT"
+
+[node name="BtnClose" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_danger_red")
+text = "CLOSE"
+
+[node name="AccountModal" type="ColorRect" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.10, 0.28, 0.80)
+
+[node name="Panel" type="Panel" parent="Modals/AccountModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -310.0
+offset_right = 300.0
+offset_bottom = 310.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_levelcard")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/AccountModal/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = 20.0
+offset_right = -22.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="LblTitle" type="Label" parent="Modals/AccountModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.88, 0.24, 1)
+theme_override_font_sizes/font_size = 26
+text = "ACCOUNT"
+horizontal_alignment = 1
+
+[node name="StatsBox" type="VBoxContainer" parent="Modals/AccountModal/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="LblScore" type="Label" parent="Modals/AccountModal/Panel/VBoxContainer/StatsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "HIGH SCORE: 0"
+horizontal_alignment = 1
+
+[node name="LblLines" type="Label" parent="Modals/AccountModal/Panel/VBoxContainer/StatsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "LINES CLEARED: 0"
+horizontal_alignment = 1
+
+[node name="LblRewardStatus" type="Label" parent="Modals/AccountModal/Panel/VBoxContainer/StatsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.90, 0.35, 1)
+theme_override_font_sizes/font_size = 19
+text = "Stars: 0   •   Coins: 250   •   Unlocked: 1/500"
+horizontal_alignment = 1
+
+[node name="BtnClose" type="Button" parent="Modals/AccountModal/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_danger_red")
+text = "CLOSE"
+
+[node name="LevelMapModal" type="ColorRect" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.10, 0.28, 0.80)
+
+[node name="Panel" type="Panel" parent="Modals/LevelMapModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -342.0
+offset_top = -550.0
+offset_right = 342.0
+offset_bottom = 510.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_levelcard")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/LevelMapModal/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="LblMapTitle" type="Label" parent="Modals/LevelMapModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.90, 0.26, 1)
+theme_override_font_sizes/font_size = 25
+text = "WORLD PROGRESSION MAP"
+horizontal_alignment = 1
+
+[node name="LblMapMilestoneHint" type="Label" parent="Modals/LevelMapModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.96, 0.72, 1)
+theme_override_font_sizes/font_size = 16
+text = "You: Lv.1   •   0 Stars   •   Next Milestone: Lv.5 (STAR)"
+horizontal_alignment = 1
+
+[node name="PageNavRow" type="HBoxContainer" parent="Modals/LevelMapModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="BtnPagePrev" type="Button" parent="Modals/LevelMapModal/Panel/VBoxContainer/PageNavRow"]
+custom_minimum_size = Vector2(88, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "< PREV"
+
+[node name="LblPageRange" type="Label" parent="Modals/LevelMapModal/Panel/VBoxContainer/PageNavRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.56, 0.96, 1.0, 1)
+theme_override_font_sizes/font_size = 15
+text = "CH. 1/25 • SKY KINGDOM (LV. 1–20)"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="BtnPageCurrent" type="Button" parent="Modals/LevelMapModal/Panel/VBoxContainer/PageNavRow"]
+custom_minimum_size = Vector2(88, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_lang")
+text = "CURRENT"
+
+[node name="BtnPageNext" type="Button" parent="Modals/LevelMapModal/Panel/VBoxContainer/PageNavRow"]
+custom_minimum_size = Vector2(88, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "NEXT >"
+
+[node name="LevelGrid" type="Control" parent="Modals/LevelMapModal/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(630, 740)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BottomMapActions" type="HBoxContainer" parent="Modals/LevelMapModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 26
+alignment = 1
+
+[node name="BtnCloseLevelMap" type="Button" parent="Modals/LevelMapModal/Panel/VBoxContainer/BottomMapActions"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_danger_red")
+text = "HOME"
+
+[node name="BtnStartSelectedLevel" type="Button" parent="Modals/LevelMapModal/Panel/VBoxContainer/BottomMapActions"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_play")
+text = "PLAY LEVEL 1"
+
+[node name="LuckyWheelModal" type="ColorRect" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.10, 0.28, 0.80)
+
+[node name="Panel" type="Panel" parent="Modals/LuckyWheelModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -346.0
+offset_top = -540.0
+offset_right = 346.0
+offset_bottom = 540.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_levelcard")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/LuckyWheelModal/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="LblWheelTitle" type="Label" parent="Modals/LuckyWheelModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.90, 0.24, 1)
+theme_override_font_sizes/font_size = 28
+text = "DAILY GIFT"
+horizontal_alignment = 1
+
+[node name="LblWheelSubtitle" type="Label" parent="Modals/LuckyWheelModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.96, 1.0, 1)
+theme_override_font_sizes/font_size = 17
+text = "One Free Spin Daily — Win Modern Special Items!"
+horizontal_alignment = 1
+
+[node name="WheelCanvas" type="Control" parent="Modals/LuckyWheelModal/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="WheelRewardInfoBox" type="PanelContainer" parent="Modals/LuckyWheelModal/Panel/VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mode")
+
+[node name="RewardTextVBox" type="VBoxContainer" parent="Modals/LuckyWheelModal/Panel/VBoxContainer/WheelRewardInfoBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="LblWheelRewardTitle" type="Label" parent="Modals/LuckyWheelModal/Panel/VBoxContainer/WheelRewardInfoBox/RewardTextVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.92, 0.28, 1)
+theme_override_colors/font_shadow_color = Color(0.08, 0.04, 0.22, 0.95)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "BOMB ×1"
+horizontal_alignment = 1
+
+[node name="LblWheelRewardDesc" type="Label" parent="Modals/LuckyWheelModal/Panel/VBoxContainer/WheelRewardInfoBox/RewardTextVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.98, 1.0, 1)
+theme_override_font_sizes/font_size = 20
+text = "Clear a 3×3 area"
+horizontal_alignment = 1
+
+[node name="LblWheelResult" type="Label" parent="Modals/LuckyWheelModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.94, 0.34, 1)
+theme_override_font_sizes/font_size = 19
+text = "Tap SPIN for your Daily Special-Item Gift!"
+horizontal_alignment = 1
+
+[node name="WheelActions" type="HBoxContainer" parent="Modals/LuckyWheelModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="BtnCloseWheel" type="Button" parent="Modals/LuckyWheelModal/Panel/VBoxContainer/WheelActions"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_danger_red")
+text = "CLOSE"
+
+[node name="BtnSpinWheel" type="Button" parent="Modals/LuckyWheelModal/Panel/VBoxContainer/WheelActions"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBoxFlat_spin_blue")
+text = "    SPIN"

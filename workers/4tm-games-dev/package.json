@@ -1,0 +1,21 @@
+{
+  "name": "4tm-games-dev",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker static game host for 4TM-games development and testing builds",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit",
+    "build": "echo 'Worker assets ready'",
+    "stage:block-puzzle": "mkdir -p public/block-puzzle && cp -r ../../build/web/* public/block-puzzle/",
+    "build:block-puzzle": "mkdir -p ../../build/web && godot --headless --path ../../games/block-puzzle --export-release \"Web (HTML5)\" ../../../build/web/index.html && npm run stage:block-puzzle"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260925.1",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.140.0"
+  }
+}

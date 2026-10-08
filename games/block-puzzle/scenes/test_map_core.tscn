@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bpl08testmapcore"]
+
+[ext_resource type="Script" path="res://scripts/map_core/test_map_core.gd" id="1_testmapcore"]
+
+[node name="TestMapCore" type="Node"]
+script = ExtResource("1_testmapcore")

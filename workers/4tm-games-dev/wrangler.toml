@@ -1,0 +1,15 @@
+name = "4tm-games-dev"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+# Cloudflare Workers Static Assets binding
+# Serves game assets (HTML, JS, WASM, PCK, audio worklets, images) from ./public
+[assets]
+directory = "./public"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+not_found_handling = "none"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "4tm-games-dev"
