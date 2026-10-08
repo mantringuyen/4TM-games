@@ -883,8 +883,14 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", int(base_m_side + safe_left))
 		margin_ctrl.add_theme_constant_override("margin_right", int(base_m_side + safe_right))
-		margin_ctrl.add_theme_constant_override("margin_top", int(maxf(float(base_m_top), safe_top)))
+		margin_ctrl.add_theme_constant_override("margin_top", int(float(base_m_top) + safe_top))
 		margin_ctrl.add_theme_constant_override("margin_bottom", 4 if is_compact else 6)
+	var total_header_h: float = float(base_m_top) + safe_top + header_ctrl_h + (4.0 if is_compact else 6.0)
+	custom_minimum_size.y = maxf(custom_minimum_size.y, total_header_h)
+	size.y = maxf(size.y, total_header_h)
+	if margin_ctrl:
+		margin_ctrl.custom_minimum_size.y = maxf(margin_ctrl.custom_minimum_size.y, total_header_h)
+		margin_ctrl.size.y = maxf(margin_ctrl.size.y, total_header_h)
 	var score_panel_node := get_node_or_null("MarginContainer/VBoxContainer/HeaderRow/ScorePanel") as PanelContainer
 	if level_panel:
 		level_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN

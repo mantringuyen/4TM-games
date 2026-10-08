@@ -2,8 +2,14 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		
+		
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
-		<meta name="theme-color" content="#000000">
+		<meta name="theme-color" content="#1f3885">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">
+		<meta name="mobile-web-app-capable" content="yes">
 		<title>Block Puzzle — 4TM</title>
 		<style>
 html, body, #canvas {
@@ -12,15 +18,29 @@ html, body, #canvas {
 	border: 0;
 }
 
-body {
+html, body {
+	width: 100%;
+	height: 100%;
+	min-height: 100vh;
+	min-height: calc(var(--vh, 1vh) * 100);
+	min-height: 100dvh;
+	min-height: -webkit-fill-available;
 	color: white;
-	background-color: black;
+	background-color: #1f3885;
 	overflow: hidden;
 	touch-action: none;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 #canvas {
 	display: block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 }
 
 #canvas:focus {
@@ -96,6 +116,21 @@ body {
 			<div id="status-notice"></div>
 		</div>
 
+		<script>
+		// Standards-safe iOS PWA Standalone viewport height normalization: eliminates bottom chin gap
+		// without overriding window.innerHeight or referencing window.screen.height
+		(function () {
+			function syncViewportHeight() {
+				var h = (document.documentElement && document.documentElement.clientHeight) || window.innerHeight;
+				if (h) {
+					document.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
+				}
+			}
+			syncViewportHeight();
+			window.addEventListener('resize', syncViewportHeight);
+			window.addEventListener('orientationchange', syncViewportHeight);
+		}());
+		</script>
 		<script src="index.js"></script>
 		<script>
 const GODOT_CONFIG = {"mainPack":"https://games-data.4tm.io.vn/games/block-puzzle/index.pck","args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":120368,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};

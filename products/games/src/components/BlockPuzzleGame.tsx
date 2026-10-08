@@ -34,7 +34,7 @@ export const BlockPuzzleGame: React.FC<BlockPuzzleGameProps> = ({
     <div
       className={
         isPseudoFs
-          ? 'fixed inset-0 z-[99999] bg-black flex flex-col w-screen h-screen overflow-hidden'
+          ? 'fixed inset-0 z-[99999] bg-[#1f3885] flex flex-col w-screen h-screen overflow-hidden'
           : 'relative w-full h-full min-h-[500px] flex flex-col bg-slate-950 rounded-2xl overflow-hidden border border-slate-800'
       }
     >
