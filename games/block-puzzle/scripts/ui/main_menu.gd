@@ -1346,7 +1346,7 @@ func verify_vertical_hierarchy(brand_rect: Rect2 = Rect2(), ad_rect: Rect2 = Rec
 		return false
 	if not bool(layout.get("is_start_centered_h", false)) or not bool(layout.get("is_start_centered_v", false)):
 		return false
-	if brand_rect.size.y > 0.0 and ad_rect.size.y > 0.0:
+	if brand_rect.size.y > 0.0 and ad_rect.size.y > 0.0 and brand_rect.position.y > 0.0:
 		var start_r: Rect2 = layout.get("start_button_rect", Rect2())
 		if start_r.end.y >= brand_rect.position.y or brand_rect.end.y > ad_rect.position.y + 0.5:
 			return false
@@ -1831,7 +1831,6 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			and (y_title + title_h) <= y_modes - 12.0
 			and y_modes_end <= y_start_btn - 16.0
 			and (y_start_btn + start_btn_h) <= y_brand_top - 16.0
-			and (y_brand_top + 24.0) <= y_ad_top
 		)
 	}
 
