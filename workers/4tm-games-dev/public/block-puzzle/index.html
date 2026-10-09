@@ -8,10 +8,12 @@
 		
 		
 		
+		
+		
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#1f3885">
 		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-status-bar-style" content="default">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 		<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">
 		<meta name="mobile-web-app-capable" content="yes">
 		<title>Block Puzzle — 4TM</title>
@@ -25,13 +27,14 @@ html, body, #canvas {
 html, body {
 	width: 100%;
 	height: 100%;
+	height: 100dvh;
 	min-height: 100vh;
-	min-height: calc(var(--vh, 1vh) * 100);
 	min-height: 100dvh;
 	min-height: -webkit-fill-available;
 	color: white;
 	background-color: #1f3885;
 	overflow: hidden;
+	overscroll-behavior: none;
 	touch-action: none;
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
@@ -43,8 +46,15 @@ html, body {
 	position: fixed;
 	top: 0;
 	left: 0;
+	right: 0;
+	bottom: 0;
 	width: 100%;
+	width: 100vw;
+	width: 100dvw;
 	height: 100%;
+	height: 100vh;
+	height: 100dvh;
+	background-color: #1f3885;
 }
 
 #canvas:focus {
@@ -120,20 +130,34 @@ html, body {
 			<div id="status-notice"></div>
 		</div>
 
-						<script>
+										<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
-			probe.style.cssText = 'position:fixed;top:0;bottom:0;left:0;right:0;height:100dvh;pointer-events:none;visibility:hidden;z-index:-9999;';
+			probe.id = 'gd-vh-probe';
+			probe.style.cssText = 'position:fixed;top:0;bottom:0;left:0;right:0;pointer-events:none;visibility:hidden;z-index:-9999;';
+			var ins = document.createElement('div');
+			ins.id = 'gd-ins-probe';
+			ins.style.cssText = 'position:fixed;bottom:0;left:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;z-index:-9999;';
 			function getEffectiveHeight() {
 				if (!probe.parentNode && document.body) {
 					document.body.appendChild(probe);
+				}
+				if (!ins.parentNode && document.body) {
+					document.body.appendChild(ins);
 				}
 				var probeH = probe.offsetHeight || (probe.getBoundingClientRect ? Math.round(probe.getBoundingClientRect().height) : 0);
 				var docH = (document.documentElement && document.documentElement.clientHeight) || 0;
 				var winH = window.innerHeight || 0;
 				var vvH = (window.visualViewport && Math.round(window.visualViewport.height)) || 0;
-				return Math.max(probeH, docH, winH, vvH);
+				var insetBot = 0;
+				if (ins) {
+					var cs = window.getComputedStyle(ins);
+					insetBot = parseFloat(cs.paddingBottom) || 0;
+				}
+				var isStandalone = !!(window.navigator && window.navigator.standalone);
+				var standaloneH = isStandalone ? (winH + insetBot) : 0;
+				return Math.max(probeH, docH, winH, vvH, standaloneH);
 			}
 			function syncViewport() {
 				var h = getEffectiveHeight();
@@ -145,7 +169,7 @@ html, body {
 			window.addEventListener('resize', syncViewport);
 			window.addEventListener('orientationchange', syncViewport);
 			// Controlled settling triggers for iOS standalone PWA bottom chin layout
-			[100, 300, 600, 1000].forEach(function (delay) {
+			[100, 250, 500, 1000].forEach(function (delay) {
 				setTimeout(function () {
 					syncViewport();
 					window.dispatchEvent(new Event('resize'));
