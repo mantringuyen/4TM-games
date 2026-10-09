@@ -6,10 +6,12 @@
 		
 		
 		
+		
+		
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#1f3885">
 		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="apple-mobile-web-app-status-bar-style" content="default">
 		<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">
 		<meta name="mobile-web-app-capable" content="yes">
 		<title>Block Puzzle — 4TM</title>
@@ -118,11 +120,23 @@ html, body {
 			<div id="status-notice"></div>
 		</div>
 
-				<script>
-		// Standards-safe iOS viewport height normalization: ensures CSS layout tracks actual client height
+						<script>
+		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
+			var probe = document.createElement('div');
+			probe.style.cssText = 'position:fixed;top:0;bottom:0;left:0;right:0;height:100dvh;pointer-events:none;visibility:hidden;z-index:-9999;';
+			function getEffectiveHeight() {
+				if (!probe.parentNode && document.body) {
+					document.body.appendChild(probe);
+				}
+				var probeH = probe.offsetHeight || (probe.getBoundingClientRect ? Math.round(probe.getBoundingClientRect().height) : 0);
+				var docH = (document.documentElement && document.documentElement.clientHeight) || 0;
+				var winH = window.innerHeight || 0;
+				var vvH = (window.visualViewport && Math.round(window.visualViewport.height)) || 0;
+				return Math.max(probeH, docH, winH, vvH);
+			}
 			function syncViewport() {
-				var h = (document.documentElement && document.documentElement.clientHeight) || window.innerHeight;
+				var h = getEffectiveHeight();
 				if (h) {
 					document.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
 				}
@@ -130,20 +144,13 @@ html, body {
 			syncViewport();
 			window.addEventListener('resize', syncViewport);
 			window.addEventListener('orientationchange', syncViewport);
-		}());
-		</script>
-				<script>
-		// Standards-safe iOS viewport height normalization: ensures CSS layout tracks actual client height
-		(function () {
-			function syncViewport() {
-				var h = (document.documentElement && document.documentElement.clientHeight) || window.innerHeight;
-				if (h) {
-					document.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');
-				}
-			}
-			syncViewport();
-			window.addEventListener('resize', syncViewport);
-			window.addEventListener('orientationchange', syncViewport);
+			// Controlled settling triggers for iOS standalone PWA bottom chin layout
+			[100, 300, 600, 1000].forEach(function (delay) {
+				setTimeout(function () {
+					syncViewport();
+					window.dispatchEvent(new Event('resize'));
+				}, delay);
+			});
 		}());
 		</script>
 		<script src="index.js"></script>

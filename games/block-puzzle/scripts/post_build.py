@@ -39,7 +39,7 @@ def main():
             '\n\t\t<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">'
             '\n\t\t<meta name="theme-color" content="#1f3885">'
             '\n\t\t<meta name="apple-mobile-web-app-capable" content="yes">'
-            '\n\t\t<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
+            '\n\t\t<meta name="apple-mobile-web-app-status-bar-style" content="default">'
             '\n\t\t<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">'
             '\n\t\t<meta name="mobile-web-app-capable" content="yes">'
         )
@@ -52,8 +52,8 @@ def main():
         # 3. Ensure edge-to-edge full viewport CSS styling without artificial black gaps
         css_replacement = (
             "html, body, #canvas {\n\tmargin: 0;\n\tpadding: 0;\n\tborder: 0;\n}\n\n"
-            "html, body {\n\twidth: 100%;\n\theight: 100%;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #1f3885;\n\toverflow: hidden;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
-            "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\twidth: 100%;\n\theight: 100%;\n}"
+            "html, body {\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #1f3885;\n\toverflow: hidden;\n\toverscroll-behavior: none;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
+            "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n}"
         )
         old_css_pat = re.compile(r'html,\s*body,\s*#canvas\s*\{[^}]*\}\s*body\s*\{[^}]*\}\s*#canvas\s*\{[^}]*\}', re.DOTALL)
         if old_css_pat.search(content):
@@ -62,10 +62,22 @@ def main():
         # 4. Inject standards-safe iOS viewport height sync script before index.js
         pwa_script = (
             "\t\t<script>\n"
-            "\t\t// Standards-safe iOS viewport height normalization: ensures CSS layout tracks actual client height\n"
+            "\t\t// Standards-safe iOS viewport height normalization and settled resize trigger\n"
             "\t\t(function () {\n"
+            "\t\t\tvar probe = document.createElement('div');\n"
+            "\t\t\tprobe.style.cssText = 'position:fixed;top:0;bottom:0;left:0;right:0;height:100dvh;pointer-events:none;visibility:hidden;z-index:-9999;';\n"
+            "\t\t\tfunction getEffectiveHeight() {\n"
+            "\t\t\t\tif (!probe.parentNode && document.body) {\n"
+            "\t\t\t\t\tdocument.body.appendChild(probe);\n"
+            "\t\t\t\t}\n"
+            "\t\t\t\tvar probeH = probe.offsetHeight || (probe.getBoundingClientRect ? Math.round(probe.getBoundingClientRect().height) : 0);\n"
+            "\t\t\t\tvar docH = (document.documentElement && document.documentElement.clientHeight) || 0;\n"
+            "\t\t\t\tvar winH = window.innerHeight || 0;\n"
+            "\t\t\t\tvar vvH = (window.visualViewport && Math.round(window.visualViewport.height)) || 0;\n"
+            "\t\t\t\treturn Math.max(probeH, docH, winH, vvH);\n"
+            "\t\t\t}\n"
             "\t\t\tfunction syncViewport() {\n"
-            "\t\t\t\tvar h = (document.documentElement && document.documentElement.clientHeight) || window.innerHeight;\n"
+            "\t\t\t\tvar h = getEffectiveHeight();\n"
             "\t\t\t\tif (h) {\n"
             "\t\t\t\t\tdocument.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');\n"
             "\t\t\t\t}\n"
@@ -73,12 +85,19 @@ def main():
             "\t\t\tsyncViewport();\n"
             "\t\t\twindow.addEventListener('resize', syncViewport);\n"
             "\t\t\twindow.addEventListener('orientationchange', syncViewport);\n"
+            "\t\t\t// Controlled settling triggers for iOS standalone PWA bottom chin layout\n"
+            "\t\t\t[100, 300, 600, 1000].forEach(function (delay) {\n"
+            "\t\t\t\tsetTimeout(function () {\n"
+            "\t\t\t\t\tsyncViewport();\n"
+            "\t\t\t\t\twindow.dispatchEvent(new Event('resize'));\n"
+            "\t\t\t\t}, delay);\n"
+            "\t\t\t});\n"
             "\t\t}());\n"
             "\t\t</script>\n\t\t<script src=\"index.js\"></script>"
         )
-        # Remove any obsolete monkey-patch script if already present
+        # Remove any obsolete monkey-patch or previous sync scripts if already present
         content = re.sub(r'<script>\s*// iOS PWA Standalone viewport & height normalization.*?</script>\s*', '', content, flags=re.DOTALL)
-        content = re.sub(r'<script>\s*// Standards-safe iOS.*?syncViewportHeight.*?</script>\s*', '', content, flags=re.DOTALL)
+        content = re.sub(r'<script>\s*// Standards-safe iOS.*?syncViewport.*?</script>\s*', '', content, flags=re.DOTALL)
         if '<script src="index.js"></script>' in content:
             content = content.replace('<script src="index.js"></script>', pwa_script)
 
@@ -92,26 +111,39 @@ def main():
     # 3. Patch Godot 4.3 Web index.js to resolve iOS standalone PWA canvas height discrepancy
     # In iOS standalone PWA, WebKit's window.innerHeight initially omits the home indicator chin,
     # causing Godot's WebGL backbuffer to render shorter than the screen.
-    # We patch Godot's sizing calculation to consider documentElement.clientHeight and visualViewport.height
-    # without overriding window.innerHeight or referencing window.screen.height.
+    # We patch Godot's sizing calculation to evaluate documentElement.clientHeight, visualViewport,
+    # and a 100dvh measurement probe if available, keeping DOM canvas size and backbuffer strictly synced.
     js_path = os.path.join(target_dir, "index.js")
     if os.path.exists(js_path):
         with open(js_path, "r", encoding="utf-8") as f:
             js_content = f.read()
 
         target_sizing = "if(isFullscreen||wantsFullWindow){width=window.innerWidth*scale;height=window.innerHeight*scale}"
-        safe_sizing = (
+        prev_patch = (
             "if(isFullscreen||wantsFullWindow){"
             "const vh=Math.max(window.innerHeight||0,document.documentElement?document.documentElement.clientHeight||0:0,window.visualViewport?Math.round(window.visualViewport.height)||0:0);"
             "width=window.innerWidth*scale;"
             "height=(vh||window.innerHeight)*scale}"
         )
+        robust_sizing = (
+            "if(isFullscreen||wantsFullWindow){"
+            "let probeH=0;"
+            "try{let pb=document.getElementById('gd-vh-probe');if(!pb){pb=document.createElement('div');pb.id='gd-vh-probe';pb.style.cssText='position:fixed;top:0;bottom:0;left:0;right:0;height:100dvh;pointer-events:none;visibility:hidden;z-index:-9999;';document.body&&document.body.appendChild(pb)}probeH=pb.offsetHeight||(pb.getBoundingClientRect?Math.round(pb.getBoundingClientRect().height):0)}catch(e){}"
+            "const vh=Math.max(probeH||0,window.innerHeight||0,document.documentElement?document.documentElement.clientHeight||0:0,window.visualViewport?Math.round(window.visualViewport.height)||0:0);"
+            "width=window.innerWidth*scale;"
+            "height=(vh||window.innerHeight)*scale}"
+        )
         if target_sizing in js_content:
-            js_content = js_content.replace(target_sizing, safe_sizing)
+            js_content = js_content.replace(target_sizing, robust_sizing)
             with open(js_path, "w", encoding="utf-8") as f:
                 f.write(js_content)
             print(f"Successfully patched Godot Web canvas sizing in {js_path}")
-        elif safe_sizing in js_content:
+        elif prev_patch in js_content:
+            js_content = js_content.replace(prev_patch, robust_sizing)
+            with open(js_path, "w", encoding="utf-8") as f:
+                f.write(js_content)
+            print(f"Successfully upgraded Godot Web canvas sizing in {js_path}")
+        elif robust_sizing in js_content:
             print(f"Godot Web canvas sizing already patched in {js_path}")
         else:
             print(f"Notice: Godot canvas sizing target pattern not found in {js_path} (may be custom build).")
