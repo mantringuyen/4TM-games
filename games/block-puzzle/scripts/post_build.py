@@ -59,35 +59,27 @@ def main():
         if old_css_pat.search(content):
             content = old_css_pat.sub(css_replacement, content, count=1)
 
-        # 4. Inject iOS standalone PWA height normalization script before index.js to prevent bottom chin gap
+        # 4. Inject standards-safe iOS viewport height sync script before index.js
         pwa_script = (
             "\t\t<script>\n"
-            "\t\t// iOS PWA Standalone viewport & height normalization: eliminates bottom chin gap\n"
+            "\t\t// Standards-safe iOS viewport height normalization: ensures CSS layout tracks actual client height\n"
             "\t\t(function () {\n"
-            "\t\t\tfunction fixPwaViewport() {\n"
-            "\t\t\t\tvar isStandalone = (window.navigator && window.navigator.standalone === true) ||\n"
-            "\t\t\t\t\t(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);\n"
-            "\t\t\t\tvar isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||\n"
-            "\t\t\t\t\t(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);\n"
-            "\t\t\t\tif (isIOS && isStandalone) {\n"
-            "\t\t\t\t\tvar screenH = window.screen.height;\n"
-            "\t\t\t\t\tif (screenH && window.innerHeight < screenH) {\n"
-            "\t\t\t\t\t\ttry {\n"
-            "\t\t\t\t\t\t\tObject.defineProperty(window, 'innerHeight', {\n"
-            "\t\t\t\t\t\t\t\tget: function () { return window.screen.height; },\n"
-            "\t\t\t\t\t\t\t\tconfigurable: true\n"
-            "\t\t\t\t\t\t\t});\n"
-            "\t\t\t\t\t\t} catch (e) {}\n"
-            "\t\t\t\t\t}\n"
+            "\t\t\tfunction syncViewport() {\n"
+            "\t\t\t\tvar h = (document.documentElement && document.documentElement.clientHeight) || window.innerHeight;\n"
+            "\t\t\t\tif (h) {\n"
+            "\t\t\t\t\tdocument.documentElement.style.setProperty('--vh', (h * 0.01) + 'px');\n"
             "\t\t\t\t}\n"
             "\t\t\t}\n"
-            "\t\t\tfixPwaViewport();\n"
-            "\t\t\twindow.addEventListener('resize', fixPwaViewport);\n"
-            "\t\t\twindow.addEventListener('orientationchange', fixPwaViewport);\n"
+            "\t\t\tsyncViewport();\n"
+            "\t\t\twindow.addEventListener('resize', syncViewport);\n"
+            "\t\t\twindow.addEventListener('orientationchange', syncViewport);\n"
             "\t\t}());\n"
             "\t\t</script>\n\t\t<script src=\"index.js\"></script>"
         )
-        if '<script src="index.js"></script>' in content and 'fixPwaViewport' not in content:
+        # Remove any obsolete monkey-patch script if already present
+        content = re.sub(r'<script>\s*// iOS PWA Standalone viewport & height normalization.*?</script>\s*', '', content, flags=re.DOTALL)
+        content = re.sub(r'<script>\s*// Standards-safe iOS.*?syncViewportHeight.*?</script>\s*', '', content, flags=re.DOTALL)
+        if '<script src="index.js"></script>' in content:
             content = content.replace('<script src="index.js"></script>', pwa_script)
 
         with open(html_path, "w", encoding="utf-8") as f:
@@ -96,8 +88,35 @@ def main():
     else:
         print(f"Error: index.html not found at {html_path}")
         sys.exit(1)
-        
-    # 2. Safely remove index.pck from the worker public staging directory to stay under individual file size limits
+
+    # 3. Patch Godot 4.3 Web index.js to resolve iOS standalone PWA canvas height discrepancy
+    # In iOS standalone PWA, WebKit's window.innerHeight initially omits the home indicator chin,
+    # causing Godot's WebGL backbuffer to render shorter than the screen.
+    # We patch Godot's sizing calculation to consider documentElement.clientHeight and visualViewport.height
+    # without overriding window.innerHeight or referencing window.screen.height.
+    js_path = os.path.join(target_dir, "index.js")
+    if os.path.exists(js_path):
+        with open(js_path, "r", encoding="utf-8") as f:
+            js_content = f.read()
+
+        target_sizing = "if(isFullscreen||wantsFullWindow){width=window.innerWidth*scale;height=window.innerHeight*scale}"
+        safe_sizing = (
+            "if(isFullscreen||wantsFullWindow){"
+            "const vh=Math.max(window.innerHeight||0,document.documentElement?document.documentElement.clientHeight||0:0,window.visualViewport?Math.round(window.visualViewport.height)||0:0);"
+            "width=window.innerWidth*scale;"
+            "height=(vh||window.innerHeight)*scale}"
+        )
+        if target_sizing in js_content:
+            js_content = js_content.replace(target_sizing, safe_sizing)
+            with open(js_path, "w", encoding="utf-8") as f:
+                f.write(js_content)
+            print(f"Successfully patched Godot Web canvas sizing in {js_path}")
+        elif safe_sizing in js_content:
+            print(f"Godot Web canvas sizing already patched in {js_path}")
+        else:
+            print(f"Notice: Godot canvas sizing target pattern not found in {js_path} (may be custom build).")
+
+    # 4. Safely remove index.pck from the worker public staging directory to stay under individual file size limits
     if os.path.exists(pck_path):
         os.remove(pck_path)
         print("Successfully removed index.pck from Workers Static Assets staging directory.")

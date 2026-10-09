@@ -3217,7 +3217,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 			left_inset = maxf(left_inset, float(safe_rect.position.x) * scale_x)
 			right_inset = maxf(right_inset, float(screen_sz.x - (safe_rect.position.x + safe_rect.size.x)) * scale_x)
 
-	# 2. Web HTML5 safe area via CSS env(safe-area-inset-*)
+	# 2. Web HTML5 safe area via CSS env(safe-area-inset-*) with device-aware notch / Dynamic Island protection
 	var os_name := OS.get_name().strip_edges().to_lower()
 	if (os_name == "web" or OS.has_feature("web")) and ClassDB.class_exists("JavaScriptBridge"):
 		var js_insets: Variant = JavaScriptBridge.eval("""(function(){
@@ -3239,9 +3239,31 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				var left = parseFloat(cs.paddingLeft) || 0;
 				var right = parseFloat(cs.paddingRight) || 0;
 				document.body.removeChild(div);
-				var h = window.innerHeight || 1;
-				var w = window.innerWidth || 1;
-				return JSON.stringify({ top_ratio: top / h, bottom_ratio: bottom / h, left_ratio: left / w, right_ratio: right / w });
+				var h = (document.documentElement && document.documentElement.clientHeight) || window.innerHeight || 1;
+				var w = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 1;
+				var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+				var isIPhone = /iPhone/.test(navigator.userAgent) || (isIOS && Math.min(window.screen.width, window.screen.height) < 500);
+				var scrW = window.screen ? window.screen.width : w;
+				var scrH = window.screen ? window.screen.height : h;
+				var maxDim = Math.max(scrW, scrH);
+				var isDynamicIsland = isIPhone && (maxDim === 852 || maxDim === 932 || maxDim === 874 || maxDim === 956);
+				var isNotch = isIPhone && !isDynamicIsland && maxDim >= 780;
+				return JSON.stringify({
+					top_ratio: top / h,
+					bottom_ratio: bottom / h,
+					left_ratio: left / w,
+					right_ratio: right / w,
+					top_px: top,
+					bottom_px: bottom,
+					left_px: left,
+					right_px: right,
+					viewport_h: h,
+					viewport_w: w,
+					is_ios: isIOS,
+					is_iphone: isIPhone,
+					is_dynamic_island: isDynamicIsland,
+					is_notch: isNotch
+				});
 			} catch(e) { return '{}'; }
 		})()""", true)
 		if typeof(js_insets) == TYPE_STRING and String(js_insets) != "" and String(js_insets) != "{}":
@@ -3259,6 +3281,19 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 					left_inset = maxf(left_inset, left_r * vp_sz.x)
 				if right_r > 0.0:
 					right_inset = maxf(right_inset, right_r * vp_sz.x)
+
+				var is_dyn_island: bool = bool(json.data.get("is_dynamic_island", false))
+				var is_notch: bool = bool(json.data.get("is_notch", false))
+				var vh: float = float(json.data.get("viewport_h", 1.0))
+				var scale_to_vp: float = vp_sz.y / maxf(1.0, vh)
+				if is_dyn_island:
+					# iPhone 14/15/16 Pro / Pro Max with Dynamic Island requires ~54-59 CSS px top clearance
+					top_inset = maxf(top_inset, 54.0 * scale_to_vp)
+					bottom_inset = maxf(bottom_inset, 28.0 * scale_to_vp)
+				elif is_notch:
+					# iPhones with standard sensor notch require ~44-47 CSS px top clearance
+					top_inset = maxf(top_inset, 44.0 * scale_to_vp)
+					bottom_inset = maxf(bottom_inset, 24.0 * scale_to_vp)
 
 	# 3. Graceful tall screen (e.g. 19.5:9 or taller) notch buffer for web when browser hides insets
 	var aspect_ratio: float = vp_sz.y / maxf(1.0, vp_sz.x)
