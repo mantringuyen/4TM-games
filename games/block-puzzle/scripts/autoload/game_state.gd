@@ -3197,6 +3197,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 	var bottom_inset: float = 0.0
 	var left_inset: float = 0.0
 	var right_inset: float = 0.0
+	var is_standalone: bool = false
 
 	var vp_sz: Vector2 = custom_viewport_size
 	if vp_sz.x <= 0.0 or vp_sz.y <= 0.0:
@@ -3248,6 +3249,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				var maxDim = Math.max(scrW, scrH);
 				var isDynamicIsland = isIPhone && (maxDim === 852 || maxDim === 932 || maxDim === 874 || maxDim === 956);
 				var isNotch = isIPhone && !isDynamicIsland && maxDim >= 780;
+				var isStandalone = !!(window.navigator && window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
 				return JSON.stringify({
 					top_ratio: top / h,
 					bottom_ratio: bottom / h,
@@ -3262,7 +3264,8 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 					is_ios: isIOS,
 					is_iphone: isIPhone,
 					is_dynamic_island: isDynamicIsland,
-					is_notch: isNotch
+					is_notch: isNotch,
+					is_standalone: isStandalone
 				});
 			} catch(e) { return '{}'; }
 		})()""", true)
@@ -3282,7 +3285,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				if right_r > 0.0:
 					right_inset = maxf(right_inset, right_r * vp_sz.x)
 
-				var is_standalone: bool = bool(json.data.get("is_standalone", false))
+				is_standalone = bool(json.data.get("is_standalone", false))
 				var is_dyn_island: bool = bool(json.data.get("is_dynamic_island", false))
 				var is_notch: bool = bool(json.data.get("is_notch", false))
 				var vh: float = float(json.data.get("viewport_h", 1.0))
