@@ -3282,22 +3282,24 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				if right_r > 0.0:
 					right_inset = maxf(right_inset, right_r * vp_sz.x)
 
+				var is_standalone: bool = bool(json.data.get("is_standalone", false))
 				var is_dyn_island: bool = bool(json.data.get("is_dynamic_island", false))
 				var is_notch: bool = bool(json.data.get("is_notch", false))
 				var vh: float = float(json.data.get("viewport_h", 1.0))
 				var scale_to_vp: float = vp_sz.y / maxf(1.0, vh)
-				if is_dyn_island:
-					# iPhone 14/15/16 Pro / Pro Max with Dynamic Island requires ~54-59 CSS px top clearance
-					top_inset = maxf(top_inset, 54.0 * scale_to_vp)
-					bottom_inset = maxf(bottom_inset, 28.0 * scale_to_vp)
-				elif is_notch:
-					# iPhones with standard sensor notch require ~44-47 CSS px top clearance
-					top_inset = maxf(top_inset, 44.0 * scale_to_vp)
-					bottom_inset = maxf(bottom_inset, 24.0 * scale_to_vp)
+				if is_standalone:
+					if is_dyn_island:
+						# iPhone 14/15/16 Pro / Pro Max with Dynamic Island requires ~54-59 CSS px top clearance
+						top_inset = maxf(top_inset, 54.0 * scale_to_vp)
+						bottom_inset = maxf(bottom_inset, 28.0 * scale_to_vp)
+					elif is_notch:
+						# iPhones with standard sensor notch require ~44-47 CSS px top clearance
+						top_inset = maxf(top_inset, 44.0 * scale_to_vp)
+						bottom_inset = maxf(bottom_inset, 24.0 * scale_to_vp)
 
-	# 3. Graceful tall screen (e.g. 19.5:9 or taller) notch buffer for web when browser hides insets
+	# 3. Graceful tall screen (e.g. 19.5:9 or taller) notch buffer for PWA standalone when browser hides insets
 	var aspect_ratio: float = vp_sz.y / maxf(1.0, vp_sz.x)
-	if aspect_ratio >= 1.95 and top_inset <= 0.0:
+	if aspect_ratio >= 1.95 and top_inset <= 0.0 and is_standalone:
 		top_inset = maxf(top_inset, clampf(vp_sz.y * 0.032, 20.0, 48.0))
 
 	return {
