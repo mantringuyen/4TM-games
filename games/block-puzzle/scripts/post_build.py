@@ -42,7 +42,7 @@ def main():
             '\n\t\t<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">'
             '\n\t\t<meta name="theme-color" content="#1f3885">'
             '\n\t\t<meta name="apple-mobile-web-app-capable" content="yes">'
-            '\n\t\t<meta name="apple-mobile-web-app-status-bar-style" content="default">'
+            '\n\t\t<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
             '\n\t\t<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">'
             '\n\t\t<meta name="mobile-web-app-capable" content="yes">'
             '\n\t\t<link rel="manifest" href="manifest.json">'
