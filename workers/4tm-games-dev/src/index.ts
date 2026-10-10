@@ -14,6 +14,8 @@
 
 interface Env {
   ASSETS: Fetcher;
+  BUCKET?: R2Bucket;
+  ASSET_BASE_URL?: string;
 }
 
 const MIME_MAP: Record<string, string> = {
@@ -67,9 +69,67 @@ export default {
       }
     }
 
+    // Support streaming Godot package (.pck) assets stored in R2
+    // Ensures .pck requests never fall back to index.html and have exact content-type & isolation headers.
+    if (response.status === 404 && url.pathname.endsWith('.pck')) {
+      const pckPath = url.pathname.replace(/^\/+/, '');
+      // 1. Check R2 bucket binding first (env.BUCKET)
+      if (env.BUCKET) {
+        const candidateKeys = [
+          pckPath,
+          pckPath.startsWith('games/') ? pckPath.replace(/^games\//, '') : `games/${pckPath}`,
+        ];
+        for (const key of candidateKeys) {
+          const r2Object = await env.BUCKET.get(key);
+          if (r2Object) {
+            const headers = new Headers();
+            r2Object.writeHttpMetadata(headers);
+            headers.set('Content-Type', 'application/octet-stream');
+            headers.set('Content-Length', r2Object.size.toString());
+            if (r2Object.httpEtag) {
+              headers.set('ETag', r2Object.httpEtag);
+            }
+            headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+            headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+            headers.set('Cache-Control', 'public, max-age=300');
+            return new Response(r2Object.body, {
+              status: 200,
+              statusText: 'OK',
+              headers,
+            });
+          }
+        }
+      }
+
+      // 2. Fallback: proxy from the deployed R2 custom domain (Dev: games-dev-data.4tm.io.vn)
+      try {
+        const assetBase = (env.ASSET_BASE_URL || 'https://games-dev-data.4tm.io.vn').replace(/\/+$/, '');
+        const candidateUrls = [
+          `${assetBase}/${pckPath}`,
+          pckPath.startsWith('games/') ? `${assetBase}/${pckPath.replace(/^games\//, '')}` : `${assetBase}/games/${pckPath}`,
+        ];
+        for (const r2Url of candidateUrls) {
+          const r2Res = await fetch(r2Url);
+          if (r2Res.ok && r2Res.body) {
+            const headers = new Headers(r2Res.headers);
+            headers.set('Content-Type', 'application/octet-stream');
+            headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+            headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+            headers.set('Cache-Control', 'public, max-age=300');
+            return new Response(r2Res.body, {
+              status: 200,
+              statusText: 'OK',
+              headers,
+            });
+          }
+        }
+      } catch (_) {}
+    }
+
     // 3. Fallback for browser refresh / client-side sub-routes:
     // If a request under /<game>/subpath 404s, attempt serving /<game>/index.html
-    if (response.status === 404) {
+    // CRITICAL: Exclude static file extensions (.pck, .wasm, .js, etc.) so asset misses NEVER serve HTML!
+    if (response.status === 404 && !url.pathname.includes('.')) {
       const match = url.pathname.match(/^(\/[a-zA-Z0-9_-]+)\/.+/);
       if (match) {
         const gameRoot = match[1];
@@ -108,9 +168,11 @@ export default {
     headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
 
     // Caching policy:
-    if (url.pathname.endsWith('.html') || url.pathname.endsWith('/')) {
-      // HTML entry points: revalidate to ensure immediate test build updates
-      headers.set('Cache-Control', 'no-cache, must-revalidate');
+    if (url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.js')) {
+      // Entry points and scripts: prevent stale caching during rapid dev iteration
+      headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      headers.set('Pragma', 'no-cache');
+      headers.set('Expires', '0');
     } else if (url.pathname.endsWith('.wasm') || url.pathname.endsWith('.pck')) {
       // Large binary assets: 5-minute cache for fast dev iteration
       headers.set('Cache-Control', 'public, max-age=300');

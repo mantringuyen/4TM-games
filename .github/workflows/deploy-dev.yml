@@ -112,15 +112,17 @@ jobs:
           bun install --frozen-lockfile
           bunx wrangler deploy
 
-      - name: Upload Block Puzzle index.pck to Cloudflare R2
+      - name: Upload Block Puzzle index.pck to Cloudflare R2 (Dev)
         working-directory: workers/4tm-games-dev
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          R2_BUCKET_NAME="${{ secrets.CLOUDFLARE_R2_BUCKET }}"
+          # Strictly isolate Dev builds to the Dev R2 bucket to prevent overwriting production assets
+          R2_BUCKET_NAME="${{ secrets.CLOUDFLARE_R2_DEV_BUCKET }}"
           if [ -z "$R2_BUCKET_NAME" ]; then
             R2_BUCKET_NAME="4tm-games-dev"
           fi
-          echo "Uploading index.pck to R2 bucket: $R2_BUCKET_NAME"
-          bunx wrangler r2 object put "$R2_BUCKET_NAME/games/block-puzzle/index.pck" --file=../../build/web/index.pck --remote
+          echo "Uploading index.pck to Dev R2 bucket: $R2_BUCKET_NAME"
+          # Upload canonical package to required asset base: /block-puzzle/index.pck
+          bunx wrangler r2 object put "$R2_BUCKET_NAME/block-puzzle/index.pck" --file=../../build/web/index.pck --remote

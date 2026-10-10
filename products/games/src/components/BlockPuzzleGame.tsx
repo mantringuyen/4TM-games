@@ -8,7 +8,7 @@ interface BlockPuzzleGameProps {
 }
 
 export const BlockPuzzleGame: React.FC<BlockPuzzleGameProps> = ({
-  gameUrl = 'https://games-data.4tm.io.vn/games/block-puzzle/index.html',
+  gameUrl = 'https://4tm-games-dev.mantringuyen.workers.dev/block-puzzle/index.html',
 }) => {
   // 1. Initial state is false by default
   const [isPseudoFs, setIsPseudoFs] = useState<boolean>(false);

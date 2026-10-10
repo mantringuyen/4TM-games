@@ -10,12 +10,22 @@
 		
 		
 		
+		
+		
+		
+		
+		
+		
+		
+		
+		<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#1f3885">
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 		<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">
 		<meta name="mobile-web-app-capable" content="yes">
+		<link rel="manifest" href="manifest.json">
 		<title>Block Puzzle — 4TM</title>
 		<style>
 html, body, #canvas {
@@ -124,13 +134,7 @@ html, body {
 			Your browser does not support JavaScript.
 		</noscript>
 
-		<div id="status">
-			<img id="status-splash" src="index.png" alt="">
-			<progress id="status-progress"></progress>
-			<div id="status-notice"></div>
-		</div>
-
-										<script>
+																		<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
@@ -138,7 +142,7 @@ html, body {
 			probe.style.cssText = 'position:fixed;top:0;bottom:0;left:0;right:0;pointer-events:none;visibility:hidden;z-index:-9999;';
 			var ins = document.createElement('div');
 			ins.id = 'gd-ins-probe';
-			ins.style.cssText = 'position:fixed;bottom:0;left:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;z-index:-9999;';
+			ins.style.cssText = 'position:fixed;bottom:0;left:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;z-index:-9999;';
 			function getEffectiveHeight() {
 				if (!probe.parentNode && document.body) {
 					document.body.appendChild(probe);
@@ -176,10 +180,55 @@ html, body {
 				}, delay);
 			});
 		}());
+		// Standards-safe iOS viewport diagnostic telemetry (headless)
+		(function () {
+			function updateDiag() {
+				var probe = document.getElementById('gd-vh-probe');
+				var ins = document.getElementById('gd-ins-probe');
+				var canvas = document.getElementById('canvas');
+				var winH = window.innerHeight || 0;
+				var winW = window.innerWidth || 0;
+				var docH = (document.documentElement && document.documentElement.clientHeight) || 0;
+				var vvH = (window.visualViewport && Math.round(window.visualViewport.height)) || 0;
+				var probeH = (probe && (probe.offsetHeight || (probe.getBoundingClientRect && Math.round(probe.getBoundingClientRect().height)))) || 0;
+				var scrH = (window.screen && window.screen.height) || 0;
+				var isStandalone = !!(window.navigator && window.navigator.standalone);
+				var displayModeStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+				var insetT = 0, insetB = 0;
+				if (ins) {
+					var cs = window.getComputedStyle(ins);
+					insetT = parseFloat(cs.paddingTop) || 0;
+					insetB = parseFloat(cs.paddingBottom) || 0;
+				}
+				var csw = canvas ? canvas.style.width : 'N/A';
+				var csh = canvas ? canvas.style.height : 'N/A';
+				var cw = canvas ? canvas.width : 'N/A';
+				var ch = canvas ? canvas.height : 'N/A';
+				var modeStr = isStandalone ? 'PWA-STANDALONE' : (displayModeStandalone ? 'STANDALONE-MEDIA' : 'SAFARI-WEB');
+				window.__4TM_DIAG__ = {
+					build: '2026.10.10-v1',
+					mode: modeStr,
+					url: window.location.href,
+					winH: winH, winW: winW, docH: docH, vvH: vvH, probeH: probeH, scrH: scrH,
+					insetTop: insetT, insetBottom: insetB,
+					canvasStyle: { width: csw, height: csh },
+					canvasPixels: { width: cw, height: ch }
+				};
+			}
+			window.addEventListener('resize', updateDiag);
+			window.addEventListener('orientationchange', updateDiag);
+			updateDiag();
+		}());
 		</script>
-		<script src="index.js"></script>
-		<script>
-const GODOT_CONFIG = {"mainPack":"https://games-data.4tm.io.vn/games/block-puzzle/index.pck","args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":120368,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+		<script src="index.js?v=20261010-v1"></script>
+		<div id="status">
+			<img id="status-splash" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+										<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":120368,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

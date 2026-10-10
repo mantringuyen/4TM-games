@@ -13,3 +13,6 @@ not_found_handling = "none"
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "4tm-games-dev"
+
+[vars]
+ASSET_BASE_URL = "https://games-dev-data.4tm.io.vn"

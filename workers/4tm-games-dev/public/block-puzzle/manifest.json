@@ -1,0 +1,23 @@
+{
+  "name": "Block Puzzle \u2014 4TM",
+  "short_name": "Block Puzzle",
+  "description": "Official 4TM 2D block puzzle game (X\u1ebfp G\u1ea1ch \u2014 4TM) supporting Classic and Modern Drag-and-Drop modes.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1f3885",
+  "theme_color": "#1f3885",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "index.icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "index.apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
