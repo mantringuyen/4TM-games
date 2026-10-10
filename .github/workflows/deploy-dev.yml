@@ -126,3 +126,14 @@ jobs:
           echo "Uploading index.pck to Dev R2 bucket: $R2_BUCKET_NAME"
           # Upload canonical package to required asset base: /block-puzzle/index.pck
           bunx wrangler r2 object put "$R2_BUCKET_NAME/block-puzzle/index.pck" --file=../../build/web/index.pck --remote
+
+      - name: Stage index.pck into Public Directory for Release Artifact
+        run: |
+          cp build/web/index.pck workers/4tm-games-dev/public/block-puzzle/index.pck
+
+      - name: Upload Block Puzzle Dev Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: block-puzzle-dev-build
+          path: workers/4tm-games-dev/public/block-puzzle/
+          retention-days: 30
