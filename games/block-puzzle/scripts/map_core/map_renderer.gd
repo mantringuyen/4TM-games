@@ -904,14 +904,15 @@ static func _draw_sky_and_regional_horizon(
 
 	# Full-screen continuous base painting strictly inside rect
 	canvas.draw_rect(Rect2(ox, oy, w, h), ground_high, true)
-	var sky_bands: int = 20
+	# Reduced sky bands to decrease haze
+	var sky_bands: int = 5
 	var sky_reach: float = hz_ratio + 0.08
 	for i in range(sky_bands):
 		var t0: float = float(i) / float(sky_bands)
 		var t1: float = float(i + 1) / float(sky_bands)
-		var c: Color = sky_top.lerp(sky_bot, pow((t0 + t1) * 0.5, 0.82))
-		if t0 > 0.72:
-			c = c.lerp(ground_high.lightened(0.18), (t0 - 0.72) / 0.28)
+		# Use a simpler gradient that does not lerp towards the ground_high color
+		var c: Color = sky_top.lerp(sky_bot, pow((t0 + t1) * 0.5, 0.5))
+		# Removed the ground_high lerp that created the haze
 		canvas.draw_rect(Rect2(ox, oy + h * t0 * sky_reach, w, h * (t1 - t0) * sky_reach + 2.0), c, true)
 
 	# Celestial sun / moon / nebula glow
