@@ -204,14 +204,14 @@ func _run_tests() -> void:
 			"Block Puzzle page %d has strictly 1 major focal landmark (never cluttered)" % [p_i + 1])
 		_check(String(pg_chk.background_landmarks[0].get("landmark_classification", "")) == "POINT_OF_INTEREST" and not bool(pg_chk.background_landmarks[0].get("connected_to_route", true)),
 			"Block Puzzle page %d background landmark is an independent POINT_OF_INTEREST not connected by a spur road" % [p_i + 1])
-		var lm_pt: Vector2 = pg.background_landmarks[0].get("position", Vector2.ZERO)
+		var lm_pt: Vector2 = pg_chk.background_landmarks[0].get("position", Vector2.ZERO)
 		_check(lm_pt.x >= 36.0 and lm_pt.x <= 390.0 - 36.0,
 			"Block Puzzle page %d focal landmark within horizontal bounds" % [p_i + 1])
-		var manifest: Dictionary = MapRenderer.get_page_landmark_manifest(pg, Rect2(Vector2.ZERO, Vector2(390, 620)))
+		var manifest: Dictionary = MapRenderer.get_page_landmark_manifest(pg_chk, Rect2(Vector2.ZERO, Vector2(390, 620)))
 		var lm_density: String = String(manifest.get("landmark_density", ""))
 		var feat_cnt: int = (manifest.get("destination_landmarks", []) as Array).size()
 		_check(lm_density in ["sparse", "moderate", "rich", "very_rich"],
-			"Block Puzzle page %d ('%s') has valid data-driven landmark_density '%s'" % [p_i + 1, pg.country_name_en, lm_density])
+			"Block Puzzle page %d ('%s') has valid data-driven landmark_density '%s'" % [p_i + 1, pg_chk.country_name_en, lm_density])
 		var density_cnt_ok: bool = false
 		match lm_density:
 			"sparse":
@@ -222,11 +222,11 @@ func _run_tests() -> void:
 				density_cnt_ok = (feat_cnt >= 3 and feat_cnt <= 5)
 			"very_rich":
 				density_cnt_ok = (feat_cnt >= 4 and feat_cnt <= 6)
-		_check(not bool(manifest.get("has_secondary_spur_roads", true)) and density_cnt_ok and feat_cnt < cnt,
-			"Block Puzzle page %d ('%s', density=%s, milestones=%d) has country-appropriate landmark count %d (not 1-to-1 with milestones) and zero secondary spur roads" % [p_i + 1, pg.country_name_en, lm_density, cnt, feat_cnt])
+		_check(not bool(manifest.get("has_secondary_spur_roads", true)) and density_cnt_ok and feat_cnt < cnt_chk,
+			"Block Puzzle page %d ('%s', density=%s, milestones=%d) has country-appropriate landmark count %d (not 1-to-1 with milestones) and zero secondary spur roads" % [p_i + 1, pg_chk.country_name_en, lm_density, cnt_chk, feat_cnt])
 		_check(bool(manifest.get("zero_plaque_or_landmark_overlap", false)),
 			"Block Puzzle page %d ('%s') destination footprints, plaques, and landmark silhouettes have zero overlap and zero out-of-bounds (lm_ov=%d, bg_ov=%d, lm_oob=%d, lbl_ov=%d, lbl_oob=%d)" % [
-				p_i + 1, pg.country_name_en,
+				p_i + 1, pg_chk.country_name_en,
 				int(manifest.get("overlapping_landmark_count", -1)),
 				int(manifest.get("overlapping_background_count", -1)),
 				int(manifest.get("out_of_bounds_landmark_count", -1)),
@@ -250,12 +250,12 @@ func _run_tests() -> void:
 			int(manifest.get("oversized_background_layer_count", -1)) == 0 and
 			int(manifest.get("route_in_sky_count", -1)) == 0 and
 			int(manifest.get("route_in_background_count", -1)) == 0,
-			"Page %d ('%s') passes landmark visual hierarchy (major_landmark > landmark_environment > regional_scene > small_destination_marker), semantic terrain surface, ground_anchor_inside_surface, SKY/DISTANT_HORIZON/MOUNTAIN_BACKGROUND exclusion, water relationship, route clearance, footprint bounds, and single-landscape-layer validation" % [p_i + 1, pg.country_name_en]
+			"Page %d ('%s') passes landmark visual hierarchy (major_landmark > landmark_environment > regional_scene > small_destination_marker), semantic terrain surface, ground_anchor_inside_surface, SKY/DISTANT_HORIZON/MOUNTAIN_BACKGROUND exclusion, water relationship, route clearance, footprint bounds, and single-landscape-layer validation" % [p_i + 1, pg_chk.country_name_en]
 		)
 		for vp_chk in [Vector2(360.0, 800.0), Vector2(390.0, 844.0), Vector2(720.0, 1280.0)]:
 			var c_sz_vp := Vector2(clampf(vp_chk.x - 22.0, 338.0, 684.0), clampf(vp_chk.y - 240.0, 420.0, 960.0))
 			bp_map.build_page_layout(p_i, c_sz_vp, {"unlocked_level": 25, "selected_level": 12})
-			var man_vp: Dictionary = MapRenderer.get_page_landmark_manifest(pg, Rect2(Vector2.ZERO, c_sz_vp))
+			var man_vp: Dictionary = MapRenderer.get_page_landmark_manifest(pg_chk, Rect2(Vector2.ZERO, c_sz_vp))
 			_check(
 				bool(man_vp.get("zero_plaque_or_landmark_overlap", false)) and
 				bool(man_vp.get("order_preserved_after_relaxation", false)) and
@@ -267,14 +267,14 @@ func _run_tests() -> void:
 				bool(man_vp.get("all_route_endpoints_compatible", false)) and
 				int(man_vp.get("primary_landscape_layer_count", 0)) == 1 and
 				int(man_vp.get("oversized_background_layer_count", -1)) == 0,
-				"Page %d ('%s') at viewport %s has zero landmark/background/label overlap, grounded bases on compatible terrain surfaces (never SKY, DISTANT_HORIZON, or MOUNTAIN_BACKGROUND), coherent route endpoints, and preserves geographic order" % [p_i + 1, pg.country_name_en, str(vp_chk)]
+				"Page %d ('%s') at viewport %s has zero landmark/background/label overlap, grounded bases on compatible terrain surfaces (never SKY, DISTANT_HORIZON, or MOUNTAIN_BACKGROUND), coherent route endpoints, and preserves geographic order" % [p_i + 1, pg_chk.country_name_en, str(vp_chk)]
 			)
 		bp_map.build_page_layout(p_i, Vector2(390, 620), {"unlocked_level": 25, "selected_level": 12})
 
-		var geo_rep: Dictionary = BlockPuzzleMapConfigScript.validate_country_page_geography(pg)
+		var geo_rep: Dictionary = BlockPuzzleMapConfigScript.validate_country_page_geography(pg_chk)
 		_check(bool(geo_rep.get("geographic_order_valid", false)) and bool(geo_rep.get("level_sequence_consistent", false)) and bool(geo_rep.get("landmark_density_consistent", false)),
 			"Page %d ('%s', %s) passes strict lat/lon geographic order, manifest/level consistency & landmark_density validation (errors=%s)" % [
-				p_i + 1, pg.country_name_en, pg.journey_direction, str(geo_rep.get("errors", []))
+				p_i + 1, pg_chk.country_name_en, pg_chk.journey_direction, str(geo_rep.get("errors", []))
 			])
 
 	var full_geo_audit: Dictionary = BlockPuzzleMapConfigScript.audit_all_68_country_journeys(bp_map)

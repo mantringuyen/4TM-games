@@ -30,6 +30,16 @@ def main():
             actual_pck_size = os.path.getsize("build/web/index.pck")
         elif os.path.exists("../../build/web/index.pck"):
             actual_pck_size = os.path.getsize("../../build/web/index.pck")
+        else:
+            # Fallback to querying R2 or using known canonical Dev build package size if running standalone post-build
+            try:
+                import urllib.request
+                req = urllib.request.Request("https://games-dev-data.4tm.io.vn/block-puzzle/index.pck", method="HEAD", headers={"User-Agent": "Mozilla/5.0"})
+                res = urllib.request.urlopen(req, timeout=3)
+                if res.status == 200 and res.headers.get("Content-Length"):
+                    actual_pck_size = int(res.headers.get("Content-Length"))
+            except Exception:
+                actual_pck_size = 25633392
 
         if actual_pck_size:
             content = re.sub(r'"index\.pck":\s*\d+', f'"index.pck":{actual_pck_size}', content)
@@ -260,11 +270,39 @@ def main():
     print(f"Generated manifest.json at {manifest_path}")
 
     # 5. Safely remove index.pck from the worker public staging directory to stay under individual file size limits
+    # and preserve the established Dev architecture where index.pck is served via R2 (env.BUCKET / proxy fallback).
     if os.path.exists(pck_path):
         os.remove(pck_path)
-        print("Successfully removed index.pck from Workers Static Assets staging directory.")
+        print("Successfully removed index.pck from Workers Static Assets staging directory (served via R2).")
     else:
-        print("index.pck already absent or removed from staging directory.")
+        print("Notice: index.pck already absent from staging directory.")
+
+    # 6. Inject robust loading error reporting, unhandled rejection catchers, and timeout watchdog into index.html
+    if os.path.exists(html_path):
+        with open(html_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        
+        robust_error_script = (
+            "\t\twindow.addEventListener('error', function (event) {\n"
+            "\t\t\tdisplayFailureNotice(event.message || 'Global script error occurred during startup.');\n"
+            "\t\t});\n"
+            "\t\twindow.addEventListener('unhandledrejection', function (event) {\n"
+            "\t\t\tvar reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';\n"
+            "\t\t\tdisplayFailureNotice('Startup rejection: ' + reason);\n"
+            "\t\t});\n"
+            "\t\t// Loading timeout watchdog (15 seconds)\n"
+            "\t\tsetTimeout(function() {\n"
+            "\t\t\tif (initializing) {\n"
+            "\t\t\t\tdisplayFailureNotice('Loading timed out at ~40% (asset fetch or startup delayed). Please check network or try refreshing.');\n"
+            "\t\t\t}\n"
+            "\t\t}, 15000);\n"
+        )
+        target_engine_start = "engine.startGame({"
+        if robust_error_script not in html_content and target_engine_start in html_content:
+            html_content = html_content.replace(target_engine_start, robust_error_script + "\t\t" + target_engine_start)
+            with open(html_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            print("Successfully injected robust loading error handlers and timeout watchdog into index.html")
 
 if __name__ == "__main__":
     main()

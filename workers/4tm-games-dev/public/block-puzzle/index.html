@@ -19,6 +19,8 @@
 		
 		
 		
+		
+		
 		<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#1f3885">
@@ -135,7 +137,7 @@ html, body {
 			Your browser does not support JavaScript.
 		</noscript>
 
-																				<script>
+																								<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
@@ -229,7 +231,7 @@ html, body {
 		</div>
 
 										<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":120368,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":25633392,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -310,6 +312,19 @@ const engine = new Engine(GODOT_CONFIG);
 		}
 	} else {
 		setStatusMode('progress');
+				window.addEventListener('error', function (event) {
+			displayFailureNotice(event.message || 'Global script error occurred during startup.');
+		});
+		window.addEventListener('unhandledrejection', function (event) {
+			var reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';
+			displayFailureNotice('Startup rejection: ' + reason);
+		});
+		// Loading timeout watchdog (15 seconds)
+		setTimeout(function() {
+			if (initializing) {
+				displayFailureNotice('Loading timed out at ~40% (asset fetch or startup delayed). Please check network or try refreshing.');
+			}
+		}, 15000);
 		engine.startGame({
 			'onProgress': function (current, total) {
 				if (current > 0 && total > 0) {

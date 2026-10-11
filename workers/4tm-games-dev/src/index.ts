@@ -113,6 +113,10 @@ export default {
           if (r2Res.ok && r2Res.body) {
             const headers = new Headers(r2Res.headers);
             headers.set('Content-Type', 'application/octet-stream');
+            const cl = r2Res.headers.get('Content-Length');
+            if (cl) {
+              headers.set('Content-Length', cl);
+            }
             headers.set('Cross-Origin-Opener-Policy', 'same-origin');
             headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
             headers.set('Cache-Control', 'public, max-age=300');
