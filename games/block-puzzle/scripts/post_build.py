@@ -70,6 +70,7 @@ def main():
             "html, body {\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #1f3885;\n\toverflow: hidden;\n\toverscroll-behavior: none;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
             "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100%;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n}\n\n"
             "#canvas:focus {\n\toutline: none;\n}\n\n"
+            "#ios-safe-area {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\twidth: 100%;\n\theight: env(safe-area-inset-top, 0px);\n\tbackground-color: #1f3885;\n\tz-index: 1000;\n}\n\n"
             "#status {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: center;\n\talign-items: center;\n\tvisibility: hidden;\n\tz-index: 10;\n}\n\n"
             "#status-splash {\n\tmax-height: 70%;\n\tmax-width: 70%;\n\tmargin: auto;\n}\n\n"
             "#status-progress, #status-notice {\n\tdisplay: none;\n}\n\n"
@@ -181,7 +182,7 @@ def main():
         content = re.sub(r'<script>\s*// Standards-safe iOS.*?\[4TM-DIAG.*?</script>\s*', '', content, flags=re.DOTALL)
         content = re.sub(r'<script\s+src="index\.js(?:\?[^"]*)?"></script>\s*', '', content)
         if '<div id="status">' in content:
-            content = content.replace('<div id="status">', f'{pwa_script}\n\t\t<div id="status">')
+            content = content.replace('<div id="status">', f'{pwa_script}\n\t\t<div id="ios-safe-area"></div>\n\t\t<div id="status">')
         elif '</body>' in content:
             content = content.replace('</body>', f'{pwa_script}\n</body>')
 
