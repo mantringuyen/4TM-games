@@ -63,15 +63,21 @@ def main():
             else:
                 content = content.replace('<head>', f'<head>{meta_tags}')
 
-        # 3. Ensure edge-to-edge full viewport CSS styling without artificial black gaps
+        # 3. Ensure edge-to-edge full viewport CSS styling without artificial gaps or color mismatches
         css_replacement = (
+            "<style>\n"
             "html, body, #canvas {\n\tmargin: 0;\n\tpadding: 0;\n\tborder: 0;\n}\n\n"
             "html, body {\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #1f3885;\n\toverflow: hidden;\n\toverscroll-behavior: none;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
-            "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100%;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n}"
+            "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100%;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n}\n\n"
+            "#canvas:focus {\n\toutline: none;\n}\n\n"
+            "#status {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: center;\n\talign-items: center;\n\tvisibility: hidden;\n\tz-index: 10;\n}\n\n"
+            "#status-splash {\n\tmax-height: 70%;\n\tmax-width: 70%;\n\tmargin: auto;\n}\n\n"
+            "#status-progress, #status-notice {\n\tdisplay: none;\n}\n\n"
+            "#status-progress {\n\tposition: absolute;\n\tleft: 0;\n\tright: 0;\n\tbottom: calc(10% + env(safe-area-inset-bottom, 0px));\n\twidth: 50%;\n\tmargin: 0 auto;\n}\n\n"
+            "#status-notice {\n\tbackground-color: #5b3943;\n\tborder-radius: 0.5rem;\n\tborder: 1px solid #9b3943;\n\tcolor: #e0e0e0;\n\tfont-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;\n\tline-height: 1.3;\n\tmargin: 0 2rem;\n\toverflow: hidden;\n\tpadding: 1rem;\n\ttext-align: center;\n\tz-index: 11;\n}\n\t\t</style>"
         )
-        old_css_pat = re.compile(r'html,\s*body,\s*#canvas\s*\{[^}]*\}(?:\s*html\s*,\s*body|\s*body)\s*\{[^}]*\}\s*#canvas\s*\{[^}]*\}', re.DOTALL)
-        if old_css_pat.search(content):
-            content = old_css_pat.sub(css_replacement, content, count=1)
+        if '<style>' in content:
+            content = re.sub(r'<style>.*?</style>', css_replacement, content, flags=re.DOTALL)
 
         # 4. Inject standards-safe iOS viewport height sync script and diagnostic HUD before index.js
         pwa_script = (
@@ -100,8 +106,15 @@ def main():
             "\t\t\t\t\tvar cs = window.getComputedStyle(ins);\n"
             "\t\t\t\t\tinsetBot = parseFloat(cs.paddingBottom) || 0;\n"
             "\t\t\t\t}\n"
-            "\t\t\t\tvar isStandalone = !!(window.navigator && window.navigator.standalone);\n"
-            "\t\t\t\tvar standaloneH = isStandalone ? (winH + insetBot) : 0;\n"
+            "\t\t\t\tvar isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);\n"
+            "\t\t\t\tvar isStandalone = !!(window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);\n"
+            "\t\t\t\tvar standaloneH = 0;\n"
+            "\t\t\t\tif (isStandalone && isIOS && window.screen) {\n"
+            "\t\t\t\t\tvar isLand = (window.orientation === 90 || window.orientation === -90);\n"
+            "\t\t\t\t\tstandaloneH = isLand ? Math.min(window.screen.width, window.screen.height) : Math.max(window.screen.width, window.screen.height);\n"
+            "\t\t\t\t} else if (isStandalone) {\n"
+            "\t\t\t\t\tstandaloneH = (winH || 0) + insetBot;\n"
+            "\t\t\t\t}\n"
             "\t\t\t\treturn Math.max(probeH, docH, winH, vvH, standaloneH);\n"
             "\t\t\t}\n"
             "\t\t\tfunction syncViewport() {\n"
@@ -189,21 +202,6 @@ def main():
         with open(js_path, "r", encoding="utf-8") as f:
             js_content = f.read()
 
-        target_sizing = "if(isFullscreen||wantsFullWindow){width=window.innerWidth*scale;height=window.innerHeight*scale}"
-        prev_patch = (
-            "if(isFullscreen||wantsFullWindow){"
-            "const vh=Math.max(window.innerHeight||0,document.documentElement?document.documentElement.clientHeight||0:0,window.visualViewport?Math.round(window.visualViewport.height)||0:0);"
-            "width=window.innerWidth*scale;"
-            "height=(vh||window.innerHeight)*scale}"
-        )
-        old_robust_sizing = (
-            "if(isFullscreen||wantsFullWindow){"
-            "let probeH=0;"
-            "try{let pb=document.getElementById('gd-vh-probe');if(!pb){pb=document.createElement('div');pb.id='gd-vh-probe';pb.style.cssText='position:fixed;top:0;bottom:0;left:0;right:0;height:100dvh;pointer-events:none;visibility:hidden;z-index:-9999;';document.body&&document.body.appendChild(pb)}probeH=pb.offsetHeight||(pb.getBoundingClientRect?Math.round(pb.getBoundingClientRect().height):0)}catch(e){}"
-            "const vh=Math.max(probeH||0,window.innerHeight||0,document.documentElement?document.documentElement.clientHeight||0:0,window.visualViewport?Math.round(window.visualViewport.height)||0:0);"
-            "width=window.innerWidth*scale;"
-            "height=(vh||window.innerHeight)*scale}"
-        )
         robust_sizing = (
             "if(isFullscreen||wantsFullWindow){"
             "let probeH=0,insetBot=0;"
@@ -213,29 +211,25 @@ def main():
             "let ins=document.getElementById('gd-ins-probe');if(!ins){ins=document.createElement('div');ins.id='gd-ins-probe';ins.style.cssText='position:fixed;bottom:0;left:0;padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;z-index:-9999;';document.body&&document.body.appendChild(ins)}"
             "if(ins){insetBot=parseFloat(window.getComputedStyle(ins).paddingBottom)||0}"
             "}catch(e){}"
-            "const isStandalone=!!(window.navigator&&window.navigator.standalone);"
-            "const standaloneH=isStandalone?((window.innerHeight||0)+insetBot):0;"
+            "const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);"
+            "const isStandalone=!!(window.navigator&&window.navigator.standalone)||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);"
+            "let standaloneH=0;"
+            "if(isStandalone&&isIOS&&window.screen){"
+            "const isLand=(window.orientation===90||window.orientation===-90);"
+            "standaloneH=isLand?Math.min(window.screen.width,window.screen.height):Math.max(window.screen.width,window.screen.height);"
+            "}else if(isStandalone){"
+            "standaloneH=(window.innerHeight||0)+insetBot;"
+            "}"
             "const vh=Math.max(probeH||0,standaloneH||0,window.innerHeight||0,document.documentElement?document.documentElement.clientHeight||0:0,window.visualViewport?Math.round(window.visualViewport.height)||0:0);"
             "width=window.innerWidth*scale;"
             "height=(vh||window.innerHeight)*scale}"
         )
-        if target_sizing in js_content:
-            js_content = js_content.replace(target_sizing, robust_sizing)
+        sizing_pat = re.compile(r'if\(isFullscreen\|\|wantsFullWindow\)\{.*?(?:height=\(vh\|\|window\.innerHeight\)\*scale|height=window\.innerHeight\*scale)\}')
+        if sizing_pat.search(js_content):
+            js_content = sizing_pat.sub(robust_sizing, js_content, count=1)
             with open(js_path, "w", encoding="utf-8") as f:
                 f.write(js_content)
             print(f"Successfully patched Godot Web canvas sizing in {js_path}")
-        elif prev_patch in js_content:
-            js_content = js_content.replace(prev_patch, robust_sizing)
-            with open(js_path, "w", encoding="utf-8") as f:
-                f.write(js_content)
-            print(f"Successfully upgraded Godot Web canvas sizing in {js_path}")
-        elif old_robust_sizing in js_content:
-            js_content = js_content.replace(old_robust_sizing, robust_sizing)
-            with open(js_path, "w", encoding="utf-8") as f:
-                f.write(js_content)
-            print(f"Successfully updated Godot Web canvas sizing to standalone safe-area probe in {js_path}")
-        elif robust_sizing in js_content:
-            print(f"Godot Web canvas sizing already patched in {js_path}")
         else:
             print(f"Notice: Godot canvas sizing target pattern not found in {js_path} (may be custom build).")
 

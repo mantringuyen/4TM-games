@@ -4243,22 +4243,11 @@ static func draw_gameplay_level_background(
 
 
 static func _draw_gameplay_subdued_contrast_veil(
-	canvas: CanvasItem,
-	rect: Rect2,
-	pal: Dictionary
+	_canvas: CanvasItem,
+	_rect: Rect2,
+	_pal: Dictionary
 ) -> void:
-	var ox: float = rect.position.x
-	var oy: float = rect.position.y
-	var w: float = rect.size.x
-	var h: float = rect.size.y
-	var sky_top: Color = pal.get("sky_top", Color(0.12, 0.22, 0.42, 1.0))
-	var veil_tint: Color = sky_top.darkened(0.72)
-	veil_tint.a = 0.10
-	# canvas.draw_rect(rect, veil_tint, true)
-	# 
-	# # Subtle top HUD readability band and bottom tray/controls readability band
-	# var top_h: float = minf(132.0, h * 0.15)
-	# canvas.draw_rect(Rect2(Vector2(ox, oy), Vector2(w, top_h)), Color(0.02, 0.05, 0.13, 0.12), true)
-	# var bot_h: float = minf(164.0, h * 0.18)
-	# canvas.draw_rect(Rect2(Vector2(ox, oy + h - bot_h), Vector2(w, bot_h)), Color(0.02, 0.05, 0.13, 0.12), true)
+	# Purposely disabled to eliminate fog/blur overlay above the LV, energy, and header buttons in PWA
+	# Maintains 100% crystal-clear edge-to-edge landscape visibility beneath the notch/Dynamic Island
+	pass
 
