@@ -341,7 +341,9 @@ def main():
             r"setStatusMode\('progress'\);.+?engine\.startGame\(.+?\)\.then\(.+?displayFailureNotice(?:\(err\))?\s*(?:\}\);|\);)",
             re.DOTALL
         )
-        if engine_start_pattern.search(html_content):
+        if "STALL_TIMEOUT_MS" in html_content:
+            print("Notice: Robust startup script already present in index.html")
+        elif engine_start_pattern.search(html_content):
             html_content = engine_start_pattern.sub(robust_startup_script, html_content, count=1)
             with open(html_path, "w", encoding="utf-8") as f:
                 f.write(html_content)

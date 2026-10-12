@@ -31,6 +31,14 @@ const MIME_MAP: Record<string, string> = {
   '.map': 'application/json',
 };
 
+function matchesEtag(clientEtag: string | null, serverEtag: string | null): boolean {
+  if (!clientEtag || !serverEtag) return false;
+  const clean = (e: string) => e.trim().replace(/^W\//, '').replace(/^"|"$/g, '');
+  const cleanServer = clean(serverEtag);
+  if (clientEtag.trim() === '*') return true;
+  return clientEtag.split(',').some((tag) => clean(tag) === cleanServer);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -71,8 +79,13 @@ export default {
 
     // Support streaming Godot package (.pck) assets stored in R2
     // Ensures .pck requests never fall back to index.html and have exact content-type & isolation headers.
+    // Uses targeted revalidation (no-cache, must-revalidate with ETag) so iPhones immediately receive
+    // the newest build upon deployment, while 304 Not Modified prevents redundant 25MB transfers when unchanged.
     if (response.status === 404 && url.pathname.endsWith('.pck')) {
       const pckPath = url.pathname.replace(/^\/+/, '');
+      const clientIfNoneMatch = request.headers.get('if-none-match');
+      const clientIfModifiedSince = request.headers.get('if-modified-since');
+
       // 1. Check R2 bucket binding first (env.BUCKET)
       if (env.BUCKET) {
         const candidateKeys = [
@@ -85,13 +98,24 @@ export default {
             const headers = new Headers();
             r2Object.writeHttpMetadata(headers);
             headers.set('Content-Type', 'application/octet-stream');
-            headers.set('Content-Length', r2Object.size.toString());
-            if (r2Object.httpEtag) {
-              headers.set('ETag', r2Object.httpEtag);
+            const etag = r2Object.httpEtag ? (r2Object.httpEtag.startsWith('"') ? r2Object.httpEtag : `"${r2Object.httpEtag}"`) : null;
+            if (etag) {
+              headers.set('ETag', etag);
             }
             headers.set('Cross-Origin-Opener-Policy', 'same-origin');
             headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
-            headers.set('Cache-Control', 'public, max-age=300');
+            headers.set('Cache-Control', 'no-cache, must-revalidate');
+
+            // Handle conditional request (304 Not Modified)
+            if (clientIfNoneMatch && etag && matchesEtag(clientIfNoneMatch, etag)) {
+              return new Response(null, {
+                status: 304,
+                statusText: 'Not Modified',
+                headers,
+              });
+            }
+
+            headers.set('Content-Length', r2Object.size.toString());
             return new Response(r2Object.body, {
               status: 200,
               statusText: 'OK',
@@ -108,18 +132,44 @@ export default {
           `${assetBase}/${pckPath}`,
           pckPath.startsWith('games/') ? `${assetBase}/${pckPath.replace(/^games\//, '')}` : `${assetBase}/games/${pckPath}`,
         ];
+        const proxyHeaders = new Headers();
+        if (clientIfNoneMatch) proxyHeaders.set('If-None-Match', clientIfNoneMatch);
+        if (clientIfModifiedSince) proxyHeaders.set('If-Modified-Since', clientIfModifiedSince);
+
         for (const r2Url of candidateUrls) {
-          const r2Res = await fetch(r2Url);
+          const r2Res = await fetch(r2Url, { headers: proxyHeaders });
+          if (r2Res.status === 304) {
+            const headers = new Headers(r2Res.headers);
+            headers.set('Content-Type', 'application/octet-stream');
+            headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+            headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+            headers.set('Cache-Control', 'no-cache, must-revalidate');
+            return new Response(null, {
+              status: 304,
+              statusText: 'Not Modified',
+              headers,
+            });
+          }
           if (r2Res.ok && r2Res.body) {
             const headers = new Headers(r2Res.headers);
             headers.set('Content-Type', 'application/octet-stream');
+            headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+            headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+            headers.set('Cache-Control', 'no-cache, must-revalidate');
+
+            const etag = headers.get('etag');
+            if (clientIfNoneMatch && etag && matchesEtag(clientIfNoneMatch, etag)) {
+              return new Response(null, {
+                status: 304,
+                statusText: 'Not Modified',
+                headers,
+              });
+            }
+
             const cl = r2Res.headers.get('Content-Length');
             if (cl) {
               headers.set('Content-Length', cl);
             }
-            headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-            headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
-            headers.set('Cache-Control', 'public, max-age=300');
             return new Response(r2Res.body, {
               status: 200,
               statusText: 'OK',
@@ -177,7 +227,10 @@ export default {
       headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       headers.set('Pragma', 'no-cache');
       headers.set('Expires', '0');
-    } else if (url.pathname.endsWith('.wasm') || url.pathname.endsWith('.pck')) {
+    } else if (url.pathname.endsWith('.pck')) {
+      // Game package: targeted revalidation ensures iPhones always receive latest build
+      headers.set('Cache-Control', 'no-cache, must-revalidate');
+    } else if (url.pathname.endsWith('.wasm')) {
       // Large binary assets: 5-minute cache for fast dev iteration
       headers.set('Cache-Control', 'public, max-age=300');
     }
