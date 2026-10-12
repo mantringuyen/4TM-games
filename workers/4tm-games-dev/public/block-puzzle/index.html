@@ -24,6 +24,8 @@
 		
 		
 		
+		
+		
 		<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#1f3885">
@@ -141,7 +143,7 @@ html, body {
 			Your browser does not support JavaScript.
 		</noscript>
 
-																														<script>
+																																		<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
@@ -242,7 +244,7 @@ html, body {
 		</div>
 
 										<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":25632832,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":25632736,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -323,21 +325,45 @@ const engine = new Engine(GODOT_CONFIG);
 		}
 	} else {
 		setStatusMode('progress');
-				window.addEventListener('error', function (event) {
-			displayFailureNotice(event.message || 'Global script error occurred during startup.');
+		var lastProgressTime = Date.now();
+		var lastProgressBytes = 0;
+		var STALL_TIMEOUT_MS = 30000;
+		var watchdogTimer = setInterval(function () {
+			if (!initializing) {
+				clearInterval(watchdogTimer);
+				return;
+			}
+			var idleMs = Date.now() - lastProgressTime;
+			if (idleMs > STALL_TIMEOUT_MS) {
+				console.warn('Startup watchdog: network transfer inactive for ' + Math.round(idleMs / 1000) + 's.');
+				setStatusNotice('Loading is taking longer than expected (network transfer delayed). Please check your connection or refresh.');
+				setStatusMode('notice');
+			}
+		}, 3000);
+
+		window.addEventListener('error', function (event) {
+			console.error('Startup error:', event.error || event.message);
+			if (initializing) {
+				displayFailureNotice(event.error || event.message || 'Global script error occurred during startup.');
+			}
 		});
 		window.addEventListener('unhandledrejection', function (event) {
-			var reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';
-			displayFailureNotice('Startup rejection: ' + reason);
-		});
-		// Loading timeout watchdog (15 seconds)
-		setTimeout(function() {
+			console.error('Unhandled rejection during startup:', event.reason);
 			if (initializing) {
-				displayFailureNotice('Loading timed out at ~40% (asset fetch or startup delayed). Please check network or try refreshing.');
+				var reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';
+				displayFailureNotice('Startup rejection: ' + reason);
 			}
-		}, 15000);
+		});
+
 		engine.startGame({
 			'onProgress': function (current, total) {
+				if (current > lastProgressBytes) {
+					lastProgressBytes = current;
+					lastProgressTime = Date.now();
+					if (statusMode === 'notice' && initializing) {
+						setStatusMode('progress');
+					}
+				}
 				if (current > 0 && total > 0) {
 					statusProgress.value = current;
 					statusProgress.max = total;
@@ -347,8 +373,17 @@ const engine = new Engine(GODOT_CONFIG);
 				}
 			},
 		}).then(() => {
+			if (watchdogTimer) clearInterval(watchdogTimer);
 			setStatusMode('hidden');
-		}, displayFailureNotice);
+			if (statusOverlay && statusOverlay.parentNode) {
+				statusOverlay.remove();
+			}
+			initializing = false;
+		}, function (err) {
+			if (watchdogTimer) clearInterval(watchdogTimer);
+			console.error('Godot startup failure:', err);
+			displayFailureNotice(err);
+		});
 	}
 }());
 		</script>

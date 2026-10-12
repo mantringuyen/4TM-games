@@ -271,32 +271,83 @@ def main():
     else:
         print("Notice: index.pck already absent from staging directory.")
 
-    # 6. Inject robust loading error reporting, unhandled rejection catchers, and timeout watchdog into index.html
+    # 6. Inject robust loading error reporting, unhandled rejection catchers, and stall watchdog into index.html
     if os.path.exists(html_path):
         with open(html_path, "r", encoding="utf-8") as f:
             html_content = f.read()
-        
-        robust_error_script = (
+
+        robust_startup_script = (
+            "setStatusMode('progress');\n"
+            "\t\tvar lastProgressTime = Date.now();\n"
+            "\t\tvar lastProgressBytes = 0;\n"
+            "\t\tvar STALL_TIMEOUT_MS = 30000;\n"
+            "\t\tvar watchdogTimer = setInterval(function () {\n"
+            "\t\t\tif (!initializing) {\n"
+            "\t\t\t\tclearInterval(watchdogTimer);\n"
+            "\t\t\t\treturn;\n"
+            "\t\t\t}\n"
+            "\t\t\tvar idleMs = Date.now() - lastProgressTime;\n"
+            "\t\t\tif (idleMs > STALL_TIMEOUT_MS) {\n"
+            "\t\t\t\tconsole.warn('Startup watchdog: network transfer inactive for ' + Math.round(idleMs / 1000) + 's.');\n"
+            "\t\t\t\tsetStatusNotice('Loading is taking longer than expected (network transfer delayed). Please check your connection or refresh.');\n"
+            "\t\t\t\tsetStatusMode('notice');\n"
+            "\t\t\t}\n"
+            "\t\t}, 3000);\n\n"
             "\t\twindow.addEventListener('error', function (event) {\n"
-            "\t\t\tdisplayFailureNotice(event.message || 'Global script error occurred during startup.');\n"
+            "\t\t\tconsole.error('Startup error:', event.error || event.message);\n"
+            "\t\t\tif (initializing) {\n"
+            "\t\t\t\tdisplayFailureNotice(event.error || event.message || 'Global script error occurred during startup.');\n"
+            "\t\t\t}\n"
             "\t\t});\n"
             "\t\twindow.addEventListener('unhandledrejection', function (event) {\n"
-            "\t\t\tvar reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';\n"
-            "\t\t\tdisplayFailureNotice('Startup rejection: ' + reason);\n"
-            "\t\t});\n"
-            "\t\t// Loading timeout watchdog (15 seconds)\n"
-            "\t\tsetTimeout(function() {\n"
+            "\t\t\tconsole.error('Unhandled rejection during startup:', event.reason);\n"
             "\t\t\tif (initializing) {\n"
-            "\t\t\t\tdisplayFailureNotice('Loading timed out at ~40% (asset fetch or startup delayed). Please check network or try refreshing.');\n"
+            "\t\t\t\tvar reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';\n"
+            "\t\t\t\tdisplayFailureNotice('Startup rejection: ' + reason);\n"
             "\t\t\t}\n"
-            "\t\t}, 15000);\n"
+            "\t\t});\n\n"
+            "\t\tengine.startGame({\n"
+            "\t\t\t'onProgress': function (current, total) {\n"
+            "\t\t\t\tif (current > lastProgressBytes) {\n"
+            "\t\t\t\t\tlastProgressBytes = current;\n"
+            "\t\t\t\t\tlastProgressTime = Date.now();\n"
+            "\t\t\t\t\tif (statusMode === 'notice' && initializing) {\n"
+            "\t\t\t\t\t\tsetStatusMode('progress');\n"
+            "\t\t\t\t\t}\n"
+            "\t\t\t\t}\n"
+            "\t\t\t\tif (current > 0 && total > 0) {\n"
+            "\t\t\t\t\tstatusProgress.value = current;\n"
+            "\t\t\t\t\tstatusProgress.max = total;\n"
+            "\t\t\t\t} else {\n"
+            "\t\t\t\t\tstatusProgress.removeAttribute('value');\n"
+            "\t\t\t\t\tstatusProgress.removeAttribute('max');\n"
+            "\t\t\t\t}\n"
+            "\t\t\t},\n"
+            "\t\t}).then(() => {\n"
+            "\t\t\tif (watchdogTimer) clearInterval(watchdogTimer);\n"
+            "\t\t\tsetStatusMode('hidden');\n"
+            "\t\t\tif (statusOverlay && statusOverlay.parentNode) {\n"
+            "\t\t\t\tstatusOverlay.remove();\n"
+            "\t\t\t}\n"
+            "\t\t\tinitializing = false;\n"
+            "\t\t}, function (err) {\n"
+            "\t\t\tif (watchdogTimer) clearInterval(watchdogTimer);\n"
+            "\t\t\tconsole.error('Godot startup failure:', err);\n"
+            "\t\t\tdisplayFailureNotice(err);\n"
+            "\t\t});"
         )
-        target_engine_start = "engine.startGame({"
-        if robust_error_script not in html_content and target_engine_start in html_content:
-            html_content = html_content.replace(target_engine_start, robust_error_script + "\t\t" + target_engine_start)
+
+        engine_start_pattern = re.compile(
+            r"setStatusMode\('progress'\);.+?engine\.startGame\(.+?\)\.then\(.+?displayFailureNotice(?:\(err\))?\s*(?:\}\);|\);)",
+            re.DOTALL
+        )
+        if engine_start_pattern.search(html_content):
+            html_content = engine_start_pattern.sub(robust_startup_script, html_content, count=1)
             with open(html_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
-            print("Successfully injected robust loading error handlers and timeout watchdog into index.html")
+            print("Successfully injected robust loading error handlers and stall watchdog into index.html")
+        else:
+            print("Notice: engine.startGame pattern not found in index.html")
 
 if __name__ == "__main__":
     main()
