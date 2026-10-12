@@ -3309,6 +3309,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 		"top": top_inset,
 		"bottom": bottom_inset,
 		"left": left_inset,
-		"right": right_inset
+		"right": right_inset,
+		"is_standalone": is_standalone
 	}
 

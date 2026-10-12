@@ -728,12 +728,13 @@ func _on_score_updated(new_score: int, added: int) -> void:
 	if added > 0 and points_popup and is_inside_tree():
 		points_popup.text = "+%d PTS" % added
 		points_popup.pivot_offset = points_popup.size * 0.5
-		points_popup.position = Vector2(0, 98)
+		var pop_y: float = maxf(98.0, size.y + 4.0)
+		points_popup.position = Vector2(0, pop_y)
 		points_popup.scale = Vector2(0.82, 0.82)
 		points_popup.modulate.a = 1.0
 		var tw_p = create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw_p.tween_property(points_popup, "scale", Vector2(1.26, 1.26), 0.16)
-		tw_p.tween_property(points_popup, "position:y", 68.0, 0.45)
+		tw_p.tween_property(points_popup, "position:y", pop_y - 30.0, 0.45)
 		tw_p.tween_property(points_popup, "modulate:a", 0.0, 0.50)
 	_update_stars_and_goal()
 
@@ -877,15 +878,23 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	var safe_top: float = float(insets.get("top", 0.0))
 	var safe_left: float = float(insets.get("left", 0.0))
 	var safe_right: float = float(insets.get("right", 0.0))
+	# In iOS standalone PWA with black-translucent status bar, the native translucent blur overlay
+	# extends beyond the physical hardware cutout (~20-25 pt / CSS px blur falloff, covering the
+	# upper half of the header controls when positioned directly at safe_top).
+	# To ensure all header controls (level, energy, score, settings) sit completely below the observed
+	# blur boundary with a clean safety margin, add a blur clearance buffer proportional to safe_top:
+	var status_bar_blur_buffer: float = safe_top * 0.48 if safe_top > 0.0 else 0.0
+	var effective_safe_top: float = safe_top + status_bar_blur_buffer
 	var base_m_top: int = 6 if is_ultra_narrow else (8 if is_compact else 12)
 	var base_m_side: int = 6 if is_ultra_narrow else (10 if is_compact else 18)
+	var m_top: int = int(float(base_m_top) + effective_safe_top)
 	var margin_ctrl := get_node_or_null("MarginContainer") as MarginContainer
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", int(base_m_side + safe_left))
 		margin_ctrl.add_theme_constant_override("margin_right", int(base_m_side + safe_right))
-		margin_ctrl.add_theme_constant_override("margin_top", int(float(base_m_top) + safe_top))
+		margin_ctrl.add_theme_constant_override("margin_top", m_top)
 		margin_ctrl.add_theme_constant_override("margin_bottom", 4 if is_compact else 6)
-	var total_header_h: float = float(base_m_top) + safe_top + header_ctrl_h + (4.0 if is_compact else 6.0)
+	var total_header_h: float = float(base_m_top) + effective_safe_top + header_ctrl_h + (4.0 if is_compact else 6.0)
 	custom_minimum_size.y = maxf(custom_minimum_size.y, total_header_h)
 	size.y = maxf(size.y, total_header_h)
 	if margin_ctrl:
