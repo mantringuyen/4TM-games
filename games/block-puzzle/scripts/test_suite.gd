@@ -578,7 +578,7 @@ func _ready() -> void:
 	# =========================================================================
 	# TEST 29: Classic vs Modern HUD Special-Item Toolbar Visibility & Exact 3 Items (NO Rotate)
 	# =========================================================================
-	var hud_inst = HUDScene.instantiate() if HUDScene else HUDScript.new()
+	var hud_inst = HUDScene.instantiate()
 	add_child(hud_inst)
 	hud_inst.update_responsive_hud_layout(Vector2(720, 1280))
 	
