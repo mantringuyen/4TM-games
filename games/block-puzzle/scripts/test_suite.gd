@@ -580,7 +580,7 @@ func _ready() -> void:
 	# =========================================================================
 	var hud_inst = HUDScene.instantiate() if HUDScene else HUDScript.new()
 	add_child(hud_inst)
-	hud_inst.update_responsive_layout(Vector2(720, 1280))
+	hud_inst.update_responsive_hud_layout(Vector2(720, 1280))
 	
 	game_state.start_game_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING)
 	if hud_inst.is_special_items_visible():
