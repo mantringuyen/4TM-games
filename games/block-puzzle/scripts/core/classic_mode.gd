@@ -700,7 +700,7 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var extra_gap: float = free_v / 4.0
 	var step_gap: float = maxf(gap, gap + extra_gap * 0.45)
 	
-	var piece_area_y: float = hud_h + maxf(gap, free_v * 0.22)
+	var piece_area_y: float = hud_h + maxf(gap + 12.0, free_v * 0.32)
 	var board_y: float = piece_area_y + piece_area_h + step_gap
 	var ctrl_y: float = board_y + board_sz.y + step_gap
 	

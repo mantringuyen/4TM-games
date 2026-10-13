@@ -160,7 +160,7 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var margin_x: float = (vp_w - board_sz.x) * 0.5
 	
 	var avail_v: float = maxf(0.0, (ad_top_y - hud_h) - board_sz.y - tray_h)
-	var gap_top: float = maxf(min_gap * 0.85, avail_v * 0.22)
+	var gap_top: float = maxf(min_gap * 1.2, avail_v * 0.32)
 	var gap_mid: float = maxf(min_mid_gap, avail_v * 0.52)
 	var board_y: float = hud_h + gap_top
 	var tray_y: float = board_y + board_sz.y + gap_mid

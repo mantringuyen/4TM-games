@@ -1632,13 +1632,15 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	var safe_bot: float = float(insets.get("bottom", 0.0))
 	var safe_side: float = maxf(float(insets.get("left", 0.0)), float(insets.get("right", 0.0)))
 	var effective_top: float = float(insets.get("effective_top", safe_top))
+	var is_standalone: bool = bool(insets.get("is_standalone", false))
+	var menu_effective_top: float = minf(effective_top, 78.0) if is_standalone else effective_top
 
 	var base_m_side: int = 8 if is_very_compact else (12 if is_compact else 24)
 	var base_m_top: int = 10 if is_very_compact else (12 if is_compact else 18)
 	var base_m_bot: int = 10 if is_very_compact else (12 if is_compact else 18)
 
 	var m_side: int = int(float(base_m_side) + safe_side)
-	var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
+	var effective_safe_top: float = menu_effective_top if menu_effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
 	var m_top: int = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
 	var m_bot: int = int(float(base_m_bot) + safe_bot)
 	if margin_ctrl:
