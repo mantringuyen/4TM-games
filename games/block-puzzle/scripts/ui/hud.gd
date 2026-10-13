@@ -878,17 +878,16 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	var safe_top: float = float(insets.get("top", 0.0))
 	var safe_left: float = float(insets.get("left", 0.0))
 	var safe_right: float = float(insets.get("right", 0.0))
-	# In iOS standalone PWA with black-translucent status bar, the native translucent blur overlay
-	# extends beyond the physical hardware cutout by ~22 pt / CSS px (reaching ~76 pt from top).
-	# Previously, status_bar_blur_buffer (= safe_top * 0.48) was stacked on top of base_m_top (= 12),
-	# creating an excessive ~33 pt gap (~60 virtual units) above the header controls.
-	# To minimize empty space while keeping every header control cleanly below the blur boundary
-	# with a compact safety margin (~3.5-3.8 pt / ~6-7 virtual units):
+	var effective_top: float = float(insets.get("effective_top", safe_top))
+	# In iOS standalone PWA with black-translucent status bar and viewport-fit=cover,
+	# the native WebKit compositor blur overlay extends downward, is mostly gone by ~75 pt,
+	# and clears completely by approximately 90 pt.
+	# With a compact safety margin (~2-4 pt), effective_top ensures every gameplay header control
+	# sits cleanly below the blur boundary without excessive empty space.
 	var base_m_top: int = 6 if is_ultra_narrow else (8 if is_compact else 12)
 	var base_m_side: int = 6 if is_ultra_narrow else (10 if is_compact else 18)
-	var blur_clearance: float = (safe_top * 0.47) if safe_top > 0.0 else float(base_m_top)
-	var effective_safe_top: float = safe_top + blur_clearance if safe_top > 0.0 else 0.0
-	var m_top: int = int(round(effective_safe_top)) if safe_top > 0.0 else base_m_top
+	var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
+	var m_top: int = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
 	var margin_ctrl := get_node_or_null("MarginContainer") as MarginContainer
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", int(base_m_side + safe_left))

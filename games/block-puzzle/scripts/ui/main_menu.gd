@@ -1631,13 +1631,15 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	var safe_top: float = float(insets.get("top", 0.0))
 	var safe_bot: float = float(insets.get("bottom", 0.0))
 	var safe_side: float = maxf(float(insets.get("left", 0.0)), float(insets.get("right", 0.0)))
+	var effective_top: float = float(insets.get("effective_top", safe_top))
 
 	var base_m_side: int = 8 if is_very_compact else (12 if is_compact else 24)
 	var base_m_top: int = 10 if is_very_compact else (12 if is_compact else 18)
 	var base_m_bot: int = 10 if is_very_compact else (12 if is_compact else 18)
 
 	var m_side: int = int(float(base_m_side) + safe_side)
-	var m_top: int = int(float(base_m_top) + safe_top)
+	var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
+	var m_top: int = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
 	var m_bot: int = int(float(base_m_bot) + safe_bot)
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", m_side)
@@ -3832,8 +3834,14 @@ func update_responsive_level_map_layout(vp_size: Vector2 = Vector2(720, 1280)) -
 	var is_very_compact: bool = (vp_h <= 810.0 or vp_w <= 370.0)
 	
 	var brand_top_y: float = vp_h - 88.0
-	var top_safe_margin: float = 6.0 if is_compact else 12.0
-	var bottom_safe_limit: float = brand_top_y - (8.0 if is_compact else 14.0)
+	var gs = get_node_or_null("/root/GameState")
+	var insets: Dictionary = gs.get_safe_area_insets(vp_size) if (gs and gs.has_method("get_safe_area_insets")) else {"top": 0.0, "bottom": 0.0, "left": 0.0, "right": 0.0}
+	var effective_top: float = float(insets.get("effective_top", insets.get("top", 0.0)))
+	var safe_bot: float = float(insets.get("bottom", 0.0))
+
+	var base_top_m: float = 6.0 if is_compact else 12.0
+	var top_safe_margin: float = maxf(base_top_m, effective_top)
+	var bottom_safe_limit: float = brand_top_y - maxf(8.0 if is_compact else 14.0, safe_bot)
 	
 	var panel_w: float = clampf(vp_w - (8.0 if is_very_compact else 12.0), 348.0, 704.0)
 	var max_safe_panel_h: float = maxf(540.0, bottom_safe_limit - top_safe_margin)
@@ -3949,8 +3957,14 @@ func update_responsive_wheel_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Di
 	# plus a clean separation margin above the 4TM GAMES branding so CLOSE and SPIN never overlap it.
 	var brand_top_y: float = vp_h - 88.0
 	var ad_top_y: float = vp_h - 60.0
-	var top_safe_margin: float = 10.0 if is_compact else 18.0
-	var bottom_safe_limit: float = brand_top_y - (14.0 if is_compact else 20.0)
+	var gs = get_node_or_null("/root/GameState")
+	var insets: Dictionary = gs.get_safe_area_insets(vp_size) if (gs and gs.has_method("get_safe_area_insets")) else {"top": 0.0, "bottom": 0.0, "left": 0.0, "right": 0.0}
+	var effective_top: float = float(insets.get("effective_top", insets.get("top", 0.0)))
+	var safe_bot: float = float(insets.get("bottom", 0.0))
+
+	var base_top_m: float = 10.0 if is_compact else 18.0
+	var top_safe_margin: float = maxf(base_top_m, effective_top)
+	var bottom_safe_limit: float = brand_top_y - maxf(14.0 if is_compact else 20.0, safe_bot)
 
 	var panel_w: float = clampf(vp_w - 14.0, 344.0, 704.0)
 	var max_safe_panel_h: float = maxf(540.0, bottom_safe_limit - top_safe_margin)
@@ -4004,8 +4018,8 @@ func update_responsive_wheel_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Di
 		btn_spin_wheel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn_spin_wheel.custom_minimum_size = Vector2(0.0, btn_h)
 		btn_spin_wheel.size.y = btn_h
-		_apply_spin_button_blue_style()
-		var gs = get_node_or_null("/root/GameState")
+		if not gs:
+			gs = get_node_or_null("/root/GameState")
 		var can_claim_sp: bool = gs.can_claim_daily_gift_today() if (gs and gs.has_method("can_claim_daily_gift_today")) else true
 		var is_claimed: bool = not can_claim_sp and not is_wheel_spinning
 		var spin_fsz: int = (12 if is_very_compact else (14 if is_compact else 16)) if is_claimed else (16 if is_very_compact else (18 if is_compact else 22))
@@ -5418,8 +5432,14 @@ func update_responsive_account_and_settings_modals(vp_size: Vector2 = Vector2(72
 	var is_very_compact: bool = (vp_h <= 810.0 or vp_w <= 370.0)
 
 	var brand_top_y: float = vp_h - 88.0
-	var top_safe_y: float = 12.0 if is_compact else 20.0
-	var bot_safe_y: float = brand_top_y - (10.0 if is_compact else 16.0)
+	var gs = get_node_or_null("/root/GameState")
+	var insets: Dictionary = gs.get_safe_area_insets(vp_size) if (gs and gs.has_method("get_safe_area_insets")) else {"top": 0.0, "bottom": 0.0, "left": 0.0, "right": 0.0}
+	var effective_top: float = float(insets.get("effective_top", insets.get("top", 0.0)))
+	var safe_bot: float = float(insets.get("bottom", 0.0))
+
+	var base_top_y: float = 12.0 if is_compact else 20.0
+	var top_safe_y: float = maxf(base_top_y, effective_top)
+	var bot_safe_y: float = brand_top_y - maxf(10.0 if is_compact else 16.0, safe_bot)
 	var max_modal_h: float = maxf(420.0, bot_safe_y - top_safe_y)
 	var modal_w: float = clampf(vp_w - (16.0 if is_very_compact else 24.0), 336.0, 600.0)
 
@@ -5431,11 +5451,14 @@ func update_responsive_account_and_settings_modals(vp_size: Vector2 = Vector2(72
 	var s_vpad: float = 16.0 if is_compact else 22.0
 	var s_sep: int = 10 if is_compact else 12
 	var row_sep: int = 10 if is_compact else 12
+
+	var usable_center_y: float = (top_safe_y + bot_safe_y) * 0.5
+	var s_top_y: float = maxf(top_safe_y, usable_center_y - settings_h * 0.5)
 	if settings_panel:
 		settings_panel.offset_left = -modal_w * 0.5
 		settings_panel.offset_right = modal_w * 0.5
-		settings_panel.offset_top = -settings_h * 0.5
-		settings_panel.offset_bottom = settings_h * 0.5
+		settings_panel.offset_top = s_top_y - vp_h * 0.5
+		settings_panel.offset_bottom = s_top_y + settings_h - vp_h * 0.5
 	if settings_vbox:
 		settings_vbox.offset_left = s_pad
 		settings_vbox.offset_right = -s_pad
@@ -5484,11 +5507,12 @@ func update_responsive_account_and_settings_modals(vp_size: Vector2 = Vector2(72
 	var desired_acc_h: float = (530.0 if has_platform_id else 476.0) if is_compact else (610.0 if has_platform_id else 550.0)
 	var acc_h: float = clampf(desired_acc_h, 430.0, max_modal_h)
 	var a_pad: float = 16.0 if is_compact else 22.0
+	var a_top_y: float = maxf(top_safe_y, usable_center_y - acc_h * 0.5)
 	if acc_panel:
 		acc_panel.offset_left = -modal_w * 0.5
 		acc_panel.offset_right = modal_w * 0.5
-		acc_panel.offset_top = -acc_h * 0.5
-		acc_panel.offset_bottom = acc_h * 0.5
+		acc_panel.offset_top = a_top_y - vp_h * 0.5
+		acc_panel.offset_bottom = a_top_y + acc_h - vp_h * 0.5
 	if acc_vbox:
 		acc_vbox.offset_left = a_pad
 		acc_vbox.offset_right = -a_pad
@@ -5507,14 +5531,25 @@ func update_responsive_account_and_settings_modals(vp_size: Vector2 = Vector2(72
 
 	var confirm_w: float = clampf(modal_w - 16.0, 316.0, 520.0)
 	var confirm_h: float = 310.0 if is_compact else 340.0
+	var c_top_y: float = maxf(top_safe_y, usable_center_y - confirm_h * 0.5)
 	if confirm_delete_panel:
 		confirm_delete_panel.offset_left = -confirm_w * 0.5
 		confirm_delete_panel.offset_right = confirm_w * 0.5
-		confirm_delete_panel.offset_top = -confirm_h * 0.5
-		confirm_delete_panel.offset_bottom = confirm_h * 0.5
+		confirm_delete_panel.offset_top = c_top_y - vp_h * 0.5
+		confirm_delete_panel.offset_bottom = c_top_y + confirm_h - vp_h * 0.5
 
-	var acc_panel_rect := Rect2(Vector2((vp_w - modal_w) * 0.5, (vp_h - acc_h) * 0.5), Vector2(modal_w, acc_h))
-	var settings_panel_rect := Rect2(Vector2((vp_w - modal_w) * 0.5, (vp_h - settings_h) * 0.5), Vector2(modal_w, settings_h))
+	var how_to_play_panel := get_node_or_null("Modals/HowToPlayModal/Panel") as Control
+	if how_to_play_panel:
+		var htp_h: float = clampf(max_modal_h, 480.0, 680.0)
+		var htp_w: float = clampf(modal_w, 320.0, 650.0)
+		var htp_top_y: float = maxf(top_safe_y, usable_center_y - htp_h * 0.5)
+		how_to_play_panel.offset_left = -htp_w * 0.5
+		how_to_play_panel.offset_right = htp_w * 0.5
+		how_to_play_panel.offset_top = htp_top_y - vp_h * 0.5
+		how_to_play_panel.offset_bottom = htp_top_y + htp_h - vp_h * 0.5
+
+	var acc_panel_rect := Rect2(Vector2((vp_w - modal_w) * 0.5, a_top_y), Vector2(modal_w, acc_h))
+	var settings_panel_rect := Rect2(Vector2((vp_w - modal_w) * 0.5, s_top_y), Vector2(modal_w, settings_h))
 	var inner_w: float = modal_w - s_pad * 2.0
 	var col_w: float = (inner_w - float(row_sep)) * 0.5
 	var v_row_y: float = settings_panel_rect.position.y + s_vpad + 34.0 + float(s_sep) + settings_btn_h + float(s_sep) + settings_btn_h + float(s_sep)

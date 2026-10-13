@@ -3198,6 +3198,8 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 	var left_inset: float = 0.0
 	var right_inset: float = 0.0
 	var is_standalone: bool = false
+	var is_ios_device: bool = false
+	var scale_to_vp: float = 1.0
 
 	var vp_sz: Vector2 = custom_viewport_size
 	if vp_sz.x <= 0.0 or vp_sz.y <= 0.0:
@@ -3288,8 +3290,11 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				is_standalone = bool(json.data.get("is_standalone", false))
 				var is_dyn_island: bool = bool(json.data.get("is_dynamic_island", false))
 				var is_notch: bool = bool(json.data.get("is_notch", false))
+				var is_iphone: bool = bool(json.data.get("is_iphone", false))
+				var is_ios: bool = bool(json.data.get("is_ios", false))
+				is_ios_device = is_dyn_island or is_notch or is_iphone or is_ios
 				var vh: float = float(json.data.get("viewport_h", 1.0))
-				var scale_to_vp: float = vp_sz.y / maxf(1.0, vh)
+				scale_to_vp = vp_sz.y / maxf(1.0, vh)
 				if is_standalone:
 					if is_dyn_island:
 						# iPhone 14/15/16 Pro / Pro Max with Dynamic Island requires ~54-59 CSS px top clearance
@@ -3305,11 +3310,36 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 	if aspect_ratio >= 1.95 and top_inset <= 0.0 and is_standalone:
 		top_inset = maxf(top_inset, clampf(vp_sz.y * 0.032, 20.0, 48.0))
 
+	# 4. iOS PWA Top Blur Clearance:
+	# When running as standalone iOS PWA with apple-mobile-web-app-status-bar-style="black-translucent"
+	# and viewport-fit=cover, WebKit compositor introduces a native frosted blur overlay that
+	# fades downward from top, is mostly gone around 75 pt, and clears completely by approximately 90 pt.
+	# With a compact safety margin (~2-4 pt), effective top safe position is ~92-94 pt.
+	var effective_safe_top: float = top_inset
+	var blur_band_pt: float = 0.0
+	if is_standalone and is_ios_device:
+		var target_clearance_pt: float = 92.0
+		effective_safe_top = maxf(effective_safe_top, target_clearance_pt * scale_to_vp)
+		blur_band_pt = 90.0
+
 	return {
 		"top": top_inset,
 		"bottom": bottom_inset,
 		"left": left_inset,
 		"right": right_inset,
-		"is_standalone": is_standalone
+		"is_standalone": is_standalone,
+		"effective_top": effective_safe_top,
+		"status_bar_blur_top": blur_band_pt * scale_to_vp
 	}
+
+
+func get_effective_top_safe_margin(custom_viewport_size: Vector2 = Vector2.ZERO, base_margin: float = 12.0) -> float:
+	var insets := get_safe_area_insets(custom_viewport_size)
+	var eff := float(insets.get("effective_top", 0.0))
+	if eff > 0.0:
+		return eff
+	var top_val := float(insets.get("top", 0.0))
+	if top_val > 0.0:
+		return top_val + base_margin
+	return base_margin
 

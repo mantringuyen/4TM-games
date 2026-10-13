@@ -86,6 +86,9 @@ func _ready() -> void:
 		if not btn_menu.pressed.is_connected(_on_btn_menu_pressed):
 			btn_menu.pressed.connect(_on_btn_menu_pressed)
 	_setup_leave_button_spacing()
+	update_responsive_layout()
+	if not resized.is_connected(_on_resized):
+		resized.connect(_on_resized)
 	
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
@@ -95,6 +98,41 @@ func _ready() -> void:
 		if state_mgr.has_signal("special_item_inventory_changed"):
 			state_mgr.special_item_inventory_changed.connect(func(_inv): _render_modal_state())
 	UIIconScript.setup_all_buttons_feedback(self)
+
+
+func _on_resized() -> void:
+	update_responsive_layout(get_viewport_rect().size)
+
+
+func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
+	if vp_size.is_zero_approx():
+		if is_inside_tree() and get_viewport():
+			vp_size = get_viewport_rect().size
+		else:
+			vp_size = Vector2(720, 1280)
+	var vp_w: float = vp_size.x if vp_size.x > 0 else 720.0
+	var vp_h: float = vp_size.y if vp_size.y > 0 else 1280.0
+	var is_compact: bool = (vp_h <= 880.0 or vp_w <= 420.0)
+	var is_very_compact: bool = (vp_h <= 810.0 or vp_w <= 370.0)
+
+	var gs = _get_game_state()
+	var insets: Dictionary = gs.get_safe_area_insets(vp_size) if (gs and gs.has_method("get_safe_area_insets")) else {"top": 0.0, "bottom": 0.0, "left": 0.0, "right": 0.0}
+	var effective_top: float = float(insets.get("effective_top", insets.get("top", 0.0)))
+	var safe_bot: float = float(insets.get("bottom", 0.0))
+
+	var top_safe_y: float = maxf(14.0 if is_compact else 24.0, effective_top)
+	var bot_safe_y: float = vp_h - maxf(14.0 if is_compact else 24.0, safe_bot)
+	var avail_h: float = maxf(480.0, bot_safe_y - top_safe_y)
+
+	var target_w: float = clampf(vp_w - (16.0 if is_very_compact else 24.0), 320.0, 560.0)
+	var target_h: float = clampf(avail_h - (16.0 if is_very_compact else 30.0), 480.0, 620.0)
+	var usable_center_y: float = (top_safe_y + bot_safe_y) * 0.5
+	var panel_top_y: float = maxf(top_safe_y, usable_center_y - target_h * 0.5)
+	if panel_container:
+		panel_container.offset_left = -target_w * 0.5
+		panel_container.offset_right = target_w * 0.5
+		panel_container.offset_top = panel_top_y - vp_h * 0.5
+		panel_container.offset_bottom = panel_top_y + target_h - vp_h * 0.5
 
 
 func _setup_leave_button_spacing() -> void:

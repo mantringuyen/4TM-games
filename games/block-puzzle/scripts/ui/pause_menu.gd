@@ -104,13 +104,24 @@ func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
 	var is_compact: bool = (vp_h <= 880.0 or vp_w <= 420.0)
 	var is_very_compact: bool = (vp_h <= 810.0 or vp_w <= 370.0)
 
+	var gs = _get_game_state()
+	var insets: Dictionary = gs.get_safe_area_insets(vp_size) if (gs and gs.has_method("get_safe_area_insets")) else {"top": 0.0, "bottom": 0.0, "left": 0.0, "right": 0.0}
+	var effective_top: float = float(insets.get("effective_top", insets.get("top", 0.0)))
+	var safe_bot: float = float(insets.get("bottom", 0.0))
+
+	var top_safe_y: float = maxf(14.0 if is_compact else 24.0, effective_top)
+	var bot_safe_y: float = vp_h - maxf(14.0 if is_compact else 24.0, safe_bot)
+	var avail_h: float = maxf(520.0, bot_safe_y - top_safe_y)
+
 	var target_w: float = clampf(vp_w - (16.0 if is_very_compact else 28.0), 330.0, 600.0)
-	var target_h: float = clampf(vp_h - (70.0 if is_very_compact else 110.0), 520.0, 720.0)
+	var target_h: float = clampf(avail_h - (16.0 if is_very_compact else 30.0), 520.0, 720.0)
+	var usable_center_y: float = (top_safe_y + bot_safe_y) * 0.5
+	var panel_top_y: float = maxf(top_safe_y, usable_center_y - target_h * 0.5)
 	if panel_container:
 		panel_container.offset_left = -target_w * 0.5
 		panel_container.offset_right = target_w * 0.5
-		panel_container.offset_top = -target_h * 0.5
-		panel_container.offset_bottom = target_h * 0.5
+		panel_container.offset_top = panel_top_y - vp_h * 0.5
+		panel_container.offset_bottom = panel_top_y + target_h - vp_h * 0.5
 
 	var resume_h: float = 72.0 if is_very_compact else (74.0 if is_compact else 76.0)
 	var restart_h: float = 68.0 if is_very_compact else (70.0 if is_compact else 72.0)
