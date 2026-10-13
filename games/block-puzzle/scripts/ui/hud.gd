@@ -884,10 +884,10 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	# creating an excessive ~33 pt gap (~60 virtual units) above the header controls.
 	# To minimize empty space while keeping every header control cleanly below the blur boundary
 	# with a compact safety margin (~3.5-3.8 pt / ~6-7 virtual units):
-	var blur_clearance: float = (safe_top * 0.47) if safe_top > 0.0 else float(base_m_top)
-	var effective_safe_top: float = safe_top + blur_clearance if safe_top > 0.0 else 0.0
 	var base_m_top: int = 6 if is_ultra_narrow else (8 if is_compact else 12)
 	var base_m_side: int = 6 if is_ultra_narrow else (10 if is_compact else 18)
+	var blur_clearance: float = (safe_top * 0.47) if safe_top > 0.0 else float(base_m_top)
+	var effective_safe_top: float = safe_top + blur_clearance if safe_top > 0.0 else 0.0
 	var m_top: int = int(round(effective_safe_top)) if safe_top > 0.0 else base_m_top
 	var margin_ctrl := get_node_or_null("MarginContainer") as MarginContainer
 	if margin_ctrl:
