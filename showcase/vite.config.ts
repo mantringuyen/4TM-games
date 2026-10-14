@@ -6,6 +6,12 @@ import path from 'path';
 export default defineConfig({
   root: __dirname,
   plugins: [react(), tailwindcss()],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-dom/client', 'lucide-react', 'canvas-confetti'],
+  },
   build: {
     outDir: path.resolve(__dirname, '../dist'),
     emptyOutDir: true,
