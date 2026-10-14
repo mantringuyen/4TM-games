@@ -47,12 +47,14 @@ def main():
         # 2. Ensure iOS viewport, safe-area, theme-color and PWA meta tags
         content = re.sub(r'<meta\s+name=["\'](theme-color|description|apple-mobile-web-app-[^"\']+|mobile-web-app-capable)["\'][^>]*>\s*', '', content)
         content = re.sub(r'<link\s+rel=["\']manifest["\'][^>]*>\s*', '', content)
+        is_dev = "dev" in target_dir.lower() or os.environ.get("PWA_DEV_EXPERIMENT") == "1"
+        status_bar_style = "default" if is_dev else "black-translucent"
         meta_tags = (
             '\n\t\t<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">'
             '\n\t\t<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">'
             '\n\t\t<meta name="theme-color" content="#1f3885">'
             '\n\t\t<meta name="apple-mobile-web-app-capable" content="yes">'
-            '\n\t\t<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
+            f'\n\t\t<meta name="apple-mobile-web-app-status-bar-style" content="{status_bar_style}">'
             '\n\t\t<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">'
             '\n\t\t<meta name="mobile-web-app-capable" content="yes">'
             '\n\t\t<link rel="manifest" href="manifest.json">'

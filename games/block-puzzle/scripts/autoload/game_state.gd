@@ -3252,6 +3252,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				var isDynamicIsland = isIPhone && (maxDim === 852 || maxDim === 932 || maxDim === 874 || maxDim === 956);
 				var isNotch = isIPhone && !isDynamicIsland && maxDim >= 780;
 				var isStandalone = !!(window.navigator && window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+				var isNonFullscreen = !!window.__NON_FULLSCREEN_DEV_EXPERIMENT;
 				return JSON.stringify({
 					top_ratio: top / h,
 					bottom_ratio: bottom / h,
@@ -3263,11 +3264,13 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 					right_px: right,
 					viewport_h: h,
 					viewport_w: w,
+					scr_h: scrH,
 					is_ios: isIOS,
 					is_iphone: isIPhone,
 					is_dynamic_island: isDynamicIsland,
 					is_notch: isNotch,
-					is_standalone: isStandalone
+					is_standalone: isStandalone,
+					is_non_fullscreen: isNonFullscreen
 				});
 			} catch(e) { return '{}'; }
 		})()""", true)
@@ -3288,6 +3291,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 					right_inset = maxf(right_inset, right_r * vp_sz.x)
 
 				is_standalone = bool(json.data.get("is_standalone", false))
+				var is_non_fullscreen: bool = bool(json.data.get("is_non_fullscreen", false))
 				var is_dyn_island: bool = bool(json.data.get("is_dynamic_island", false))
 				var is_notch: bool = bool(json.data.get("is_notch", false))
 				var is_iphone: bool = bool(json.data.get("is_iphone", false))
@@ -3295,7 +3299,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				is_ios_device = is_dyn_island or is_notch or is_iphone or is_ios
 				var vh: float = float(json.data.get("viewport_h", 1.0))
 				scale_to_vp = vp_sz.y / maxf(1.0, vh)
-				if is_standalone:
+				if is_standalone and not is_non_fullscreen:
 					if is_dyn_island:
 						# iPhone 14/15/16 Pro / Pro Max with Dynamic Island requires ~54-59 CSS px top clearance
 						top_inset = maxf(top_inset, 54.0 * scale_to_vp)
@@ -3304,6 +3308,15 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 						# iPhones with standard sensor notch require ~44-47 CSS px top clearance
 						top_inset = maxf(top_inset, 44.0 * scale_to_vp)
 						bottom_inset = maxf(bottom_inset, 24.0 * scale_to_vp)
+				elif is_standalone and is_non_fullscreen:
+					# In non-fullscreen experiment, position at the highest hardware-safe clearance
+					var scr_h: float = float(json.data.get("scr_h", vh))
+					var is_already_offset: bool = (vh < scr_h - 30.0)
+					if not is_already_offset:
+						if is_dyn_island:
+							top_inset = maxf(top_inset, 54.0 * scale_to_vp)
+						elif is_notch:
+							top_inset = maxf(top_inset, 44.0 * scale_to_vp)
 
 	# 3. Graceful tall screen (e.g. 19.5:9 or taller) notch buffer for PWA standalone when browser hides insets
 	var aspect_ratio: float = vp_sz.y / maxf(1.0, vp_sz.x)
@@ -3315,12 +3328,17 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 	# and viewport-fit=cover, WebKit compositor introduces a native frosted blur overlay that
 	# fades downward from top, is mostly gone around 75 pt, and clears completely by approximately 90 pt.
 	# With a compact safety margin (~2-4 pt), effective top safe position is ~92-94 pt.
+	# Under non-fullscreen presentation, the blur overlay is absent, allowing the header to occupy the
+	# highest safe boundary without the artificial 90 pt gap.
 	var effective_safe_top: float = top_inset
 	var blur_band_pt: float = 0.0
-	if is_standalone and is_ios_device:
+	if is_standalone and is_ios_device and not is_non_fullscreen:
 		var target_clearance_pt: float = 92.0
 		effective_safe_top = maxf(effective_safe_top, target_clearance_pt * scale_to_vp)
 		blur_band_pt = 90.0
+	elif is_non_fullscreen:
+		effective_safe_top = top_inset
+		blur_band_pt = 0.0
 
 	return {
 		"top": top_inset,
@@ -3328,6 +3346,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 		"left": left_inset,
 		"right": right_inset,
 		"is_standalone": is_standalone,
+		"is_non_fullscreen": is_non_fullscreen,
 		"effective_top": effective_safe_top,
 		"status_bar_blur_top": blur_band_pt * scale_to_vp
 	}

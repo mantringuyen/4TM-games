@@ -161,9 +161,8 @@ func _on_game_state_changed(new_state: int, prev_state: int) -> void:
 func _update_ui_state(state: int, prev_state: int = -1) -> void:
 	var in_gameplay: bool = (state == GameStateScript.State.PLAYING or state == GameStateScript.State.PAUSED or state == GameStateScript.State.GAME_OVER)
 	if level_backdrop_canvas:
-		level_backdrop_canvas.visible = in_gameplay
-		if in_gameplay:
-			_refresh_active_level_backdrop()
+		level_backdrop_canvas.visible = in_gameplay or (state == GameStateScript.State.MENU)
+		_refresh_active_level_backdrop()
 	if main_menu:
 		var show_menu = (state == GameStateScript.State.MENU)
 		main_menu.visible = show_menu

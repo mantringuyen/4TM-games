@@ -40,10 +40,18 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#1f3885">
 		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="apple-mobile-web-app-status-bar-style" content="default">
 		<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">
 		<meta name="mobile-web-app-capable" content="yes">
 		<link rel="manifest" href="manifest.json">
+		<script>
+		// Dev-only PWA top-area presentation switch (default: enabled in dev, reversible via ?non_fullscreen=0)
+		(function () {
+			var p = new URLSearchParams(window.location.search);
+			var override = p.get('non_fullscreen');
+			window.__NON_FULLSCREEN_DEV_EXPERIMENT = (override !== '0');
+		}());
+		</script>
 		<title>Block Puzzle — 4TM</title>
 		<style>
 html, body, #canvas {
@@ -238,7 +246,8 @@ html, body {
 					winH: winH, winW: winW, docH: docH, vvH: vvH, probeH: probeH, scrH: scrH,
 					insetTop: insetT, insetBottom: insetB,
 					canvasStyle: { width: csw, height: csh },
-					canvasPixels: { width: cw, height: ch }
+					canvasPixels: { width: cw, height: ch },
+					nonFullscreenExperiment: !!window.__NON_FULLSCREEN_DEV_EXPERIMENT
 				};
 			}
 			window.addEventListener('resize', updateDiag);
