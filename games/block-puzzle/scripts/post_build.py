@@ -48,7 +48,7 @@ def main():
         content = re.sub(r'<meta\s+name=["\'](theme-color|description|apple-mobile-web-app-[^"\']+|mobile-web-app-capable)["\'][^>]*>\s*', '', content)
         content = re.sub(r'<link\s+rel=["\']manifest["\'][^>]*>\s*', '', content)
         is_dev = "dev" in target_dir.lower() or os.environ.get("PWA_DEV_EXPERIMENT") == "1"
-        status_bar_style = "default" if is_dev else "black-translucent"
+        status_bar_style = "black-translucent"
         meta_tags = (
             '\n\t\t<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">'
             '\n\t\t<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">'
