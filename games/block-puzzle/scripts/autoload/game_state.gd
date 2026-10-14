@@ -3199,6 +3199,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 	var right_inset: float = 0.0
 	var is_standalone: bool = false
 	var is_ios_device: bool = false
+	var is_non_fullscreen: bool = false
 	var scale_to_vp: float = 1.0
 
 	var vp_sz: Vector2 = custom_viewport_size
@@ -3291,7 +3292,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 					right_inset = maxf(right_inset, right_r * vp_sz.x)
 
 				is_standalone = bool(json.data.get("is_standalone", false))
-				var is_non_fullscreen: bool = bool(json.data.get("is_non_fullscreen", false))
+				is_non_fullscreen = bool(json.data.get("is_non_fullscreen", false))
 				var is_dyn_island: bool = bool(json.data.get("is_dynamic_island", false))
 				var is_notch: bool = bool(json.data.get("is_notch", false))
 				var is_iphone: bool = bool(json.data.get("is_iphone", false))
