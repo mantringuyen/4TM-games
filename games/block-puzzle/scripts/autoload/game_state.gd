@@ -3199,6 +3199,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 	var right_inset: float = 0.0
 	var is_standalone: bool = false
 	var is_ios_device: bool = false
+	var is_non_fullscreen: bool = false
 	var scale_to_vp: float = 1.0
 
 	var vp_sz: Vector2 = custom_viewport_size
@@ -3252,6 +3253,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				var isDynamicIsland = isIPhone && (maxDim === 852 || maxDim === 932 || maxDim === 874 || maxDim === 956);
 				var isNotch = isIPhone && !isDynamicIsland && maxDim >= 780;
 				var isStandalone = !!(window.navigator && window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+				var isNonFullscreen = !!window.__NON_FULLSCREEN_EXPERIMENT;
 				return JSON.stringify({
 					top_ratio: top / h,
 					bottom_ratio: bottom / h,
@@ -3267,7 +3269,8 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 					is_iphone: isIPhone,
 					is_dynamic_island: isDynamicIsland,
 					is_notch: isNotch,
-					is_standalone: isStandalone
+					is_standalone: isStandalone,
+					is_non_fullscreen: isNonFullscreen
 				});
 			} catch(e) { return '{}'; }
 		})()""", true)
@@ -3288,6 +3291,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 					right_inset = maxf(right_inset, right_r * vp_sz.x)
 
 				is_standalone = bool(json.data.get("is_standalone", false))
+				is_non_fullscreen = bool(json.data.get("is_non_fullscreen", false))
 				var is_dyn_island: bool = bool(json.data.get("is_dynamic_island", false))
 				var is_notch: bool = bool(json.data.get("is_notch", false))
 				var is_iphone: bool = bool(json.data.get("is_iphone", false))
@@ -3295,7 +3299,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 				is_ios_device = is_dyn_island or is_notch or is_iphone or is_ios
 				var vh: float = float(json.data.get("viewport_h", 1.0))
 				scale_to_vp = vp_sz.y / maxf(1.0, vh)
-				if is_standalone:
+				if is_standalone and not is_non_fullscreen:
 					if is_dyn_island:
 						# iPhone 14/15/16 Pro / Pro Max with Dynamic Island requires ~54-59 CSS px top clearance
 						top_inset = maxf(top_inset, 54.0 * scale_to_vp)
@@ -3317,10 +3321,13 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 	# With a compact safety margin (~2-4 pt), effective top safe position is ~92-94 pt.
 	var effective_safe_top: float = top_inset
 	var blur_band_pt: float = 0.0
-	if is_standalone and is_ios_device:
+	if is_standalone and is_ios_device and not is_non_fullscreen:
 		var target_clearance_pt: float = 92.0
 		effective_safe_top = maxf(effective_safe_top, target_clearance_pt * scale_to_vp)
 		blur_band_pt = 90.0
+	elif is_non_fullscreen:
+		effective_safe_top = maxf(top_inset, 12.0 * scale_to_vp)
+		blur_band_pt = 0.0
 
 	return {
 		"top": top_inset,
@@ -3328,6 +3335,7 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 		"left": left_inset,
 		"right": right_inset,
 		"is_standalone": is_standalone,
+		"is_non_fullscreen": is_non_fullscreen,
 		"effective_top": effective_safe_top,
 		"status_bar_blur_top": blur_band_pt * scale_to_vp
 	}
