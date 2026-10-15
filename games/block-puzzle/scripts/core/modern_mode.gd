@@ -152,11 +152,12 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var tray_h: float = clampf(vp_h * 0.118, 88.0, 142.0)
 	var max_board_h: float = maxf(240.0, (ad_top_y - hud_h) - tray_h - min_mid_gap - (min_gap * 2.0))
 	
+	var max_layout_w: float = minf(vp_w, 720.0)
 	var board_cols: float = float(board.GRID_WIDTH) if board else float(DRAG_DROP_BOARD_COLS)
 	var board_rows: float = float(board.GRID_HEIGHT) if board else float(DRAG_DROP_BOARD_ROWS)
-	var board_sz := Vector2(vp_w * (board_cols / (board_cols + 2.0)), vp_w * (board_rows / (board_cols + 2.0)))
+	var board_sz := Vector2(max_layout_w * (board_cols / (board_cols + 2.0)), max_layout_w * (board_rows / (board_cols + 2.0)))
 	if board:
-		board_sz = board.update_responsive_layout(vp_w, 0.0, max_board_h)
+		board_sz = board.update_responsive_layout(max_layout_w, 0.0, max_board_h)
 	var margin_x: float = (vp_w - board_sz.x) * 0.5
 	
 	var avail_v: float = maxf(0.0, (ad_top_y - hud_h) - board_sz.y - tray_h)
@@ -175,7 +176,7 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	if board:
 		board.position = Vector2(margin_x, board_y)
 	
-	var tray_w: float = minf(vp_w - 20.0, maxf(board_sz.x, vp_w * 0.90))
+	var tray_w: float = maxf(board_sz.x, minf(max_layout_w - 24.0, max_layout_w * (10.0 / 12.0)))
 	var tray_x: float = (vp_w - tray_w) * 0.5
 	var actual_mid_gap: float = maxf(min_mid_gap, tray_y - (board_y + board_sz.y))
 	var tray_rect := Rect2(Vector2(tray_x, tray_y), Vector2(tray_w, tray_h))

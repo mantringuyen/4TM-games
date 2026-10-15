@@ -688,11 +688,12 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var avail_v: float = maxf(260.0, ad_top_y - hud_h)
 	var max_board_h: float = avail_v - piece_area_h - ctrl_h - (gap * 4.0)
 	
-	var board_sz := Vector2(vp_w * (10.0 / 12.0), vp_w)
+	var max_layout_w: float = minf(vp_w, 720.0)
+	var board_sz := Vector2(max_layout_w * (10.0 / 12.0), max_layout_w)
 	if board:
-		board_sz = board.update_responsive_layout(vp_w, 0.0, max_board_h)
+		board_sz = board.update_responsive_layout(max_layout_w, 0.0, max_board_h)
 	var margin_x: float = (vp_w - board_sz.x) * 0.5
-	var content_w: float = maxf(board_sz.x, minf(vp_w - 24.0, vp_w * (10.0 / 12.0)))
+	var content_w: float = maxf(board_sz.x, minf(max_layout_w - 24.0, max_layout_w * (10.0 / 12.0)))
 	var content_x: float = (vp_w - content_w) * 0.5
 	
 	var cluster_h: float = piece_area_h + gap + board_sz.y + gap + ctrl_h

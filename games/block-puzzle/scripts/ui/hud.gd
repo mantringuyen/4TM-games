@@ -898,10 +898,14 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	else:
 		var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
 		m_top = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
+	var max_hud_w: float = 684.0
+	var side_space: float = maxf(0.0, (vp_w - max_hud_w) * 0.5)
+	var m_side_left: int = int(maxf(float(base_m_side) + safe_left, side_space))
+	var m_side_right: int = int(maxf(float(base_m_side) + safe_right, side_space))
 	var margin_ctrl := get_node_or_null("MarginContainer") as MarginContainer
 	if margin_ctrl:
-		margin_ctrl.add_theme_constant_override("margin_left", int(base_m_side + safe_left))
-		margin_ctrl.add_theme_constant_override("margin_right", int(base_m_side + safe_right))
+		margin_ctrl.add_theme_constant_override("margin_left", m_side_left)
+		margin_ctrl.add_theme_constant_override("margin_right", m_side_right)
 		margin_ctrl.add_theme_constant_override("margin_top", m_top)
 		margin_ctrl.add_theme_constant_override("margin_bottom", 4 if is_compact else 6)
 	var total_header_h: float = float(m_top) + header_ctrl_h + (4.0 if is_compact else 6.0)

@@ -1642,7 +1642,9 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	var base_m_top: int = 10 if is_very_compact else (12 if is_compact else 18)
 	var base_m_bot: int = 10 if is_very_compact else (12 if is_compact else 18)
 
-	var m_side: int = int(float(base_m_side) + safe_side)
+	var max_game_w: float = 680.0
+	var side_space: float = maxf(0.0, (vp_w - max_game_w) * 0.5)
+	var m_side: int = int(maxf(float(base_m_side) + safe_side, side_space))
 	var m_bot: int = int(float(base_m_bot) + safe_bot)
 	var m_top: int = base_m_top
 
@@ -1762,7 +1764,10 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 				top_gear_icon._on_parent_resized()
 	var mode_btn_h: float = 80.0 if is_compact else 90.0
 	var mode_sep: int = 8 if is_compact else 14
+	var max_mode_w: float = minf(content_w, 580.0)
 	if mode_box:
+		mode_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		mode_box.custom_minimum_size = Vector2(max_mode_w, 0.0)
 		mode_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		mode_box.add_theme_constant_override("separation", mode_sep)
 	for mb in [btn_classic, btn_modern, btn_falling, btn_drag_drop]:
