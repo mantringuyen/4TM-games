@@ -880,15 +880,24 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	var safe_right: float = float(insets.get("right", 0.0))
 	var effective_top: float = float(insets.get("effective_top", safe_top))
 	var is_standalone: bool = bool(insets.get("is_standalone", false))
-	# In iOS standalone PWA with black-translucent status bar and viewport-fit=cover,
-	# the native WebKit compositor blur overlay extends downward, is mostly gone by ~75 pt,
-	# and clears completely by approximately 90 pt.
-	# With a compact safety margin (~2-4 pt), effective_top ensures every gameplay header control
-	# sits cleanly below the blur boundary without excessive empty space.
+	var is_ios_device: bool = bool(insets.get("is_ios_device", false))
+	var scale_to_vp: float = float(insets.get("scale_to_vp", 1.0))
+	if scale_to_vp <= 0.0:
+		scale_to_vp = (vp_size.y / 844.0) if vp_size.y > 0 else 1.0
+
 	var base_m_top: int = 6 if is_ultra_narrow else (8 if is_compact else 12)
 	var base_m_side: int = 6 if is_ultra_narrow else (10 if is_compact else 18)
-	var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
-	var m_top: int = int(round(effective_safe_top)) - (8 if is_standalone else 0) if effective_safe_top > 0.0 else base_m_top
+	var m_top: int = base_m_top
+
+	if is_standalone and is_ios_device:
+		# In iOS standalone PWA, the in-game HUD is positioned independently from the Home Menu's 90 pt anchor.
+		# It anchors around ~76 pt (clearing Dynamic Island/notch and status clock/battery while keeping
+		# the HUD snug and comfortable without sinking down into the gameplay space).
+		var target_hud_top_px: float = maxf(safe_top + float(base_m_top), 76.0 * scale_to_vp)
+		m_top = int(round(target_hud_top_px))
+	else:
+		var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
+		m_top = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
 	var margin_ctrl := get_node_or_null("MarginContainer") as MarginContainer
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", int(base_m_side + safe_left))

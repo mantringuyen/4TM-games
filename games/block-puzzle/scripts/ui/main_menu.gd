@@ -1633,17 +1633,31 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	var safe_side: float = maxf(float(insets.get("left", 0.0)), float(insets.get("right", 0.0)))
 	var effective_top: float = float(insets.get("effective_top", safe_top))
 	var is_standalone: bool = bool(insets.get("is_standalone", false))
-	var is_non_fullscreen: bool = bool(insets.get("is_non_fullscreen", false))
-	var menu_effective_top: float = effective_top if is_non_fullscreen else (minf(effective_top, 78.0) if is_standalone else effective_top)
+	var is_ios_device: bool = bool(insets.get("is_ios_device", false))
+	var scale_to_vp: float = float(insets.get("scale_to_vp", 1.0))
+	if scale_to_vp <= 0.0:
+		scale_to_vp = (vp_h / 844.0) if vp_h > 0.0 else 1.0
 
 	var base_m_side: int = 8 if is_very_compact else (12 if is_compact else 24)
 	var base_m_top: int = 10 if is_very_compact else (12 if is_compact else 18)
 	var base_m_bot: int = 10 if is_very_compact else (12 if is_compact else 18)
 
 	var m_side: int = int(float(base_m_side) + safe_side)
-	var effective_safe_top: float = menu_effective_top if menu_effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
-	var m_top: int = int(round(effective_safe_top)) + (12 if is_standalone else 0) if effective_safe_top > 0.0 else base_m_top
 	var m_bot: int = int(float(base_m_bot) + safe_bot)
+	var m_top: int = base_m_top
+
+	if is_standalone and is_ios_device:
+		# iOS Standalone PWA Exact Top Anchor Requirement:
+		# Home Menu's top edge must start at 90 pt from the physical screen's top edge (y = 0.0),
+		# or immediately below the iOS status-bar blur region if that boundary is slightly lower.
+		# Measured directly from the screen's top edge, NOT added on top of safe area origin.
+		var target_90pt_px: float = 90.0 * scale_to_vp
+		var blur_boundary_px: float = maxf(float(insets.get("status_bar_blur_top", 0.0)), safe_top)
+		var final_menu_top_px: float = maxf(target_90pt_px, blur_boundary_px)
+		m_top = int(round(final_menu_top_px))
+	else:
+		var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
+		m_top = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", m_side)
 		margin_ctrl.add_theme_constant_override("margin_right", m_side)

@@ -3349,7 +3349,9 @@ func get_safe_area_insets(custom_viewport_size: Vector2 = Vector2.ZERO) -> Dicti
 		"is_standalone": is_standalone,
 		"is_non_fullscreen": is_non_fullscreen,
 		"effective_top": effective_safe_top,
-		"status_bar_blur_top": blur_band_pt * scale_to_vp
+		"status_bar_blur_top": blur_band_pt * scale_to_vp,
+		"scale_to_vp": scale_to_vp,
+		"is_ios_device": is_ios_device
 	}
 
 

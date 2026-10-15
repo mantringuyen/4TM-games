@@ -49,11 +49,11 @@
 		<meta name="mobile-web-app-capable" content="yes">
 		<link rel="manifest" href="manifest.json">
 		<script>
-		// Dev-only PWA top-area presentation switch (default: enabled in dev, reversible via ?non_fullscreen=0)
+		// Reversible dev switch (defaults to canonical black-translucent PWA behavior; enabled only if ?non_fullscreen=1 is explicitly passed)
 		(function () {
 			var p = new URLSearchParams(window.location.search);
 			var override = p.get('non_fullscreen');
-			window.__NON_FULLSCREEN_DEV_EXPERIMENT = (override !== '0');
+			window.__NON_FULLSCREEN_DEV_EXPERIMENT = (override === '1');
 		}());
 		</script>
 		<title>Block Puzzle — 4TM</title>
