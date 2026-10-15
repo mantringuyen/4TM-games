@@ -879,6 +879,7 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	var safe_left: float = float(insets.get("left", 0.0))
 	var safe_right: float = float(insets.get("right", 0.0))
 	var effective_top: float = float(insets.get("effective_top", safe_top))
+	var is_standalone: bool = bool(insets.get("is_standalone", false))
 	# In iOS standalone PWA with black-translucent status bar and viewport-fit=cover,
 	# the native WebKit compositor blur overlay extends downward, is mostly gone by ~75 pt,
 	# and clears completely by approximately 90 pt.
@@ -887,7 +888,7 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	var base_m_top: int = 6 if is_ultra_narrow else (8 if is_compact else 12)
 	var base_m_side: int = 6 if is_ultra_narrow else (10 if is_compact else 18)
 	var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
-	var m_top: int = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
+	var m_top: int = int(round(effective_safe_top)) - (8 if is_standalone else 0) if effective_safe_top > 0.0 else base_m_top
 	var margin_ctrl := get_node_or_null("MarginContainer") as MarginContainer
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", int(base_m_side + safe_left))

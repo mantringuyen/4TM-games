@@ -1642,7 +1642,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 
 	var m_side: int = int(float(base_m_side) + safe_side)
 	var effective_safe_top: float = menu_effective_top if menu_effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
-	var m_top: int = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top
+	var m_top: int = int(round(effective_safe_top)) + (12 if is_standalone else 0) if effective_safe_top > 0.0 else base_m_top
 	var m_bot: int = int(float(base_m_bot) + safe_bot)
 	if margin_ctrl:
 		margin_ctrl.add_theme_constant_override("margin_left", m_side)
