@@ -1647,14 +1647,12 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	var m_top: int = base_m_top
 
 	if is_standalone and is_ios_device:
-		# iOS Standalone PWA Exact Top Anchor Requirement:
-		# Home Menu's top edge must start at 90 pt from the physical screen's top edge (y = 0.0),
-		# or immediately below the iOS status-bar blur region if that boundary is slightly lower.
-		# Measured directly from the screen's top edge, NOT added on top of safe area origin.
-		var target_90pt_px: float = 90.0 * scale_to_vp
-		var blur_boundary_px: float = maxf(float(insets.get("status_bar_blur_top", 0.0)), safe_top)
-		var final_menu_top_px: float = maxf(target_90pt_px, blur_boundary_px)
-		m_top = int(round(final_menu_top_px))
+		# Visual top alignment reference matching in-game Play HUD header:
+		# Aligns Home Menu header top with Play HUD (anchoring at ~76 pt / safe_top + HUD margin)
+		# instead of sitting 14 pt lower at 90 pt, eliminating vertical jump between Menu and Play.
+		var hud_base_m_top: float = 4.0 if is_very_compact else (6.0 if is_compact else 8.0)
+		var target_top_px: float = maxf(safe_top + hud_base_m_top, 76.0 * scale_to_vp)
+		m_top = int(round(target_top_px))
 	else:
 		var effective_safe_top: float = effective_top if effective_top > 0.0 else (safe_top + float(base_m_top) if safe_top > 0.0 else 0.0)
 		m_top = int(round(effective_safe_top)) if effective_safe_top > 0.0 else base_m_top

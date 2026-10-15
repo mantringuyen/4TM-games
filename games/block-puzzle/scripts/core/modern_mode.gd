@@ -160,8 +160,11 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var margin_x: float = (vp_w - board_sz.x) * 0.5
 	
 	var avail_v: float = maxf(0.0, (ad_top_y - hud_h) - board_sz.y - tray_h)
-	var gap_top: float = maxf(min_gap * 1.2, avail_v * 0.32)
-	var gap_mid: float = maxf(min_mid_gap, avail_v * 0.52)
+	# Board moved slightly downward (gap_top: 0.32 -> 0.38 avail_v),
+	# and 3-piece tray moved slightly upward (gap_mid: 0.52 -> 0.42 avail_v),
+	# creating balanced vertical spacing while preserving rotate button clearance and ad gap.
+	var gap_top: float = maxf(min_gap * 1.2, avail_v * 0.38)
+	var gap_mid: float = maxf(min_mid_gap, avail_v * 0.42)
 	var board_y: float = hud_h + gap_top
 	var tray_y: float = board_y + board_sz.y + gap_mid
 	
