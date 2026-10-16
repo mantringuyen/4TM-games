@@ -1318,7 +1318,7 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	if settings_box:
 		settings_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if btn_settings:
-		var target_btn_sz := Vector2(42.0, 38.0) if is_ultra_narrow else (Vector2(46.0, 42.0) if is_compact else Vector2(56.0, 48.0))
+		var target_btn_sz := Vector2(46.0, 40.0) if is_ultra_narrow else (Vector2(48.0, 42.0) if is_compact else Vector2(56.0, 48.0))
 		UIIconScript.apply_frameless_icon_button_style(btn_settings)
 		btn_settings.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		btn_settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
