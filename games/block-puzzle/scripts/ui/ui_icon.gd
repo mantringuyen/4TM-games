@@ -884,9 +884,9 @@ func _draw() -> void:
 			draw_line(c - Vector2(0.0, arm), c + Vector2(0.0, arm), out_col, out_thick, true)
 			draw_line(c - Vector2(arm, 0.0), c + Vector2(arm, 0.0), primary_color, thick, true)
 			draw_line(c - Vector2(0.0, arm), c + Vector2(0.0, arm), primary_color, thick, true)
-		"extra_life":
+		"extra_life", "heart":
 			var hc := c + Vector2(0, r * 0.08)
-			var hcol := Color(0.98, 0.24, 0.48, 1.0)
+			var hcol := primary_color if primary_color != Color(1.0, 0.94, 0.42, 1.0) else Color(0.98, 0.24, 0.48, 1.0)
 			draw_circle(hc + Vector2(-r * 0.34, -r * 0.24), r * 0.40, hcol)
 			draw_circle(hc + Vector2(r * 0.34, -r * 0.24), r * 0.40, hcol)
 			draw_colored_polygon(PackedVector2Array([hc + Vector2(-r * 0.72, -r * 0.08), hc + Vector2(r * 0.72, -r * 0.08), hc + Vector2(0.0, r * 0.72)]), hcol)

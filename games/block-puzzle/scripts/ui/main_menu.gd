@@ -1762,9 +1762,9 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			top_gear_icon.size = Vector2(top_btn_h, top_btn_h)
 			if top_gear_icon.has_method("_on_parent_resized"):
 				top_gear_icon._on_parent_resized()
-	var mode_btn_h: float = 80.0 if is_compact else 90.0
+	var mode_btn_h: float = 82.0 if is_very_compact else (86.0 if is_compact else 96.0)
 	var mode_sep: int = 8 if is_compact else 14
-	var max_mode_w: float = minf(content_w, 580.0)
+	var max_mode_w: float = minf(content_w, 590.0)
 	if mode_box:
 		mode_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		mode_box.custom_minimum_size = Vector2(max_mode_w, 0.0)
@@ -1773,7 +1773,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	for mb in [btn_classic, btn_modern, btn_falling, btn_drag_drop]:
 		if mb:
 			mb.custom_minimum_size = Vector2(0.0, mode_btn_h)
-			mb.add_theme_font_size_override("font_size", 19 if is_compact else 24)
+			mb.add_theme_font_size_override("font_size", 20 if is_very_compact else (22 if is_compact else 25))
 	
 	var mode_sec_h: float = (26.0 * 2.0) + (mode_btn_h * 2.0) + float(mode_sep * 3)
 	var y_header: float = float(m_top)
@@ -1799,14 +1799,14 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		lbl_title.add_theme_font_size_override("font_size", title_font_sz)
 		lbl_title.queue_redraw()
 	
-	var play_m_top: int = 20 if is_compact else 22
+	var play_m_top: int = 18 if is_compact else 22
 	var play_m_bot: int = 20 if is_compact else 22
-	var start_btn_h: float = 88.0 if is_compact else 108.0
-	var start_btn_w: float = clampf(content_w - 28.0, 268.0, 580.0)
+	var start_btn_h: float = 92.0 if is_very_compact else (98.0 if is_compact else 114.0)
+	var start_btn_w: float = clampf(content_w - 20.0, 276.0, 590.0)
 	if play_box:
 		play_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		play_box.add_theme_constant_override("margin_left", 14)
-		play_box.add_theme_constant_override("margin_right", 14)
+		play_box.add_theme_constant_override("margin_left", 12)
+		play_box.add_theme_constant_override("margin_right", 12)
 		play_box.add_theme_constant_override("margin_top", play_m_top)
 		play_box.add_theme_constant_override("margin_bottom", play_m_bot)
 	if btn_start:
@@ -1814,7 +1814,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		btn_start.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn_start.custom_minimum_size = Vector2(start_btn_w, start_btn_h)
 		btn_start.size = Vector2(start_btn_w, start_btn_h)
-		btn_start.add_theme_font_size_override("font_size", 32 if is_compact else 38)
+		btn_start.add_theme_font_size_override("font_size", 34 if is_compact else 42)
 	
 	var y_title: float = y_header_end + (title_zone_h - title_h) * 0.5
 	var x_title: float = (vp_w - title_w) * 0.5
@@ -4799,10 +4799,10 @@ func _make_card_style(bg_col: Color, border_col: Color, border_w: int = 2) -> St
 
 
 func _update_mode_selection_ui() -> void:
-	var style_classic_sel = _make_card_style(Color(0.86, 0.44, 0.12, 0.98), Color(1.0, 0.92, 0.36, 1.0), 3)
-	var style_modern_sel = _make_card_style(Color(0.14, 0.56, 0.88, 0.98), Color(0.45, 0.98, 1.0, 1.0), 3)
-	var style_play_sel = _make_card_style(Color(0.78, 0.22, 0.62, 0.98), Color(1.0, 0.78, 0.94, 1.0), 3)
-	var style_unsel = _make_card_style(Color(0.16, 0.22, 0.52, 0.88), Color(0.42, 0.52, 0.84, 0.72), 2)
+	var style_classic_sel = _make_card_style(Color(0.92, 0.48, 0.10, 0.98), Color(1.0, 0.94, 0.45, 1.0), 3)
+	var style_modern_sel = _make_card_style(Color(0.12, 0.60, 0.94, 0.98), Color(0.55, 0.98, 1.0, 1.0), 3)
+	var style_play_sel = _make_card_style(Color(0.84, 0.24, 0.68, 0.98), Color(1.0, 0.82, 0.96, 1.0), 3)
+	var style_unsel = _make_card_style(Color(0.16, 0.24, 0.56, 0.90), Color(0.48, 0.60, 0.92, 0.85), 2)
 
 	var is_modern = (selected_mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
 	var is_falling = (selected_play_style == GameStateScript.PlayStyle.FALLING)
@@ -4815,31 +4815,31 @@ func _update_mode_selection_ui() -> void:
 	# Clean selectable buttons/cards with procedural vector icons (UIIcon) and font-verified text
 	if btn_classic:
 		btn_classic.text = "    " + classic_label
-		btn_classic.add_theme_color_override("font_color", Color(1.0, 0.98, 0.82, 1.0) if not is_modern else Color(0.80, 0.86, 0.98, 0.90))
+		btn_classic.add_theme_color_override("font_color", Color(1.0, 0.98, 0.82, 1.0) if not is_modern else Color(0.92, 0.96, 1.0, 0.92))
 		btn_classic.add_theme_stylebox_override("normal", style_classic_sel if not is_modern else style_unsel)
 		btn_classic.add_theme_stylebox_override("hover", style_classic_sel if not is_modern else style_unsel)
-		GameTypographyScript.apply_secondary_button_typography(btn_classic, 22)
+		GameTypographyScript.apply_secondary_button_typography(btn_classic, 24)
 
 	if btn_modern:
 		btn_modern.text = "    " + modern_label
-		btn_modern.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0) if is_modern else Color(0.80, 0.86, 0.98, 0.90))
+		btn_modern.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0) if is_modern else Color(0.92, 0.96, 1.0, 0.92))
 		btn_modern.add_theme_stylebox_override("normal", style_modern_sel if is_modern else style_unsel)
 		btn_modern.add_theme_stylebox_override("hover", style_modern_sel if is_modern else style_unsel)
-		GameTypographyScript.apply_secondary_button_typography(btn_modern, 22)
+		GameTypographyScript.apply_secondary_button_typography(btn_modern, 24)
 
 	if btn_falling:
 		btn_falling.text = "    " + falling_label
-		btn_falling.add_theme_color_override("font_color", Color(1.0, 0.96, 1.0, 1.0) if is_falling else Color(0.80, 0.86, 0.98, 0.90))
+		btn_falling.add_theme_color_override("font_color", Color(1.0, 0.96, 1.0, 1.0) if is_falling else Color(0.92, 0.96, 1.0, 0.92))
 		btn_falling.add_theme_stylebox_override("normal", style_play_sel if is_falling else style_unsel)
 		btn_falling.add_theme_stylebox_override("hover", style_play_sel if is_falling else style_unsel)
-		GameTypographyScript.apply_secondary_button_typography(btn_falling, 22)
+		GameTypographyScript.apply_secondary_button_typography(btn_falling, 24)
 
 	if btn_drag_drop:
 		btn_drag_drop.text = "    " + drag_drop_label
-		btn_drag_drop.add_theme_color_override("font_color", Color(1.0, 0.96, 1.0, 1.0) if not is_falling else Color(0.80, 0.86, 0.98, 0.90))
+		btn_drag_drop.add_theme_color_override("font_color", Color(1.0, 0.96, 1.0, 1.0) if not is_falling else Color(0.92, 0.96, 1.0, 0.92))
 		btn_drag_drop.add_theme_stylebox_override("normal", style_play_sel if not is_falling else style_unsel)
 		btn_drag_drop.add_theme_stylebox_override("hover", style_play_sel if not is_falling else style_unsel)
-		GameTypographyScript.apply_secondary_button_typography(btn_drag_drop, 22)
+		GameTypographyScript.apply_secondary_button_typography(btn_drag_drop, 24)
 
 	var gs = get_node_or_null("/root/GameState")
 	if btn_start:

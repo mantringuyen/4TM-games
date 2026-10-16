@@ -93,12 +93,12 @@ shadow_size = 10
 shadow_offset = Vector2(0, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_play"]
-bg_color = Color(0.10, 0.84, 0.44, 1)
+bg_color = Color(0.10, 0.86, 0.46, 1)
 border_width_left = 4
 border_width_top = 4
 border_width_right = 4
 border_width_bottom = 10
-border_color = Color(0.76, 1.0, 0.52, 1)
+border_color = Color(0.78, 1.0, 0.58, 1)
 corner_radius_top_left = 34
 corner_radius_top_right = 34
 corner_radius_bottom_right = 34

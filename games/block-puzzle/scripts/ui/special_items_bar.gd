@@ -396,6 +396,9 @@ func update_inventory_display() -> void:
 	_update_button_label(btn_bomb, "bomb", lbl_b, int(inventory.get("bomb", 0)))
 	_update_button_label(btn_change_block, "change_block", lbl_c, int(inventory.get("change_block", 0)))
 	_update_button_label(btn_extra_life, "extra_life", lbl_e, int(inventory.get("extra_life", 0)))
+	if btn_extra_life:
+		btn_extra_life.visible = false
+		btn_extra_life.size_flags_horizontal = 0
 	_update_selection_visuals()
 
 
