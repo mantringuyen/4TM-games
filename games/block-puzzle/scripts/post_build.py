@@ -9,6 +9,10 @@ def main():
         
     print(f"Running post-build processing on target directory: {target_dir}")
     
+    # Copy 4TM logo
+    import shutil
+    shutil.copy("games/block-puzzle/assets/branding/4tm_logo.svg", os.path.join(target_dir, "4tm_logo.svg"))
+
     html_path = os.path.join(target_dir, "index.html")
     pck_path = os.path.join(target_dir, "index.pck")
     
@@ -73,10 +77,14 @@ def main():
             "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100%;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n}\n\n"
             "#canvas:focus {\n\toutline: none;\n}\n\n"
             "#status {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: center;\n\talign-items: center;\n\tvisibility: hidden;\n\tz-index: 10;\n}\n\n"
-            "#status-splash {\n\tmax-height: 70%;\n\tmax-width: 70%;\n\tmargin: auto;\n}\n\n"
+            "#status-container {\n\tposition: relative;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-items: center;\n\twidth: 150px;\n\theight: 150px;\n}\n\n"
+            "#status-logo {\n\twidth: 100px;\n\theight: 100px;\n\tborder-radius: 20px;\n\tz-index: 2;\n}\n\n"
+            "#status-ring {\n\tposition: absolute;\n\twidth: 150px;\n\theight: 150px;\n\tborder-radius: 50%;\n\tbackground: conic-gradient(\n\t\t#ff0000 0%, #ff7f00 14%, #ffff00 28%, #00ff00 42%, \n\t\t#0000ff 56%, #4b0082 70%, #9400d3 84%, #ff0000 100%\n\t);\n\t-webkit-mask: radial-gradient(transparent 75%, #000 76%);\n\tmask: radial-gradient(transparent 75%, #000 76%);\n\tanimation: rotate 2s linear infinite;\n\tz-index: 1;\n}\n\n"
+            "@keyframes rotate {\n\tfrom { transform: rotate(0deg); }\n\tto { transform: rotate(360deg); }\n}\n\n"
             "#status-progress, #status-notice {\n\tdisplay: none;\n}\n\n"
             "#status-progress {\n\tposition: absolute;\n\tleft: 0;\n\tright: 0;\n\tbottom: calc(10% + env(safe-area-inset-bottom, 0px));\n\twidth: 50%;\n\tmargin: 0 auto;\n}\n\n"
-            "#status-notice {\n\tbackground-color: #5b3943;\n\tborder-radius: 0.5rem;\n\tborder: 1px solid #9b3943;\n\tcolor: #e0e0e0;\n\tfont-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;\n\tline-height: 1.3;\n\tmargin: 0 2rem;\n\toverflow: hidden;\n\tpadding: 1rem;\n\ttext-align: center;\n\tz-index: 11;\n}\n\t\t</style>"
+            "#status-notice {\n\tbackground-color: #5b3943;\n\tborder-radius: 0.5rem;\n\tborder: 1px solid #9b3943;\n\tcolor: #e0e0e0;\n\tfont-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;\n\tline-height: 1.3;\n\tmargin: 0 2rem;\n\toverflow: hidden;\n\tpadding: 1rem;\n\ttext-align: center;\n\tz-index: 11;\n}\n\n"
+            "#status-splash {\n\tdisplay: none;\n}\n\t\t</style>"
         )
         if '<style>' in content:
             content = re.sub(r'<style>.*?</style>', css_replacement, content, flags=re.DOTALL)
@@ -183,7 +191,7 @@ def main():
         content = re.sub(r'<script>\s*// Standards-safe iOS.*?\[4TM-DIAG.*?</script>\s*', '', content, flags=re.DOTALL)
         content = re.sub(r'<script\s+src="index\.js(?:\?[^"]*)?"></script>\s*', '', content)
         if '<div id="status">' in content:
-            content = content.replace('<div id="status">', f'{pwa_script}\n\t\t<div id="status">')
+            content = content.replace('<div id="status">', f'{pwa_script}\n\t\t<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>')
         elif '</body>' in content:
             content = content.replace('</body>', f'{pwa_script}\n</body>')
 
