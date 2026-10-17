@@ -844,6 +844,7 @@ func reset_progression(save_to_disk: bool = true) -> void:
 		"change_block": 0,
 		"extra_life": 0
 	}
+	special_item_inventory["extra_life"] = 1
 	last_special_item_ad_dates = {
 		"bomb": "",
 		"change_block": "",
@@ -1009,6 +1010,7 @@ func save_progression(custom_path: String = PROGRESSION_SAVE_PATH) -> void:
 	cfg.set_value("progression", "lucky_wheel_free_spins", lucky_wheel_free_spins)
 	cfg.set_value("progression", "lucky_wheel_total_spins", lucky_wheel_total_spins)
 	cfg.set_value("progression", "persistent_bonus_items", persistent_bonus_items.duplicate())
+	cfg.set_value("progression", "extra_life_count", int(special_item_inventory.get("extra_life", 1)))
 	cfg.set_value("progression", "energy", energy)
 	cfg.set_value("progression", "last_energy_regen_timestamp", last_energy_regen_timestamp)
 	cfg.set_value("progression", "last_energy_daily_refill_date", last_energy_daily_refill_date)
@@ -1031,6 +1033,7 @@ func load_progression(custom_path: String = PROGRESSION_SAVE_PATH) -> bool:
 		current_play_style = PlayStyle.FALLING
 		_play_style_explicit = false
 		energy = MAX_ENERGY
+		special_item_inventory["extra_life"] = 1
 		last_energy_regen_timestamp = get_current_unix_time()
 		last_energy_daily_refill_date = get_today_date_string()
 		_recalculate_total_stars()
@@ -1052,6 +1055,12 @@ func load_progression(custom_path: String = PROGRESSION_SAVE_PATH) -> bool:
 	if loaded_bonus is Dictionary:
 		for k in MODERN_ITEM_TYPES:
 			persistent_bonus_items[k] = int(loaded_bonus.get(k, 0))
+	var loaded_el = cfg.get_value("progression", "extra_life_count", null)
+	if loaded_el != null:
+		special_item_inventory["extra_life"] = max(0, int(loaded_el))
+	else:
+		var bonus_el = int(persistent_bonus_items.get("extra_life", 0))
+		special_item_inventory["extra_life"] = max(1, 1 + bonus_el)
 	energy = clampi(int(cfg.get_value("progression", "energy", MAX_ENERGY)), 0, MAX_ENERGY)
 	last_energy_regen_timestamp = int(cfg.get_value("progression", "last_energy_regen_timestamp", get_current_unix_time()))
 	last_energy_daily_refill_date = String(cfg.get_value("progression", "last_energy_daily_refill_date", ""))
@@ -2148,7 +2157,7 @@ func spin_daily_gift_wheel(forced_slice_index: int = -1, current_date_str: Strin
 		lucky_wheel_consecutive_extra_spins = 0
 		if not is_no_reward and (r_type in MODERN_ITEM_TYPES):
 			persistent_bonus_items[r_type] = int(persistent_bonus_items.get(r_type, 0)) + amount
-			if has_special_items(current_mode):
+			if has_special_items(current_mode) or r_type == "extra_life":
 				special_item_inventory[r_type] = int(special_item_inventory.get(r_type, 0)) + amount
 				special_item_inventory_changed.emit(special_item_inventory.duplicate())
 		if lucky_wheel_extra_spins <= 0:
@@ -2413,7 +2422,9 @@ func has_used_daily_special_item_ad(item_id: String, current_date_str: String = 
 func can_watch_ad_for_special_item(item_id: String, current_date_str: String = "") -> bool:
 	if current_date_str != "":
 		_simulated_date_str = current_date_str
-	if not has_special_items(current_mode) or not (item_id in MODERN_ITEM_TYPES):
+	if not (item_id in MODERN_ITEM_TYPES):
+		return false
+	if item_id != "extra_life" and not has_special_items(current_mode):
 		return false
 	if get_special_item_count(item_id) > 0:
 		return false
@@ -2428,7 +2439,17 @@ func open_rewarded_ad_for_special_item(item_id: String, current_date_str: String
 	return rewarded_ad_controller.open_fullscreen_ad(item_id)
 
 
-func complete_rewarded_ad_for_special_item(item_id: String, current_date_str: String = "", ad_session_id: String = "") -> Dictionary:
+func complete_rewarded_ad_for_special_item(item_id: String, arg2: String = "", arg3: String = "") -> Dictionary:
+	var current_date_str: String = ""
+	var ad_session_id: String = ""
+	if arg3 != "":
+		current_date_str = arg2
+		ad_session_id = arg3
+	elif arg2 != "":
+		if arg2.contains("_session_") or arg2.begins_with(item_id):
+			ad_session_id = arg2
+		else:
+			current_date_str = arg2
 	if not rewarded_ad_controller:
 		rewarded_ad_controller = RewardedAdScript.new()
 	var sid: String = ad_session_id if ad_session_id != "" else String(rewarded_ad_controller.active_session_id)
@@ -2450,7 +2471,9 @@ func watch_rewarded_ad_for_special_item(item_id: String, ad_completed: bool = tr
 	if current_date_str != "":
 		_simulated_date_str = current_date_str
 	var today: String = current_date_str if current_date_str != "" else (_simulated_date_str if _simulated_date_str != "" else get_today_date_string())
-	if not (item_id in MODERN_ITEM_TYPES) or not has_special_items(current_mode):
+	if not (item_id in MODERN_ITEM_TYPES):
+		return {"granted": false, "amount": 0, "reason": "invalid_item", "item_id": item_id}
+	if item_id != "extra_life" and not has_special_items(current_mode):
 		return {"granted": false, "amount": 0, "reason": "invalid_item_or_mode", "item_id": item_id}
 	if not ad_completed:
 		return {"granted": false, "amount": 0, "reason": "ad_skipped_or_closed_early", "item_id": item_id, "quantity": get_special_item_count(item_id)}
@@ -2474,24 +2497,37 @@ func watch_rewarded_ad_for_special_item(item_id: String, ad_completed: bool = tr
 		"date": today
 	}
 
+
 func reset_special_item_inventory() -> void:
+	var preserved_extra_life: int = int(special_item_inventory.get("extra_life", 1))
 	if has_special_items(current_mode):
 		special_item_inventory = DEFAULT_MODERN_INVENTORY.duplicate()
 		for k in MODERN_ITEM_TYPES:
-			special_item_inventory[k] = int(special_item_inventory.get(k, 0)) + int(persistent_bonus_items.get(k, 0))
+			if k != "extra_life":
+				special_item_inventory[k] = int(special_item_inventory.get(k, 0)) + int(persistent_bonus_items.get(k, 0))
+		special_item_inventory["extra_life"] = preserved_extra_life
 	else:
-		special_item_inventory = {}
+		special_item_inventory = {
+			"extra_life": preserved_extra_life
+		}
 	moves_since_last_discovery = 0
 	special_item_inventory_changed.emit(special_item_inventory.duplicate())
 
 
 func get_special_item_count(item_id: String) -> int:
+	if item_id == "extra_life":
+		return int(special_item_inventory.get("extra_life", 0))
 	if not has_special_items(current_mode):
 		return 0
 	return int(special_item_inventory.get(item_id, 0))
 
 
 func set_special_item_count(item_id: String, count: int) -> void:
+	if item_id == "extra_life":
+		special_item_inventory["extra_life"] = max(0, count)
+		save_progression()
+		special_item_inventory_changed.emit(special_item_inventory.duplicate())
+		return
 	if not has_special_items(current_mode):
 		return
 	if item_id in MODERN_ITEM_TYPES:
@@ -2500,16 +2536,22 @@ func set_special_item_count(item_id: String, count: int) -> void:
 
 
 func add_special_item(item_id: String, amount: int = 1) -> int:
-	if not has_special_items(current_mode) or not (item_id in MODERN_ITEM_TYPES) or amount <= 0:
+	if not (item_id in MODERN_ITEM_TYPES) or amount <= 0:
+		return 0
+	if item_id != "extra_life" and not has_special_items(current_mode):
 		return 0
 	special_item_inventory[item_id] = int(special_item_inventory.get(item_id, 0)) + amount
 	var new_qty: int = int(special_item_inventory[item_id])
+	if item_id == "extra_life":
+		save_progression()
 	special_item_inventory_changed.emit(special_item_inventory.duplicate())
 	return new_qty
 
 
 func consume_special_item(item_id: String) -> bool:
-	if not has_special_items(current_mode) or not (item_id in MODERN_ITEM_TYPES):
+	if not (item_id in MODERN_ITEM_TYPES):
+		return false
+	if item_id != "extra_life" and not has_special_items(current_mode):
 		return false
 	# Extra Life can ONLY be consumed after a genuine Game Over, never during active gameplay
 	if item_id == "extra_life" and current_state != State.GAME_OVER:
@@ -2518,7 +2560,9 @@ func consume_special_item(item_id: String) -> bool:
 	if cur <= 0:
 		return false
 	special_item_inventory[item_id] = cur - 1
-	if int(persistent_bonus_items.get(item_id, 0)) > 0:
+	if item_id == "extra_life":
+		save_progression()
+	elif int(persistent_bonus_items.get(item_id, 0)) > 0:
 		persistent_bonus_items[item_id] = max(0, int(persistent_bonus_items.get(item_id, 0)) - 1)
 		save_progression()
 	special_item_inventory_changed.emit(special_item_inventory.duplicate())

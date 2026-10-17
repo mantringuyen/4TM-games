@@ -863,7 +863,7 @@ func complete_life_rewarded_ad(session_id: String = "") -> Dictionary:
 	var sid: String = session_id if session_id != "" else _active_life_ad_session_id
 	var res: Dictionary = {"granted": false, "amount": 0}
 	if state_mgr and state_mgr.has_method("complete_rewarded_ad_for_special_item"):
-		res = state_mgr.complete_rewarded_ad_for_special_item("extra_life", sid)
+		res = state_mgr.complete_rewarded_ad_for_special_item("extra_life", "", sid)
 	if life_ad_modal:
 		life_ad_modal.visible = false
 	update_life_display()
