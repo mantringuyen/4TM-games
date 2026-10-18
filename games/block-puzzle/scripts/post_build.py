@@ -360,7 +360,7 @@ def main():
             "\t\t\tif (watchdogTimer) clearInterval(watchdogTimer);\n"
             "\t\t\tconsole.error('Godot startup failure:', err);\n"
             "\t\t\tdisplayFailureNotice(err);\n"
-            "\t\t});" ,StartLine:340,TargetContent:
+            "\t\t});"
         )
 
         engine_start_pattern = re.compile(
