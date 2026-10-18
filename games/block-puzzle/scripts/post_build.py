@@ -11,7 +11,11 @@ def main():
     
     # Copy 4TM logo
     import shutil
-    shutil.copy("games/block-puzzle/assets/branding/4tm_logo.svg", os.path.join(target_dir, "4tm_logo.svg"))
+    logo_src = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets/branding/4tm_logo.svg")
+    if not os.path.exists(logo_src):
+        logo_src = "games/block-puzzle/assets/branding/4tm_logo.svg"
+    if os.path.exists(logo_src):
+        shutil.copy(logo_src, os.path.join(target_dir, "4tm_logo.svg"))
 
     html_path = os.path.join(target_dir, "index.html")
     pck_path = os.path.join(target_dir, "index.pck")
@@ -73,10 +77,10 @@ def main():
         css_replacement = (
             "<style>\n"
             "html, body, #canvas {\n\tmargin: 0;\n\tpadding: 0;\n\tborder: 0;\n}\n\n"
-            "html, body {\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #1f3885;\n\toverflow: hidden;\n\toverscroll-behavior: none;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
+            "html, body {\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #000000;\n\toverflow: hidden;\n\toverscroll-behavior: none;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
             "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100%;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n}\n\n"
             "#canvas:focus {\n\toutline: none;\n}\n\n"
-            "#status {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tbackground-color: #1f3885;\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: center;\n\talign-items: center;\n\tvisibility: hidden;\n\tz-index: 10;\n}\n\n"
+            "#status {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tbackground-color: #000000;\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: center;\n\talign-items: center;\n\tvisibility: hidden;\n\tz-index: 10;\n}\n\n"
             "#status-container {\n\tposition: relative;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-items: center;\n\twidth: 150px;\n\theight: 150px;\n}\n\n"
             "#status-logo {\n\twidth: 100px;\n\theight: 100px;\n\tborder-radius: 20px;\n\tz-index: 2;\n}\n\n"
             "#status-ring {\n\tposition: absolute;\n\twidth: 150px;\n\theight: 150px;\n\tborder-radius: 50%;\n\tbackground: conic-gradient(\n\t\t#ff0000 0%, #ff7f00 14%, #ffff00 28%, #00ff00 42%, \n\t\t#0000ff 56%, #4b0082 70%, #9400d3 84%, #ff0000 100%\n\t);\n\t-webkit-mask: radial-gradient(transparent 75%, #000 76%);\n\tmask: radial-gradient(transparent 75%, #000 76%);\n\tanimation: rotate 2s linear infinite;\n\tz-index: 1;\n}\n\n"

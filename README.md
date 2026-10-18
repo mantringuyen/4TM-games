@@ -20,7 +20,7 @@ Official workspace for the **4TM Games** suite within the **4TM Ecosystem** (`ht
 │       └── main.tsx
 │
 ├── games/
-│   └── xep-gach/             # Reserved for future Godot 4.x 2D game project
+│   └── block-puzzle/         # Canonical Godot 4.x 2D block puzzle game project
 │       └── README.md
 │
 ├── shared/                   # Reserved for shared brand tokens & specifications
@@ -32,4 +32,4 @@ Official workspace for the **4TM Games** suite within the **4TM Ecosystem** (`ht
 
 ## Production Domain Concept
 - **Showcase Portal:** `https://games.4tm.io.vn`
-- **Flagship Game Route:** `https://games.4tm.io.vn/games/xep-gach`
+- **Flagship Game Route:** `https://games.4tm.io.vn/games/block-puzzle`

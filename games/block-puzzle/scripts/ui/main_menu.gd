@@ -140,6 +140,13 @@ var btn_cancel_delete: Button = null
 var btn_confirm_delete: Button = null
 var _account_platform_override: String = ""
 
+var life_panel: PanelContainer = null
+var life_icon: Control = null
+var lbl_life: Label = null
+var btn_life_plus: Button = null
+var life_ad_modal: Control = null
+var _active_life_ad_session_id: String = ""
+
 @onready var modal_level_map: Control = get_node_or_null("Modals/LevelMapModal")
 @onready var lbl_map_modal_title: Label = get_node_or_null("Modals/LevelMapModal/Panel/VBoxContainer/LblMapTitle")
 @onready var lbl_map_milestone_hint: Label = get_node_or_null("Modals/LevelMapModal/Panel/VBoxContainer/LblMapMilestoneHint")
@@ -352,6 +359,7 @@ func _ready() -> void:
 	add_child(reward_toast_label)
 	
 	_ensure_energy_header_control()
+	_ensure_life_header_control()
 	var gs = get_node_or_null("/root/GameState")
 	if gs:
 		if gs.has_signal("progression_updated"):
@@ -360,6 +368,8 @@ func _ready() -> void:
 			gs.energy_changed.connect(func(_e, _m): _refresh_energy_ui())
 		if gs.has_signal("energy_updated"):
 			gs.energy_updated.connect(func(_e, _m): _refresh_energy_ui())
+		if gs.has_signal("special_item_inventory_changed"):
+			gs.special_item_inventory_changed.connect(func(_inv): update_life_display())
 		if gs.has_signal("language_changed"):
 			gs.language_changed.connect(func(_lang): _refresh_all_ui())
 		if gs.has_signal("voice_settings_changed"):
@@ -651,6 +661,259 @@ func skip_energy_rewarded_ad() -> Dictionary:
 	res["success"] = false
 	_refresh_energy_ui()
 	return res
+
+
+func _ensure_life_header_control() -> void:
+	var top_bar := get_node_or_null("MarginContainer/VBoxContainer/TopStatusBar") as HBoxContainer
+	if not top_bar:
+		return
+	life_panel = top_bar.get_node_or_null("LifePanel") as PanelContainer
+	if not life_panel:
+		life_panel = PanelContainer.new()
+		life_panel.name = "LifePanel"
+		life_panel.custom_minimum_size = Vector2(76, 48)
+		life_panel.size = Vector2(76, 48)
+		life_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		life_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var st_lp := StyleBoxFlat.new()
+		st_lp.bg_color = Color(0.64, 0.12, 0.26, 0.98)
+		st_lp.border_width_left = 2
+		st_lp.border_width_top = 2
+		st_lp.border_width_right = 2
+		st_lp.border_width_bottom = 5
+		st_lp.border_color = Color(1.0, 0.68, 0.82, 1.0)
+		st_lp.shadow_color = Color(0.24, 0.02, 0.08, 0.60)
+		st_lp.shadow_size = 7
+		st_lp.shadow_offset = Vector2(0, 3)
+		st_lp.set_corner_radius_all(18)
+		st_lp.content_margin_left = 6.0
+		st_lp.content_margin_right = 6.0
+		st_lp.content_margin_top = 0.0
+		st_lp.content_margin_bottom = 0.0
+		st_lp.expand_margin_left = 0.0
+		st_lp.expand_margin_right = 0.0
+		st_lp.expand_margin_top = 0.0
+		st_lp.expand_margin_bottom = 0.0
+		life_panel.add_theme_stylebox_override("panel", st_lp)
+		life_panel.set_meta("visual_identity", "ruby_heart_life")
+		life_panel.set_meta("is_unified_life_control", true)
+
+		var hbox := HBoxContainer.new()
+		hbox.name = "LifeHBox"
+		hbox.custom_minimum_size = Vector2.ZERO
+		hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		hbox.add_theme_constant_override("separation", 4)
+		life_panel.add_child(hbox)
+
+		life_icon = UIIconScript.new("extra_life")
+		life_icon.name = "LifeHeartIcon"
+		life_icon.align_mode = "none"
+		life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		life_icon.custom_minimum_size = Vector2(18, 18)
+		life_icon.size = Vector2(18, 18)
+		life_icon.primary_color = Color(1.0, 0.38, 0.58, 1.0)
+		hbox.add_child(life_icon)
+
+		var st_empty := StyleBoxEmpty.new()
+		st_empty.content_margin_left = 0.0
+		st_empty.content_margin_right = 0.0
+		st_empty.content_margin_top = 0.0
+		st_empty.content_margin_bottom = 0.0
+
+		lbl_life = Label.new()
+		lbl_life.name = "LblLife"
+		lbl_life.text = "1"
+		lbl_life.custom_minimum_size = Vector2.ZERO
+		lbl_life.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		lbl_life.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl_life.add_theme_stylebox_override("normal", st_empty)
+		lbl_life.add_theme_font_size_override("font_size", 14)
+		lbl_life.add_theme_color_override("font_color", Color(1.0, 0.94, 0.96, 1.0))
+		lbl_life.add_theme_color_override("font_outline_color", Color(0.24, 0.04, 0.08, 0.96))
+		lbl_life.add_theme_constant_override("outline_size", 2)
+		hbox.add_child(lbl_life)
+
+		btn_life_plus = Button.new()
+		btn_life_plus.name = "BtnLifePlus"
+		btn_life_plus.text = ""
+		btn_life_plus.flat = true
+		btn_life_plus.focus_mode = Control.FOCUS_NONE
+		btn_life_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		btn_life_plus.custom_minimum_size = Vector2(26, 26)
+		btn_life_plus.size = Vector2(26, 26)
+		btn_life_plus.add_theme_constant_override("h_separation", 0)
+		btn_life_plus.add_theme_font_size_override("font_size", 20)
+		btn_life_plus.add_theme_color_override("font_color", Color(0.38, 1.0, 0.58, 1.0))
+		btn_life_plus.add_theme_color_override("font_hover_color", Color(0.56, 1.0, 0.72, 1.0))
+		btn_life_plus.add_theme_color_override("font_pressed_color", Color(0.24, 0.90, 0.46, 1.0))
+		btn_life_plus.add_theme_color_override("font_disabled_color", Color(0.62, 0.74, 0.86, 0.78))
+		btn_life_plus.add_theme_color_override("font_outline_color", Color(0.04, 0.22, 0.14, 0.96))
+		btn_life_plus.add_theme_constant_override("outline_size", 2)
+		btn_life_plus.add_theme_stylebox_override("normal", st_empty)
+		btn_life_plus.add_theme_stylebox_override("hover", st_empty)
+		btn_life_plus.add_theme_stylebox_override("pressed", st_empty)
+		btn_life_plus.add_theme_stylebox_override("disabled", st_empty)
+		btn_life_plus.add_theme_stylebox_override("focus", st_empty)
+		btn_life_plus.set_meta("has_separate_background_frame", false)
+		btn_life_plus.set_meta("is_integrated_life_plus", true)
+		UIIconScript.attach_to_button(btn_life_plus, "plus", Vector2(24, 24), "center", Color(0.38, 1.0, 0.58, 1.0))
+		UIIconScript.remove_focus_outline(btn_life_plus)
+		UIIconScript.setup_button_press_feedback(btn_life_plus)
+		btn_life_plus.pressed.connect(_on_btn_life_plus_pressed)
+		hbox.add_child(btn_life_plus)
+
+		top_bar.add_child(life_panel)
+		var ep_idx: int = energy_panel.get_index() if energy_panel else (btn_top_level.get_index() if btn_top_level else 0)
+		top_bar.move_child(life_panel, min(top_bar.get_child_count() - 1, ep_idx + 1))
+	else:
+		lbl_life = life_panel.find_child("LblLife", true, false) as Label
+		btn_life_plus = life_panel.find_child("BtnLifePlus", true, false) as Button
+		life_icon = life_panel.find_child("LifeHeartIcon", true, false) as Control
+
+	_ensure_life_ad_modal()
+	update_life_display()
+
+
+func _ensure_life_ad_modal() -> void:
+	if life_ad_modal and is_instance_valid(life_ad_modal):
+		return
+	life_ad_modal = get_node_or_null("LifeFullscreenAdModal") as Control
+	if life_ad_modal:
+		return
+	life_ad_modal = Control.new()
+	life_ad_modal.name = "LifeFullscreenAdModal"
+	life_ad_modal.top_level = true
+	life_ad_modal.visible = false
+	life_ad_modal.anchor_right = 1.0
+	life_ad_modal.anchor_bottom = 1.0
+	life_ad_modal.custom_minimum_size = Vector2(720, 1280)
+	life_ad_modal.z_index = 220
+	add_child(life_ad_modal)
+
+	var bg := ColorRect.new()
+	bg.name = "AdBackdrop"
+	bg.anchor_right = 1.0
+	bg.anchor_bottom = 1.0
+	bg.color = Color(0.04, 0.06, 0.16, 0.96)
+	life_ad_modal.add_child(bg)
+
+	var vbox := VBoxContainer.new()
+	vbox.name = "AdContentVBox"
+	vbox.anchor_left = 0.1
+	vbox.anchor_right = 0.9
+	vbox.anchor_top = 0.25
+	vbox.anchor_bottom = 0.75
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 18)
+	life_ad_modal.add_child(vbox)
+
+	var lbl_ad_title := Label.new()
+	lbl_ad_title.name = "LblAdTitle"
+	lbl_ad_title.text = "REWARDED ADVERTISEMENT"
+	lbl_ad_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_ad_title.add_theme_font_size_override("font_size", 26)
+	lbl_ad_title.add_theme_color_override("font_color", Color(1.0, 0.92, 0.34, 1.0))
+	vbox.add_child(lbl_ad_title)
+
+	var lbl_ad_desc := Label.new()
+	lbl_ad_desc.name = "LblAdDesc"
+	lbl_ad_desc.text = "Watch full-screen ad to earn +1 Extra Life"
+	lbl_ad_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_ad_desc.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(lbl_ad_desc)
+
+	var btn_complete := Button.new()
+	btn_complete.name = "BtnCompleteAd"
+	btn_complete.text = "COMPLETE AD (+1 LIFE)"
+	btn_complete.custom_minimum_size = Vector2(240, 56)
+	UIIconScript.remove_focus_outline(btn_complete)
+	UIIconScript.setup_button_press_feedback(btn_complete)
+	btn_complete.pressed.connect(func(): complete_life_rewarded_ad(_active_life_ad_session_id))
+	vbox.add_child(btn_complete)
+
+	var btn_skip := Button.new()
+	btn_skip.name = "BtnSkipAd"
+	btn_skip.text = "SKIP / CLOSE"
+	btn_skip.custom_minimum_size = Vector2(240, 50)
+	UIIconScript.remove_focus_outline(btn_skip)
+	UIIconScript.setup_button_press_feedback(btn_skip)
+	btn_skip.pressed.connect(func(): skip_life_rewarded_ad())
+	vbox.add_child(btn_skip)
+
+
+func update_life_display() -> void:
+	_ensure_life_header_control()
+	var gs = get_node_or_null("/root/GameState")
+	var cur_lives: int = gs.get_special_item_count("extra_life") if (gs and gs.has_method("get_special_item_count")) else 1
+	if lbl_life:
+		lbl_life.text = "%d" % cur_lives
+	if btn_life_plus:
+		var can_ad: bool = gs.can_watch_ad_for_special_item("extra_life") if (gs and gs.has_method("can_watch_ad_for_special_item")) else false
+		btn_life_plus.disabled = not can_ad
+		btn_life_plus.modulate.a = 1.0 if can_ad else 0.52
+
+
+func _on_btn_life_plus_pressed() -> void:
+	open_life_rewarded_ad()
+
+
+func open_life_rewarded_ad(current_date_str: String = "") -> String:
+	_ensure_life_header_control()
+	var gs = get_node_or_null("/root/GameState")
+	if not gs or not gs.has_method("open_rewarded_ad_for_special_item"):
+		return ""
+	var sid: String = gs.open_rewarded_ad_for_special_item("extra_life", current_date_str)
+	_active_life_ad_session_id = sid
+	if life_ad_modal:
+		life_ad_modal.visible = true
+	return sid
+
+
+func complete_life_rewarded_ad(session_id: String = "") -> Dictionary:
+	var gs = get_node_or_null("/root/GameState")
+	var sid: String = session_id if session_id != "" else _active_life_ad_session_id
+	if sid == "" or not gs:
+		if life_ad_modal:
+			life_ad_modal.visible = false
+		return {"granted": false, "amount": 0, "reason": "no_active_ad_session"}
+	_active_life_ad_session_id = ""
+	var res: Dictionary = {"granted": false, "amount": 0}
+	if gs.has_method("complete_rewarded_ad_for_special_item"):
+		res = gs.complete_rewarded_ad_for_special_item("extra_life", "", sid)
+	if life_ad_modal:
+		life_ad_modal.visible = false
+	update_life_display()
+	return res
+
+
+func skip_life_rewarded_ad() -> Dictionary:
+	var gs = get_node_or_null("/root/GameState")
+	_active_life_ad_session_id = ""
+	var res: Dictionary = {"granted": false, "amount": 0}
+	if gs and gs.has_method("skip_rewarded_ad_for_special_item"):
+		res = gs.skip_rewarded_ad_for_special_item("extra_life")
+	if life_ad_modal:
+		life_ad_modal.visible = false
+	update_life_display()
+	return res
+
+
+func watch_life_rewarded_ad(ad_completed: bool = true) -> Dictionary:
+	var sid := open_life_rewarded_ad()
+	if ad_completed:
+		return complete_life_rewarded_ad(sid)
+	return skip_life_rewarded_ad()
+
+
+func has_life_header_control() -> bool:
+	_ensure_life_header_control()
+	return life_panel != null and is_instance_valid(life_panel)
+
+
+func get_life_count() -> int:
+	var gs = get_node_or_null("/root/GameState")
+	return gs.get_special_item_count("extra_life") if (gs and gs.has_method("get_special_item_count")) else 1
 
 
 func _sync_selection_from_state() -> void:
@@ -1738,6 +2001,46 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		energy_panel.custom_minimum_size = Vector2(ep_w, top_btn_h)
 		energy_panel.update_minimum_size()
 		energy_panel.size = Vector2(ep_w, top_btn_h)
+	if life_panel:
+		var lp_w: float = 68.0 if is_very_compact else (72.0 if is_compact else 84.0)
+		life_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var lp_sb := life_panel.get_theme_stylebox("panel") as StyleBoxFlat
+		if lp_sb:
+			lp_sb.content_margin_left = 6.0
+			lp_sb.content_margin_right = 4.0
+			lp_sb.content_margin_top = 0.0
+			lp_sb.content_margin_bottom = 0.0
+		var lp_hbox := life_panel.get_node_or_null("LifeHBox") as HBoxContainer
+		if lp_hbox:
+			lp_hbox.custom_minimum_size = Vector2.ZERO
+			lp_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			lp_hbox.add_theme_constant_override("separation", 3 if is_very_compact else 4)
+		if life_icon:
+			var li_side: float = 16.0 if is_very_compact else (18.0 if is_compact else 20.0)
+			life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			life_icon.custom_minimum_size = Vector2(li_side, li_side)
+			life_icon.size = Vector2(li_side, li_side)
+		if lbl_life:
+			lbl_life.custom_minimum_size = Vector2.ZERO
+			lbl_life.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			lbl_life.add_theme_font_size_override("font_size", 12 if is_very_compact else (13 if is_compact else 15))
+			lbl_life.update_minimum_size()
+		if btn_life_plus:
+			var lp_plus_side: float = 22.0 if is_very_compact else (24.0 if is_compact else 28.0)
+			btn_life_plus.custom_minimum_size = Vector2(lp_plus_side, lp_plus_side)
+			btn_life_plus.size = Vector2(lp_plus_side, lp_plus_side)
+			btn_life_plus.add_theme_font_size_override("font_size", 18 if is_very_compact else (20 if is_compact else 22))
+			var lp_plus_icon := btn_life_plus.get_node_or_null("VectorIcon") as Control
+			if lp_plus_icon:
+				lp_plus_icon.custom_minimum_size = Vector2(lp_plus_side, lp_plus_side)
+				lp_plus_icon.size = Vector2(lp_plus_side, lp_plus_side)
+				if lp_plus_icon.has_method("_on_parent_resized"):
+					lp_plus_icon._on_parent_resized()
+		if lp_hbox:
+			lp_hbox.update_minimum_size()
+		life_panel.custom_minimum_size = Vector2(lp_w, top_btn_h)
+		life_panel.update_minimum_size()
+		life_panel.size = Vector2(lp_w, top_btn_h)
 	if btn_daily_gift:
 		btn_daily_gift.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var gift_w: float = 126.0 if is_very_compact else (136.0 if is_compact else 184.0)
@@ -4672,6 +4975,7 @@ func _draw_lucky_wheel_canvas() -> void:
 
 func _refresh_progression_ui() -> void:
 	_refresh_energy_ui()
+	update_life_display()
 	var gs = get_node_or_null("/root/GameState")
 	var cur_map_lvl := 1
 	var can_claim := true

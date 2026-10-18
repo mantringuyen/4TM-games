@@ -2442,7 +2442,13 @@ func open_rewarded_ad_for_special_item(item_id: String, current_date_str: String
 func complete_rewarded_ad_for_special_item(item_id: String, arg2: String = "", arg3: String = "") -> Dictionary:
 	var current_date_str: String = ""
 	var ad_session_id: String = ""
-	if arg3 != "":
+	if (arg2.length() == 10 and arg2[4] == "-") or (arg3.contains("_session_") or arg3.begins_with(item_id)):
+		current_date_str = arg2
+		ad_session_id = arg3
+	elif (arg3.length() == 10 and arg3[4] == "-") or (arg2.contains("_session_") or arg2.begins_with(item_id)):
+		current_date_str = arg3
+		ad_session_id = arg2
+	elif arg3 != "":
 		current_date_str = arg2
 		ad_session_id = arg3
 	elif arg2 != "":
@@ -2453,7 +2459,9 @@ func complete_rewarded_ad_for_special_item(item_id: String, arg2: String = "", a
 	if not rewarded_ad_controller:
 		rewarded_ad_controller = RewardedAdScript.new()
 	var sid: String = ad_session_id if ad_session_id != "" else String(rewarded_ad_controller.active_session_id)
-	if sid != "" and _claimed_ad_sessions.has(sid):
+	if sid == "":
+		return {"granted": false, "amount": 0, "reason": "no_active_ad_session", "item_id": item_id, "quantity": get_special_item_count(item_id)}
+	if _claimed_ad_sessions.has(sid):
 		return {"granted": false, "amount": 0, "reason": "duplicate_ad_session", "item_id": item_id, "quantity": get_special_item_count(item_id)}
 	var ad_res: Dictionary = rewarded_ad_controller.complete_fullscreen_ad(sid)
 	if not bool(ad_res.get("completed", false)):
@@ -2477,7 +2485,9 @@ func watch_rewarded_ad_for_special_item(item_id: String, ad_completed: bool = tr
 		return {"granted": false, "amount": 0, "reason": "invalid_item_or_mode", "item_id": item_id}
 	if not ad_completed:
 		return {"granted": false, "amount": 0, "reason": "ad_skipped_or_closed_early", "item_id": item_id, "quantity": get_special_item_count(item_id)}
-	if ad_session_id != "" and _claimed_ad_sessions.has(ad_session_id):
+	if ad_session_id == "":
+		return {"granted": false, "amount": 0, "reason": "no_active_ad_session", "item_id": item_id, "quantity": get_special_item_count(item_id)}
+	if _claimed_ad_sessions.has(ad_session_id):
 		return {"granted": false, "amount": 0, "reason": "duplicate_ad_session", "item_id": item_id, "quantity": get_special_item_count(item_id)}
 	if get_special_item_count(item_id) > 0:
 		return {"granted": false, "amount": 0, "reason": "inventory_not_zero", "item_id": item_id, "quantity": get_special_item_count(item_id)}

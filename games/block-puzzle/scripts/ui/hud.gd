@@ -861,8 +861,13 @@ func open_life_rewarded_ad(current_date_str: String = "") -> String:
 func complete_life_rewarded_ad(session_id: String = "") -> Dictionary:
 	var state_mgr = _get_game_state()
 	var sid: String = session_id if session_id != "" else _active_life_ad_session_id
+	if sid == "" or not state_mgr:
+		if life_ad_modal:
+			life_ad_modal.visible = false
+		return {"granted": false, "amount": 0, "reason": "no_active_ad_session"}
+	_active_life_ad_session_id = ""
 	var res: Dictionary = {"granted": false, "amount": 0}
-	if state_mgr and state_mgr.has_method("complete_rewarded_ad_for_special_item"):
+	if state_mgr.has_method("complete_rewarded_ad_for_special_item"):
 		res = state_mgr.complete_rewarded_ad_for_special_item("extra_life", "", sid)
 	if life_ad_modal:
 		life_ad_modal.visible = false
@@ -872,6 +877,7 @@ func complete_life_rewarded_ad(session_id: String = "") -> Dictionary:
 
 func skip_life_rewarded_ad() -> Dictionary:
 	var state_mgr = _get_game_state()
+	_active_life_ad_session_id = ""
 	var res: Dictionary = {"granted": false, "amount": 0}
 	if state_mgr and state_mgr.has_method("skip_rewarded_ad_for_special_item"):
 		res = state_mgr.skip_rewarded_ad_for_special_item("extra_life")
