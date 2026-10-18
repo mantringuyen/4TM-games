@@ -2,6 +2,15 @@ class_name RewardedAdInterface
 extends RefCounted
 
 ## RewardedAdInterface — Full-screen rewarded advertisement lifecycle & session controller.
+##
+## NOTE ON AD-NETWORK INTEGRATION:
+## Currently, no real external ad-network SDK (e.g. Google AdMob, AppLovin) or native bridge
+## is integrated in this project repository. Real rewarded ads remain unimplemented.
+## This controller provides session validation, one-reward-per-session enforcement,
+## and skip/cancellation handling for test coverage and future bridge connection.
+## User-facing UI modal dialogs transparently inform the user that rewarded ads are unavailable
+## and disable unverified reward buttons. The game remains fully playable without ads.
+##
 ## Supports:
 ##   1. Energy +1 rewarded ads ("energy")
 ##   2. Special item daily +1 rewarded ads ("bomb", "change_block", "extra_life")
@@ -10,6 +19,12 @@ extends RefCounted
 ##   - Reward is granted ONLY when the ad completes successfully.
 ##   - Skipping or closing the ad before completion grants 0 reward.
 ##   - One ad session can NEVER grant multiple rewards.
+
+const HAS_REAL_AD_SDK: bool = false
+
+## Reports whether a real external ad-network SDK or native bridge is present
+static func has_real_ad_sdk() -> bool:
+	return HAS_REAL_AD_SDK
 
 signal ad_loaded()
 signal ad_failed_to_load(error_code: int, message: String)

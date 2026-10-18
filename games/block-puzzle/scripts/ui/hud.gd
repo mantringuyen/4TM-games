@@ -583,7 +583,7 @@ func _ensure_energy_header_control() -> void:
 
 		var lbl_ad_desc := Label.new()
 		lbl_ad_desc.name = "LblAdDesc"
-		lbl_ad_desc.text = "Watch full-screen ad to earn +1 Energy"
+		lbl_ad_desc.text = "Rewarded ads are currently unavailable in this build.\nEnergy regenerates automatically (+1/hr) and via daily calendar refills."
 		lbl_ad_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl_ad_desc.add_theme_font_size_override("font_size", 18)
 		vbox.add_child(lbl_ad_desc)
@@ -592,14 +592,13 @@ func _ensure_energy_header_control() -> void:
 		btn_complete.name = "BtnCompleteAd"
 		btn_complete.text = "COMPLETE AD (+1 ENERGY)"
 		btn_complete.custom_minimum_size = Vector2(240, 56)
-		UIIconScript.remove_focus_outline(btn_complete)
-		UIIconScript.setup_button_press_feedback(btn_complete)
-		btn_complete.pressed.connect(func(): complete_energy_rewarded_ad(_active_energy_ad_session_id))
+		btn_complete.visible = false
+		btn_complete.disabled = true
 		vbox.add_child(btn_complete)
 
 		var btn_skip := Button.new()
 		btn_skip.name = "BtnSkipAd"
-		btn_skip.text = "SKIP / CLOSE"
+		btn_skip.text = "CLOSE"
 		btn_skip.custom_minimum_size = Vector2(240, 50)
 		UIIconScript.remove_focus_outline(btn_skip)
 		UIIconScript.setup_button_press_feedback(btn_skip)
@@ -665,6 +664,8 @@ func watch_energy_rewarded_ad(ad_completed: bool = true) -> Dictionary:
 
 
 func _ensure_life_header_control() -> void:
+	if life_panel and is_instance_valid(life_panel):
+		return
 	_ensure_energy_header_control()
 	var header_row := get_node_or_null("MarginContainer/VBoxContainer/HeaderRow") as HBoxContainer
 	if not header_row:
@@ -806,7 +807,7 @@ func _ensure_life_header_control() -> void:
 
 		var lbl_ad_desc := Label.new()
 		lbl_ad_desc.name = "LblAdDesc"
-		lbl_ad_desc.text = "Watch full-screen ad to earn +1 Extra Life"
+		lbl_ad_desc.text = "Rewarded ads are currently unavailable in this build.\nExtra Life is granted via Lucky Wheel spins and progression rewards."
 		lbl_ad_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl_ad_desc.add_theme_font_size_override("font_size", 18)
 		vbox.add_child(lbl_ad_desc)
@@ -815,14 +816,13 @@ func _ensure_life_header_control() -> void:
 		btn_complete.name = "BtnCompleteAd"
 		btn_complete.text = "COMPLETE AD (+1 LIFE)"
 		btn_complete.custom_minimum_size = Vector2(240, 56)
-		UIIconScript.remove_focus_outline(btn_complete)
-		UIIconScript.setup_button_press_feedback(btn_complete)
-		btn_complete.pressed.connect(func(): complete_life_rewarded_ad(_active_life_ad_session_id))
+		btn_complete.visible = false
+		btn_complete.disabled = true
 		vbox.add_child(btn_complete)
 
 		var btn_skip := Button.new()
 		btn_skip.name = "BtnSkipAd"
-		btn_skip.text = "SKIP / CLOSE"
+		btn_skip.text = "CLOSE"
 		btn_skip.custom_minimum_size = Vector2(240, 50)
 		UIIconScript.remove_focus_outline(btn_skip)
 		UIIconScript.setup_button_press_feedback(btn_skip)
@@ -831,7 +831,8 @@ func _ensure_life_header_control() -> void:
 
 
 func update_life_display() -> void:
-	_ensure_life_header_control()
+	if not life_panel or not is_instance_valid(life_panel):
+		_ensure_life_header_control()
 	var state_mgr = _get_game_state()
 	var cur_lives: int = state_mgr.get_special_item_count("extra_life") if (state_mgr and state_mgr.has_method("get_special_item_count")) else 1
 	if lbl_life:

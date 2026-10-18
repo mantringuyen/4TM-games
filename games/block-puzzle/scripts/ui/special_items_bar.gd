@@ -294,7 +294,7 @@ func _ensure_fullscreen_ad_modal() -> void:
 
 	var lbl_ad_desc := Label.new()
 	lbl_ad_desc.name = "LblAdDesc"
-	lbl_ad_desc.text = "Watch full-screen ad to earn +1 Special Item"
+	lbl_ad_desc.text = "Rewarded ads are currently unavailable in this build.\nSpecial items are earned through biomes and lucky wheel rewards."
 	lbl_ad_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_ad_desc.add_theme_font_size_override("font_size", 18)
 	vbox.add_child(lbl_ad_desc)
@@ -303,15 +303,13 @@ func _ensure_fullscreen_ad_modal() -> void:
 	btn_complete.name = "BtnCompleteAd"
 	btn_complete.text = "COMPLETE AD (+1)"
 	btn_complete.custom_minimum_size = Vector2(240, 56)
-	GameTypographyScript.apply_secondary_button_typography(btn_complete, 20)
-	UIIconScript.remove_focus_outline(btn_complete)
-	UIIconScript.setup_button_press_feedback(btn_complete)
-	btn_complete.pressed.connect(func(): complete_rewarded_ad_for_item(_active_ad_item_id, _active_ad_session_id))
+	btn_complete.visible = false
+	btn_complete.disabled = true
 	vbox.add_child(btn_complete)
 
 	var btn_skip := Button.new()
 	btn_skip.name = "BtnSkipAd"
-	btn_skip.text = "SKIP / CLOSE"
+	btn_skip.text = "CLOSE"
 	btn_skip.custom_minimum_size = Vector2(240, 50)
 	GameTypographyScript.apply_secondary_button_typography(btn_skip, 18)
 	UIIconScript.remove_focus_outline(btn_skip)

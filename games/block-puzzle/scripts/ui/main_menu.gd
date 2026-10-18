@@ -360,6 +360,7 @@ func _ready() -> void:
 	
 	_ensure_energy_header_control()
 	_ensure_life_header_control()
+	update_life_display()
 	var gs = get_node_or_null("/root/GameState")
 	if gs:
 		if gs.has_signal("progression_updated"):
@@ -554,11 +555,19 @@ func _ensure_energy_ad_overlay() -> void:
 
 	var lbl_t := Label.new()
 	lbl_t.name = "LblAdTitle"
-	lbl_t.text = "REWARDED AD: +1 ENERGY"
+	lbl_t.text = "ENERGY REFILL"
 	lbl_t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_t.add_theme_font_size_override("font_size", 18)
 	lbl_t.add_theme_color_override("font_color", Color(1.0, 0.94, 0.36, 1.0))
 	vbox.add_child(lbl_t)
+
+	var lbl_desc := Label.new()
+	lbl_desc.name = "LblAdDesc"
+	lbl_desc.text = "Rewarded ads are currently unavailable in this build.\nEnergy regenerates automatically (+1/hr) and via daily calendar refills."
+	lbl_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_desc.add_theme_font_size_override("font_size", 14)
+	lbl_desc.add_theme_color_override("font_color", Color(0.85, 0.92, 1.0, 0.90))
+	vbox.add_child(lbl_desc)
 
 	var actions := HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -567,8 +576,8 @@ func _ensure_energy_ad_overlay() -> void:
 
 	var btn_skip := Button.new()
 	btn_skip.name = "BtnSkipEnergyAd"
-	btn_skip.text = "SKIP / CLOSE"
-	btn_skip.custom_minimum_size = Vector2(124, 44)
+	btn_skip.text = "CLOSE"
+	btn_skip.custom_minimum_size = Vector2(140, 44)
 	UIIconScript.remove_focus_outline(btn_skip)
 	btn_skip.pressed.connect(func(): skip_energy_rewarded_ad())
 	actions.add_child(btn_skip)
@@ -576,9 +585,8 @@ func _ensure_energy_ad_overlay() -> void:
 	var btn_complete := Button.new()
 	btn_complete.name = "BtnCompleteEnergyAd"
 	btn_complete.text = "COMPLETE AD"
-	btn_complete.custom_minimum_size = Vector2(134, 44)
-	UIIconScript.remove_focus_outline(btn_complete)
-	btn_complete.pressed.connect(func(): complete_energy_rewarded_ad())
+	btn_complete.visible = false
+	btn_complete.disabled = true
 	actions.add_child(btn_complete)
 
 	add_child(_energy_ad_overlay)
@@ -664,6 +672,9 @@ func skip_energy_rewarded_ad() -> Dictionary:
 
 
 func _ensure_life_header_control() -> void:
+	if life_panel and is_instance_valid(life_panel):
+		_ensure_life_ad_modal()
+		return
 	var top_bar := get_node_or_null("MarginContainer/VBoxContainer/TopStatusBar") as HBoxContainer
 	if not top_bar:
 		return
@@ -772,7 +783,6 @@ func _ensure_life_header_control() -> void:
 		life_icon = life_panel.find_child("LifeHeartIcon", true, false) as Control
 
 	_ensure_life_ad_modal()
-	update_life_display()
 
 
 func _ensure_life_ad_modal() -> void:
@@ -818,7 +828,7 @@ func _ensure_life_ad_modal() -> void:
 
 	var lbl_ad_desc := Label.new()
 	lbl_ad_desc.name = "LblAdDesc"
-	lbl_ad_desc.text = "Watch full-screen ad to earn +1 Extra Life"
+	lbl_ad_desc.text = "Rewarded ads are currently unavailable in this build.\nExtra Life is granted via Lucky Wheel spins and progression rewards."
 	lbl_ad_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_ad_desc.add_theme_font_size_override("font_size", 18)
 	vbox.add_child(lbl_ad_desc)
@@ -827,14 +837,13 @@ func _ensure_life_ad_modal() -> void:
 	btn_complete.name = "BtnCompleteAd"
 	btn_complete.text = "COMPLETE AD (+1 LIFE)"
 	btn_complete.custom_minimum_size = Vector2(240, 56)
-	UIIconScript.remove_focus_outline(btn_complete)
-	UIIconScript.setup_button_press_feedback(btn_complete)
-	btn_complete.pressed.connect(func(): complete_life_rewarded_ad(_active_life_ad_session_id))
+	btn_complete.visible = false
+	btn_complete.disabled = true
 	vbox.add_child(btn_complete)
 
 	var btn_skip := Button.new()
 	btn_skip.name = "BtnSkipAd"
-	btn_skip.text = "SKIP / CLOSE"
+	btn_skip.text = "CLOSE"
 	btn_skip.custom_minimum_size = Vector2(240, 50)
 	UIIconScript.remove_focus_outline(btn_skip)
 	UIIconScript.setup_button_press_feedback(btn_skip)
@@ -843,7 +852,8 @@ func _ensure_life_ad_modal() -> void:
 
 
 func update_life_display() -> void:
-	_ensure_life_header_control()
+	if not life_panel or not is_instance_valid(life_panel):
+		_ensure_life_header_control()
 	var gs = get_node_or_null("/root/GameState")
 	var cur_lives: int = gs.get_special_item_count("extra_life") if (gs and gs.has_method("get_special_item_count")) else 1
 	if lbl_life:
