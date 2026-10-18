@@ -325,12 +325,10 @@ static func remove_all_focus_outlines(root: Node) -> void:
 static func has_focus_outline(ctrl: Control) -> bool:
 	if not ctrl:
 		return false
-	if ctrl.focus_mode != Control.FOCUS_NONE:
-		return true
 	var focus_sb: StyleBox = ctrl.get_theme_stylebox("focus")
-	if focus_sb is StyleBoxEmpty:
+	if focus_sb == null or focus_sb is StyleBoxEmpty:
 		return false
-	return focus_sb != null
+	return ctrl.focus_mode != Control.FOCUS_NONE
 
 
 static func verify_no_focus_outlines_in_tree(root: Node) -> bool:
