@@ -344,6 +344,7 @@ def main():
             "\t\t\t\tstatusOverlay.remove();\n"
             "\t\t\t}\n"
             "\t\t\tinitializing = false;\n"
+            "\t\t\t// On Safari web only (non-PWA standalone), switch browser-visible background and theme-color to navy blue #293D8A\n"
             "\t\t\tvar isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);\n"
             "\t\t\tvar isStandalone = !!(window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);\n"
             "\t\t\tvar isSafari = isIOS || /^((?!chrome|android).)*safari/i.test(navigator.userAgent);\n"
@@ -354,12 +355,12 @@ def main():
             "\t\t\t\tif (metaTheme) {\n"
             "\t\t\t\t\tmetaTheme.setAttribute('content', '#293D8A');\n"
             "\t\t\t\t}\n"
-            "\t\t\t}\n" ,StartLine:346,TargetContent:
+            "\t\t\t}\n"
             "\t\t}, function (err) {\n"
             "\t\t\tif (watchdogTimer) clearInterval(watchdogTimer);\n"
             "\t\t\tconsole.error('Godot startup failure:', err);\n"
             "\t\t\tdisplayFailureNotice(err);\n"
-            "\t\t});"
+            "\t\t});" ,StartLine:340,TargetContent:
         )
 
         engine_start_pattern = re.compile(
