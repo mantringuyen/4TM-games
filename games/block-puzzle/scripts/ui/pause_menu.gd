@@ -109,15 +109,17 @@ func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
 	var effective_top: float = float(insets.get("effective_top", insets.get("top", 0.0)))
 	var safe_bot: float = float(insets.get("bottom", 0.0))
 
-	var top_safe_y: float = maxf(14.0 if is_compact else 24.0, effective_top)
-	var bot_safe_y: float = vp_h - maxf(14.0 if is_compact else 24.0, safe_bot)
+	var top_safe_y: float = maxf(16.0 if is_compact else 26.0, effective_top)
+	var bot_safe_y: float = vp_h - maxf(16.0 if is_compact else 26.0, safe_bot)
 	var avail_h: float = maxf(520.0, bot_safe_y - top_safe_y)
 
 	var target_w: float = clampf(vp_w - (16.0 if is_very_compact else 28.0), 340.0, 620.0)
-	var target_h: float = clampf(avail_h - (12.0 if is_very_compact else 20.0), 550.0, 800.0)
+	var max_fit_h: float = maxf(500.0, avail_h - (12.0 if is_very_compact else 20.0))
+	var target_h: float = clampf(max_fit_h, 540.0, 800.0)
 	var usable_center_y: float = (top_safe_y + bot_safe_y) * 0.5
-	var panel_top_y: float = maxf(top_safe_y, usable_center_y - target_h * 0.5)
+	var panel_top_y: float = maxf(top_safe_y + 4.0, usable_center_y - target_h * 0.5)
 	if panel_container:
+		_apply_panel_style()
 		panel_container.offset_left = -target_w * 0.5
 		panel_container.offset_right = target_w * 0.5
 		panel_container.offset_top = panel_top_y - vp_h * 0.5
@@ -126,27 +128,49 @@ func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
 		if vbox:
 			vbox.add_theme_constant_override("separation", 14 if is_very_compact else (16 if is_compact else 20))
 
-	var resume_h: float = 78.0 if is_very_compact else (84.0 if is_compact else 88.0)
-	var restart_h: float = 72.0 if is_very_compact else (76.0 if is_compact else 80.0)
-	var menu_h: float = 72.0 if is_very_compact else (76.0 if is_compact else 80.0)
-	var toggle_h: float = 66.0 if is_very_compact else (70.0 if is_compact else 74.0)
+	var resume_h: float = 82.0 if is_very_compact else (88.0 if is_compact else 94.0)
+	var restart_h: float = 74.0 if is_very_compact else (80.0 if is_compact else 84.0)
+	var menu_h: float = 74.0 if is_very_compact else (80.0 if is_compact else 84.0)
+	var toggle_h: float = 68.0 if is_very_compact else (72.0 if is_compact else 76.0)
 
 	if voice_haptics_row:
 		voice_haptics_row.custom_minimum_size.y = toggle_h + (10.0 if is_very_compact else (14.0 if is_compact else 18.0))
 
+	if lbl_title:
+		GameTypographyScript.apply_heading_typography(lbl_title, 34 if is_compact else 38)
+		lbl_title.add_theme_color_override("font_color", Color(1.0, 0.94, 0.40, 1.0))
+		lbl_title.add_theme_color_override("font_shadow_color", Color(0.04, 0.08, 0.28, 0.90))
+
 	if btn_resume:
 		btn_resume.custom_minimum_size.y = resume_h
-		GameTypographyScript.apply_primary_button_typography(btn_resume, 26 if is_compact else 28)
+		GameTypographyScript.apply_primary_button_typography(btn_resume, 28 if is_compact else 30)
 	if btn_restart:
 		btn_restart.custom_minimum_size.y = restart_h
-		GameTypographyScript.apply_secondary_button_typography(btn_restart, 22 if is_compact else 24)
+		GameTypographyScript.apply_secondary_button_typography(btn_restart, 24 if is_compact else 26)
 	if btn_menu:
 		btn_menu.custom_minimum_size.y = menu_h
-		GameTypographyScript.apply_secondary_button_typography(btn_menu, 22 if is_compact else 24, Color(0.24, 0.04, 0.06, 0.95))
+		GameTypographyScript.apply_secondary_button_typography(btn_menu, 24 if is_compact else 26, Color(0.24, 0.04, 0.06, 0.95))
 	for b in [btn_music, btn_sound, btn_voice, btn_haptics]:
 		if b:
 			b.custom_minimum_size.y = toggle_h
-			GameTypographyScript.apply_secondary_button_typography(b, 17 if is_very_compact else 18)
+			GameTypographyScript.apply_secondary_button_typography(b, 18 if is_very_compact else 19)
+
+
+func _apply_panel_style() -> void:
+	if not panel_container:
+		return
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.24, 0.44, 0.86, 0.98)
+	st.border_width_left = 4
+	st.border_width_top = 4
+	st.border_width_right = 4
+	st.border_width_bottom = 10
+	st.border_color = Color(1.0, 0.92, 0.45, 1.0)
+	st.set_corner_radius_all(32)
+	st.shadow_color = Color(0.04, 0.08, 0.28, 0.60)
+	st.shadow_size = 24
+	st.shadow_offset = Vector2(0, 8)
+	panel_container.add_theme_stylebox_override("panel", st)
 
 
 func _apply_action_button_style(btn: Button, bg_col: Color, border_col: Color) -> void:

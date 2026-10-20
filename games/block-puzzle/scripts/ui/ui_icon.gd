@@ -881,6 +881,18 @@ func _draw() -> void:
 		"down":
 			var d_pts := PackedVector2Array([c + Vector2(-r * 0.68, -r * 0.42), c + Vector2(r * 0.68, -r * 0.42), c + Vector2(0.0, r * 0.62)])
 			draw_colored_polygon(d_pts, primary_color)
+		"quick_drop", "downward_drop", "drop":
+			var shaft_w: float = maxf(3.0, r * 0.32)
+			draw_rect(Rect2(c + Vector2(-shaft_w * 0.5, -r * 0.78), Vector2(shaft_w, r * 0.72)), primary_color, true)
+			var arr_pts := PackedVector2Array([
+				c + Vector2(-r * 0.64, -r * 0.12),
+				c + Vector2(r * 0.64, -r * 0.12),
+				c + Vector2(0.0, r * 0.52)
+			])
+			draw_colored_polygon(arr_pts, primary_color)
+			var bar_h: float = maxf(2.5, r * 0.22)
+			var bar_w: float = r * 1.36
+			draw_rect(Rect2(c + Vector2(-bar_w * 0.5, r * 0.68), Vector2(bar_w, bar_h)), primary_color, true)
 		"bolt", "energy", "lightning":
 			var b_pts := PackedVector2Array([
 				c + Vector2(r * 0.15, -r * 0.82),

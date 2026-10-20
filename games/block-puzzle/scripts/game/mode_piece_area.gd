@@ -35,10 +35,10 @@ class PiecePreviewDrawer extends Control:
 		var panel_sz = size if (size.x > 10.0 and size.y > 10.0) else Vector2(186.0, 70.0)
 		var dims = PolyominoLib.get_dimensions(shape_cells)
 		
-		var gap = 3.0
-		var max_cell_w = (panel_sz.x - 18.0 - float(max(0, dims.x - 1)) * gap) / float(max(1, dims.x))
-		var max_cell_h = (panel_sz.y - 10.0 - float(max(0, dims.y - 1)) * gap) / float(max(1, dims.y))
-		var cell_sz = clamp(min(max_cell_w, max_cell_h), 12.0, 24.0)
+		var gap = 3.5
+		var max_cell_w = (panel_sz.x - 14.0 - float(max(0, dims.x - 1)) * gap) / float(max(1, dims.x))
+		var max_cell_h = (panel_sz.y - 8.0 - float(max(0, dims.y - 1)) * gap) / float(max(1, dims.y))
+		var cell_sz = clamp(min(max_cell_w, max_cell_h), 20.0, 38.0)
 			
 		var shape_sz = Vector2(dims.x * cell_sz + (dims.x - 1) * gap, dims.y * cell_sz + (dims.y - 1) * gap)
 		var origin = (panel_sz - shape_sz) * 0.5
@@ -170,13 +170,17 @@ func update_responsive_size(area_size: Vector2) -> void:
 		center_box.size = Vector2(w, h)
 	var next_box := get_node_or_null("ClassicPieceArea/Center/NextBox") as HBoxContainer
 	if next_box:
-		next_box.add_theme_constant_override("separation", 10 if w < 360.0 else 16)
+		next_box.add_theme_constant_override("separation", 14 if w < 360.0 else 20)
 	if lbl_title:
-		lbl_title.add_theme_font_size_override("font_size", 14 if (w < 360.0 or h < 54.0) else 17)
+		lbl_title.add_theme_font_size_override("font_size", 22 if (w < 360.0 or h < 54.0) else 26)
+		lbl_title.add_theme_color_override("font_color", Color(1.0, 0.94, 0.42, 1.0))
+		lbl_title.add_theme_color_override("font_shadow_color", Color(0.04, 0.06, 0.22, 0.92))
+		lbl_title.add_theme_constant_override("shadow_offset_x", 1)
+		lbl_title.add_theme_constant_override("shadow_offset_y", 2)
 	var panel_next := get_node_or_null("ClassicPieceArea/Center/NextBox/PreviewPanel") as Control
 	if panel_next:
-		var panel_w: float = clampf(w * 0.40, 118.0, 192.0)
-		var panel_h: float = maxf(38.0, h - 6.0)
+		var panel_w: float = clampf(w * 0.52, 160.0, 260.0)
+		var panel_h: float = maxf(54.0, h - 2.0)
 		panel_next.custom_minimum_size = Vector2(panel_w, panel_h)
 		panel_next.size = Vector2(panel_w, panel_h)
 		var drawer := panel_next.get_node_or_null("PiecePreviewDrawer") as PiecePreviewDrawer

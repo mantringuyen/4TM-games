@@ -2075,7 +2075,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			top_gear_icon.size = Vector2(top_btn_h, top_btn_h)
 			if top_gear_icon.has_method("_on_parent_resized"):
 				top_gear_icon._on_parent_resized()
-	var mode_btn_h: float = 82.0 if is_very_compact else (86.0 if is_compact else 96.0)
+	var mode_btn_h: float = 86.0 if is_very_compact else (92.0 if is_compact else 102.0)
 	var mode_sep: int = 8 if is_compact else 14
 	var max_mode_w: float = minf(content_w, 590.0)
 	if mode_box:
@@ -2086,7 +2086,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	for mb in [btn_classic, btn_modern, btn_falling, btn_drag_drop]:
 		if mb:
 			mb.custom_minimum_size = Vector2(0.0, mode_btn_h)
-			mb.add_theme_font_size_override("font_size", 20 if is_very_compact else (22 if is_compact else 25))
+			mb.add_theme_font_size_override("font_size", 22 if is_very_compact else (24 if is_compact else 26))
 	
 	var mode_sec_h: float = (26.0 * 2.0) + (mode_btn_h * 2.0) + float(mode_sep * 3)
 	var y_header: float = float(m_top)
@@ -2114,7 +2114,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 	
 	var play_m_top: int = 18 if is_compact else 22
 	var play_m_bot: int = 20 if is_compact else 22
-	var start_btn_h: float = 92.0 if is_very_compact else (98.0 if is_compact else 114.0)
+	var start_btn_h: float = 96.0 if is_very_compact else (104.0 if is_compact else 118.0)
 	var start_btn_w: float = clampf(content_w - 20.0, 276.0, 590.0)
 	if play_box:
 		play_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -2127,7 +2127,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		btn_start.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn_start.custom_minimum_size = Vector2(start_btn_w, start_btn_h)
 		btn_start.size = Vector2(start_btn_w, start_btn_h)
-		btn_start.add_theme_font_size_override("font_size", 34 if is_compact else 42)
+		btn_start.add_theme_font_size_override("font_size", 36 if is_compact else 44)
 	
 	var y_title: float = y_header_end + (title_zone_h - title_h) * 0.5
 	var x_title: float = (vp_w - title_w) * 0.5
@@ -6157,14 +6157,14 @@ func _apply_settings_panel_style() -> void:
 	var settings_panel := get_node_or_null("Modals/SettingsModal/Panel") as Control
 	if settings_panel:
 		var st := StyleBoxFlat.new()
-		st.bg_color = Color(0.09, 0.13, 0.28, 0.98)
+		st.bg_color = Color(0.24, 0.44, 0.86, 0.98)
 		st.border_width_left = 3
 		st.border_width_top = 3
 		st.border_width_right = 3
 		st.border_width_bottom = 8
-		st.border_color = Color(0.24, 0.88, 0.96, 1.0)
+		st.border_color = Color(0.42, 0.94, 1.0, 1.0)
 		st.set_corner_radius_all(32)
-		st.shadow_color = Color(0.02, 0.04, 0.18, 0.65)
+		st.shadow_color = Color(0.04, 0.08, 0.28, 0.60)
 		st.shadow_size = 28
 		st.shadow_offset = Vector2(0, 8)
 		settings_panel.add_theme_stylebox_override("panel", st)
