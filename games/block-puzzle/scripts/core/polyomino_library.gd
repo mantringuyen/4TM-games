@@ -251,7 +251,19 @@ const MATERIAL_IDS: Array[String] = [
 	"gemstone",
 	"starlight",
 	"glass",
-	"frosted_glass"
+	"frosted_glass",
+	"neon_pulse",
+	"energy_shield",
+	"quantum_prism"
+]
+
+const CURATED_SESSION_PALETTES: Array = [
+	["crystal", "metal", "gemstone", "starlight", "quantum_prism"],
+	["moss_stone", "wood", "stone", "crystal", "energy_shield"],
+	["neon_pulse", "metal", "starlight", "glass", "crystal"],
+	["red_brick", "stone", "wood", "gemstone", "metal"],
+	["frosted_glass", "crystal", "metal", "energy_shield", "starlight"],
+	["gemstone", "crystal", "starlight", "neon_pulse", "quantum_prism"]
 ]
 
 const BLOCK_MATERIALS: Dictionary = {
@@ -345,25 +357,58 @@ const BLOCK_MATERIALS: Dictionary = {
 	},
 	"glass": {
 		"id": "glass",
-		"name_en": "Frosted Glass",
-		"name_vi": "Thủy Tinh Trong Suốt",
+		"name_en": "Clear Glass",
+		"name_vi": "Thủy Tinh Trong",
 		"base_color": Color(0.24, 0.88, 0.84, 0.94),
 		"highlight_color": Color(0.94, 1.0, 1.0, 1.0),
 		"shadow_color": Color(0.06, 0.44, 0.52, 0.96),
 		"pattern_color": Color(0.86, 0.98, 1.0, 0.70),
 		"accent_color": Color(1.0, 1.0, 1.0, 0.95),
-		"pattern_type": "frosted_glass_pane"
+		"pattern_type": "clear_glass_pane"
 	},
 	"frosted_glass": {
 		"id": "frosted_glass",
 		"name_en": "Frosted Glass",
-		"name_vi": "Thủy Tinh Mờ Sương",
+		"name_vi": "Thủy Tinh Mờ",
 		"base_color": Color(0.28, 0.90, 0.88, 0.95),
 		"highlight_color": Color(0.96, 1.0, 1.0, 1.0),
 		"shadow_color": Color(0.08, 0.48, 0.56, 0.96),
 		"pattern_color": Color(0.88, 0.99, 1.0, 0.72),
 		"accent_color": Color(1.0, 1.0, 1.0, 0.96),
-		"pattern_type": "frosted_glass_pane"
+		"pattern_type": "frosted_crystal_pane"
+	},
+	"neon_pulse": {
+		"id": "neon_pulse",
+		"name_en": "Neon Pulse",
+		"name_vi": "Hơi Thở Neon",
+		"base_color": Color(0.08, 0.94, 0.64, 1.0),
+		"highlight_color": Color(0.74, 1.0, 0.88, 1.0),
+		"shadow_color": Color(0.02, 0.42, 0.28, 1.0),
+		"pattern_color": Color(0.52, 1.0, 0.82, 0.85),
+		"accent_color": Color(1.0, 1.0, 1.0, 0.95),
+		"pattern_type": "neon_glow"
+	},
+	"energy_shield": {
+		"id": "energy_shield",
+		"name_en": "Energy Shield",
+		"name_vi": "Khiên Năng Lượng",
+		"base_color": Color(0.96, 0.54, 0.12, 1.0),
+		"highlight_color": Color(1.0, 0.88, 0.52, 1.0),
+		"shadow_color": Color(0.52, 0.22, 0.04, 1.0),
+		"pattern_color": Color(1.0, 0.78, 0.36, 0.82),
+		"accent_color": Color(1.0, 0.98, 0.86, 0.95),
+		"pattern_type": "plasma_grid"
+	},
+	"quantum_prism": {
+		"id": "quantum_prism",
+		"name_en": "Quantum Prism",
+		"name_vi": "Lăng Kính Lượng Tử",
+		"base_color": Color(0.54, 0.24, 0.96, 1.0),
+		"highlight_color": Color(0.90, 0.78, 1.0, 1.0),
+		"shadow_color": Color(0.22, 0.08, 0.48, 1.0),
+		"pattern_color": Color(0.82, 0.64, 1.0, 0.80),
+		"accent_color": Color(1.0, 0.96, 1.0, 0.95),
+		"pattern_type": "quantum_facets"
 	}
 }
 
@@ -491,10 +536,15 @@ static func get_level_material_palette(level_num: int = 1) -> Array[String]:
 	return single_pal
 
 
-## Deterministically resolves the material family for a block in a level:
-## NEW RULE: Each level selects exactly ONE dominant block material family, and ALL playable blocks
-## in that level use that same material family (while color_id provides distinct color shades).
-static func get_material_id_for_block(_color_id: int, level_num: int = 1) -> String:
+## Resolves material ID for block using randomized session palette when available, falling back to level family
+static func get_material_id_for_block(color_id: int, level_num: int = 1) -> String:
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		var gs = main_loop.root.get_node_or_null("GameState")
+		if gs and gs.has_method("get_session_material_palette"):
+			var pal: Array[String] = gs.get_session_material_palette()
+			if not pal.is_empty():
+				return pal[(clampi(color_id, 1, 8) - 1) % pal.size()]
 	return get_level_material_family(level_num)
 
 
@@ -820,12 +870,34 @@ static func draw_material_block_cell(
 			canvas.draw_colored_polygon(star_pts, acc_col)
 			canvas.draw_circle(cp + Vector2(cs.x * 0.22, cs.y * 0.74), 1.6, acc_col)
 			canvas.draw_circle(cp + Vector2(cs.x * 0.78, cs.y * 0.26), 1.6, acc_col)
-		"glass", "frosted_glass":
-			# Frosted glass pane with dual diagonal specular reflections and inner crystal rim
+		"glass":
+			# Clear glass pane with distinct specular accent lines
 			var inner_glass := cushion_rect.grow(-maxf(2.0, cs.x * 0.14))
-			canvas.draw_rect(inner_glass, Color(0.92, 0.99, 1.0, 0.26), false, 1.5)
-			canvas.draw_line(cp + Vector2(cs.x * 0.18, cs.y * 0.78), cp + Vector2(cs.x * 0.78, cs.y * 0.18), acc_col, 2.2)
-			canvas.draw_line(cp + Vector2(cs.x * 0.36, cs.y * 0.84), cp + Vector2(cs.x * 0.84, cs.y * 0.36), pat_col, 1.4)
+			canvas.draw_rect(inner_glass, Color(0.92, 0.99, 1.0, 0.32), false, 1.5)
+			canvas.draw_line(cp + Vector2(cs.x * 0.15, cs.y * 0.85), cp + Vector2(cs.x * 0.85, cs.y * 0.15), acc_col, 2.0)
+		"frosted_glass":
+			# Frosted crystal pane with textured surface fill
+			var inner_frost := cushion_rect.grow(-maxf(2.0, cs.x * 0.12))
+			canvas.draw_rect(inner_frost, pat_col, true)
+			canvas.draw_line(cp + Vector2(cs.x * 0.2, cs.y * 0.2), cp + Vector2(cs.x * 0.8, cs.y * 0.8), acc_col, 1.5)
+		"neon_pulse":
+			# Neon glow frame & pulse line
+			canvas.draw_rect(cushion_rect.grow(-2.0), pat_col, false, 2.0)
+			canvas.draw_line(cp + Vector2(cs.x * 0.2, cs.y * 0.5), cp + Vector2(cs.x * 0.8, cs.y * 0.5), acc_col, 2.0)
+		"energy_shield":
+			# Energy shield core and concentric ring
+			canvas.draw_circle(center, cs.x * 0.28, pat_col)
+			canvas.draw_arc(center, cs.x * 0.35, 0.0, TAU, 12, acc_col, 1.5)
+		"quantum_prism":
+			# Quantum prismatic diamond facets
+			var qp := PackedVector2Array([
+				center + Vector2(0, -cs.y * 0.35),
+				center + Vector2(cs.x * 0.35, 0),
+				center + Vector2(0, cs.y * 0.35),
+				center + Vector2(-cs.x * 0.35, 0)
+			])
+			canvas.draw_colored_polygon(qp, pat_col)
+			canvas.draw_line(cp + Vector2(2.0, 2.0), cp + cs - Vector2(2.0, 2.0), acc_col, 1.8)
 	
 	# Top-left specular highlight bar for crisp 3D readability across all materials
 	var gloss_rect := Rect2(cp + Vector2(2.5, 2.0), Vector2(cs.x * 0.44, cs.y * 0.20))
