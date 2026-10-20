@@ -58,6 +58,7 @@ func _on_parent_resized() -> void:
 
 
 const OFFICIAL_4TM_LOGO_PATH: String = "res://assets/branding/4tm_logo.svg"
+const OFFICIAL_4TM_LOGO_PNG_PATH: String = "res://assets/branding/4tm_logo.png"
 static var _cached_4tm_logo_tex: Texture2D = null
 static var _empty_focus_style: StyleBoxEmpty = null
 
@@ -348,13 +349,30 @@ static func verify_no_focus_outlines_in_tree(root: Node) -> bool:
 static func load_official_4tm_logo_texture() -> Texture2D:
 	if _cached_4tm_logo_tex != null:
 		return _cached_4tm_logo_tex
-	if FileAccess.file_exists(OFFICIAL_4TM_LOGO_PATH):
-		var svg_str := FileAccess.get_file_as_string(OFFICIAL_4TM_LOGO_PATH)
-		if not svg_str.is_empty():
+	if FileAccess.file_exists(OFFICIAL_4TM_LOGO_PNG_PATH):
+		var bytes := FileAccess.get_file_as_bytes(OFFICIAL_4TM_LOGO_PNG_PATH)
+		if not bytes.is_empty():
 			var img := Image.new()
-			if img.load_svg_from_string(svg_str, 4.0) == OK and img.get_width() > 0:
+			if img.load_png_from_buffer(bytes) == OK and img.get_width() > 0:
 				_cached_4tm_logo_tex = ImageTexture.create_from_image(img)
 				return _cached_4tm_logo_tex
+	if ResourceLoader.exists(OFFICIAL_4TM_LOGO_PNG_PATH):
+		var loaded_png := ResourceLoader.load(OFFICIAL_4TM_LOGO_PNG_PATH) as Texture2D
+		if loaded_png:
+			_cached_4tm_logo_tex = loaded_png
+			return _cached_4tm_logo_tex
+	if FileAccess.file_exists(OFFICIAL_4TM_LOGO_PATH):
+		var bytes := FileAccess.get_file_as_bytes(OFFICIAL_4TM_LOGO_PATH)
+		if not bytes.is_empty():
+			var img := Image.new()
+			if img.load_png_from_buffer(bytes) == OK and img.get_width() > 0:
+				_cached_4tm_logo_tex = ImageTexture.create_from_image(img)
+				return _cached_4tm_logo_tex
+			var svg_str := bytes.get_string_from_utf8()
+			if not svg_str.is_empty():
+				if img.load_svg_from_string(svg_str, 4.0) == OK and img.get_width() > 0:
+					_cached_4tm_logo_tex = ImageTexture.create_from_image(img)
+					return _cached_4tm_logo_tex
 	if ResourceLoader.exists(OFFICIAL_4TM_LOGO_PATH):
 		var loaded := ResourceLoader.load(OFFICIAL_4TM_LOGO_PATH) as Texture2D
 		if loaded:

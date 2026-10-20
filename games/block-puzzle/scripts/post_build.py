@@ -9,13 +9,16 @@ def main():
         
     print(f"Running post-build processing on target directory: {target_dir}")
     
-    # Copy 4TM logo
+    # Copy 4TM branding assets
     import shutil
-    logo_src = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets/branding/4tm_logo.svg")
-    if not os.path.exists(logo_src):
-        logo_src = "games/block-puzzle/assets/branding/4tm_logo.svg"
-    if os.path.exists(logo_src):
-        shutil.copy(logo_src, os.path.join(target_dir, "4tm_logo.svg"))
+    branding_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets/branding")
+    if not os.path.exists(branding_dir):
+        branding_dir = "games/block-puzzle/assets/branding"
+    if os.path.exists(branding_dir):
+        for brand_file in ["4tm_logo.svg", "4tm_logo.png", "4tm_favicon.png", "games_logo.png", "games_favicon.png"]:
+            src_file = os.path.join(branding_dir, brand_file)
+            if os.path.exists(src_file):
+                shutil.copy(src_file, os.path.join(target_dir, brand_file))
 
     html_path = os.path.join(target_dir, "index.html")
     pck_path = os.path.join(target_dir, "index.pck")

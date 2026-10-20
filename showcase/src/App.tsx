@@ -11,7 +11,6 @@ import { SpeedReflex } from './components/SpeedReflex';
 import { CipherBreaker } from './components/CipherBreaker';
 
 import {
-  Gamepad2,
   Sparkles,
   ExternalLink,
   Volume2,
@@ -52,9 +51,11 @@ export default function App() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 p-2 shadow-lg shadow-cyan-500/20">
-              <Gamepad2 className="h-6 w-6 text-slate-950" />
-            </div>
+            <img
+              src="/games-logo-1024.png"
+              alt="4TM Games"
+              className="h-10 w-10 rounded-xl object-contain shadow-lg shadow-cyan-500/20"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-lg tracking-tight text-white font-mono">4TM GAMES</span>
