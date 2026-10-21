@@ -536,19 +536,10 @@ static func get_level_material_palette(level_num: int = 1) -> Array[String]:
 	return single_pal
 
 
-## Resolves material ID for block using randomized session palette when available, falling back to level family
-static func get_material_id_for_block(color_id: int, level_num: int = 1) -> String:
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		var gs = main_loop.root.get_node_or_null("GameState")
-		if gs and gs.has_method("get_session_material_palette"):
-			var is_playing: bool = false
-			if "current_state" in gs:
-				is_playing = (int(gs.current_state) == 1)
-			if is_playing:
-				var pal: Array[String] = gs.get_session_material_palette()
-				if not pal.is_empty():
-					return pal[(clampi(color_id, 1, 8) - 1) % pal.size()]
+## Resolves material ID for block in a level:
+## Each level selects strictly ONE dominant block material family, and ALL playable blocks
+## in that level use that same material family (while color_id provides distinct color shades).
+static func get_material_id_for_block(_color_id: int, level_num: int = 1) -> String:
 	return get_level_material_family(level_num)
 
 

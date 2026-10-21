@@ -2609,6 +2609,25 @@ func _ready() -> void:
 		printerr("[FAIL Test 83] All 8+ material families must appear across levels, got: ", seen_all_materials)
 		get_tree().quit(1)
 		return
+
+	# Regression test: Single dominant material family during active gameplay and session palette state
+	for test_lvl in [1, 2, 3, 5, 10]:
+		game_state.start_game_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING, test_lvl)
+		var exp_family: String = PolyominoLib.get_level_material_family(test_lvl)
+		var sess_pal: Array[String] = game_state.get_session_material_palette()
+		if sess_pal.size() != 1 or sess_pal[0] != exp_family:
+			printerr("[FAIL Test 83 Regression] Session palette for level ", test_lvl, " must match single dominant material family (", exp_family, "), got: ", sess_pal)
+			get_tree().quit(1)
+			return
+		var gameplay_mats := {}
+		for cid in range(1, 9):
+			var m_id: String = PolyominoLib.get_material_id_for_block(cid, test_lvl)
+			gameplay_mats[m_id] = true
+		if gameplay_mats.size() != 1 or not gameplay_mats.has(exp_family):
+			printerr("[FAIL Test 83 Regression] Level ", test_lvl, " during active gameplay must use strictly ONE dominant family (", exp_family, "), got: ", gameplay_mats.keys())
+			get_tree().quit(1)
+			return
+	game_state.current_state = GameStateScript.State.MENU
 	print("[TEST 83/90] Single dominant block material family per level, zero plain gray stone in Level 1, richer milestone effects: PASSED")
 
 	# =========================================================================

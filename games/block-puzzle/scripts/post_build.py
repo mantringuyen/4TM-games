@@ -15,7 +15,14 @@ def main():
     if not os.path.exists(branding_dir):
         branding_dir = "games/block-puzzle/assets/branding"
     if os.path.exists(branding_dir):
-        for brand_file in ["4tm_logo.svg", "4tm_logo.png", "4tm_favicon.png", "games_logo.png", "games_favicon.png"]:
+        brand_files = [
+            "4tm_logo.svg", "4tm-logo.svg", "4tm_favicon.svg", "4tm-favicon.svg",
+            "4tm_logo.png", "4tm_favicon.png", "games_logo.png", "games_favicon.png",
+            "games-logo.svg", "games-favicon.svg", "games_logo.svg", "games_favicon.svg",
+            "block-puzzle-logo.svg", "block-puzzle-favicon.svg",
+            "block_puzzle_logo.svg", "block_puzzle_favicon.svg"
+        ]
+        for brand_file in brand_files:
             src_file = os.path.join(branding_dir, brand_file)
             if os.path.exists(src_file):
                 shutil.copy(src_file, os.path.join(target_dir, brand_file))
@@ -68,6 +75,9 @@ def main():
             f'\n\t\t<meta name="apple-mobile-web-app-status-bar-style" content="{status_bar_style}">'
             '\n\t\t<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">'
             '\n\t\t<meta name="mobile-web-app-capable" content="yes">'
+            '\n\t\t<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">'
+            '\n\t\t<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">'
+            '\n\t\t<link rel="apple-touch-icon" href="index.apple-touch-icon.png">'
             '\n\t\t<link rel="manifest" href="manifest.json">'
         )
         if '<head>' in content:
@@ -264,6 +274,11 @@ def main():
         "theme_color": "#414141",
         "orientation": "portrait",
         "icons": [
+            {
+                "src": "block-puzzle-favicon.svg",
+                "sizes": "any",
+                "type": "image/svg+xml"
+            },
             {
                 "src": "index.icon.png",
                 "sizes": "192x192",
