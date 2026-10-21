@@ -542,9 +542,13 @@ static func get_material_id_for_block(color_id: int, level_num: int = 1) -> Stri
 	if main_loop and main_loop.root:
 		var gs = main_loop.root.get_node_or_null("GameState")
 		if gs and gs.has_method("get_session_material_palette"):
-			var pal: Array[String] = gs.get_session_material_palette()
-			if not pal.is_empty():
-				return pal[(clampi(color_id, 1, 8) - 1) % pal.size()]
+			var is_playing: bool = false
+			if "current_state" in gs:
+				is_playing = (int(gs.current_state) == 1)
+			if is_playing:
+				var pal: Array[String] = gs.get_session_material_palette()
+				if not pal.is_empty():
+					return pal[(clampi(color_id, 1, 8) - 1) % pal.size()]
 	return get_level_material_family(level_num)
 
 

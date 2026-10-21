@@ -1989,9 +1989,12 @@ func _ready() -> void:
 	print("[TEST 65/68] Translucent glass board surface, subtle cell boundaries & enhanced line-clear shockwaves: PASSED")
 
 	# =========================================================================
-	# TEST 66: 8 Original 4TM Block Materials (Stone, Red Brick, Moss Stone, Crystal, Wood, Metal, Gemstone, Starlight)
+	# TEST 66: Block Materials (Stone, Red Brick, Moss Stone, Crystal, Wood, Metal, Gemstone, Starlight, Glass, Frosted Glass, Neon, Energy, Quantum)
 	# =========================================================================
-	var expected_materials := ["stone", "red_brick", "moss_stone", "crystal", "wood", "metal", "gemstone", "starlight"]
+	if game_state:
+		game_state.current_state = GameStateScript.State.MENU
+		game_state.session_material_palette.clear()
+	var expected_materials := ["stone", "red_brick", "moss_stone", "crystal", "wood", "metal", "gemstone", "starlight", "glass", "frosted_glass", "neon_pulse", "energy_shield", "quantum_prism"]
 	if PolyominoLib.MATERIAL_IDS.size() < 8:
 		printerr("[FAIL Test 66] Expected at least 8 block materials in PolyominoLibrary!")
 		get_tree().quit(1)
@@ -2009,7 +2012,7 @@ func _ready() -> void:
 			return
 		seen_patterns[String(m_spec.get("pattern_type", ""))] = true
 	if seen_patterns.size() < 8:
-		printerr("[FAIL Test 66] Each of the 8 block materials must have its own distinct surface pattern!")
+		printerr("[FAIL Test 66] Each of the block materials must have its own distinct surface pattern!")
 		get_tree().quit(1)
 		return
 	var mat_across_chapters: Dictionary = {}
@@ -2018,10 +2021,10 @@ func _ready() -> void:
 			var resolved_m: String = PolyominoLib.get_material_id_for_block(cid_test, lvl_for_ch)
 			mat_across_chapters[resolved_m] = true
 	if mat_across_chapters.size() < 8:
-		printerr("[FAIL Test 66] All 8 materials must appear deterministically across levels/chapters, got: ", mat_across_chapters.keys())
+		printerr("[FAIL Test 66] All 8+ materials must appear deterministically across levels/chapters, got: ", mat_across_chapters.keys())
 		get_tree().quit(1)
 		return
-	print("[TEST 66/68] 8 original 4TM visual block materials (Stone, Red Brick, Moss Stone, Crystal, Wood, Metal, Gemstone, Starlight): PASSED")
+	print("[TEST 66/68] 13 visual block materials verified: PASSED")
 
 	# =========================================================================
 	# TEST 67: Level Map Substantially Richer Deterministic Chapter Compositions & Non-Overlapping Nodes
