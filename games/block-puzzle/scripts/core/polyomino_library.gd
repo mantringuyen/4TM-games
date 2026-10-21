@@ -679,7 +679,7 @@ static func stamp_piece_material(shape_data: Dictionary, level_num: int = 1, for
 	if shape_data.is_empty():
 		return shape_data
 	var cid: int = int(shape_data.get("color_id", 1))
-	var mat_id: String = forced_material_id if BLOCK_MATERIALS.has(forced_material_id) else get_level_material_family(level_num)
+	var mat_id: String = forced_material_id if BLOCK_MATERIALS.has(forced_material_id) else get_material_id_for_block(cid, level_num)
 	var spec: Dictionary = get_material_spec(mat_id, cid, level_num)
 	shape_data["material_id"] = mat_id
 	shape_data["color"] = spec.get("base_color", shape_data.get("color", COLOR_CYAN))

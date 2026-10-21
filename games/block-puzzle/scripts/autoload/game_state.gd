@@ -2874,10 +2874,13 @@ func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -
 	
 	var PolyominoLibScript = preload("res://scripts/core/polyomino_library.gd")
 	var curated_pals = PolyominoLibScript.CURATED_SESSION_PALETTES if "CURATED_SESSION_PALETTES" in PolyominoLibScript else []
+	session_material_palette.clear()
 	if not curated_pals.is_empty():
-		session_material_palette = curated_pals[randi() % curated_pals.size()].duplicate()
+		var raw_pal = curated_pals[randi() % curated_pals.size()]
+		for item in raw_pal:
+			session_material_palette.append(String(item))
 	else:
-		session_material_palette = ["crystal", "metal", "gemstone", "starlight"]
+		session_material_palette.append_array(["crystal", "metal", "gemstone", "starlight"])
 	
 	var audio_mgr = get_node_or_null("/root/AudioManager")
 	if audio_mgr:
