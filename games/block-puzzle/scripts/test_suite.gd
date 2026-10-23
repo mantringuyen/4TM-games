@@ -2566,6 +2566,9 @@ func _ready() -> void:
 	# =========================================================================
 	# TEST 83: Coherent Multi-Material & Multi-Color Palettes in Normal & Milestone Levels (No Plain Gray Stone on Level 1)
 	# =========================================================================
+	if game_state:
+		game_state.current_state = GameStateScript.State.MENU
+		game_state.session_material_palette.clear()
 	if PolyominoLib.MATERIAL_IDS.size() < 8:
 		printerr("[FAIL Test 83] Expected all 8 block material families (crystal, stone, red_brick, moss_stone, wood, metal, gemstone, frosted_glass), got: ", PolyominoLib.MATERIAL_IDS)
 		get_tree().quit(1)
@@ -2613,22 +2616,49 @@ func _ready() -> void:
 	# Regression test: Single dominant material family during active gameplay and session palette state
 	for test_lvl in [1, 2, 3, 5, 10]:
 		game_state.start_game_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING, test_lvl)
-		var exp_family: String = PolyominoLib.get_level_material_family(test_lvl)
 		var sess_pal: Array[String] = game_state.get_session_material_palette()
-		if sess_pal.size() != 1 or sess_pal[0] != exp_family:
-			printerr("[FAIL Test 83 Regression] Session palette for level ", test_lvl, " must match single dominant material family (", exp_family, "), got: ", sess_pal)
+		if sess_pal.size() != 1 or not PolyominoLib.BLOCK_MATERIALS.has(sess_pal[0]):
+			printerr("[FAIL Test 83 Regression] Session palette for level ", test_lvl, " must contain exactly 1 valid material family, got: ", sess_pal)
 			get_tree().quit(1)
 			return
+		var active_sess_mat: String = sess_pal[0]
 		var gameplay_mats := {}
 		for cid in range(1, 9):
 			var m_id: String = PolyominoLib.get_material_id_for_block(cid, test_lvl)
 			gameplay_mats[m_id] = true
-		if gameplay_mats.size() != 1 or not gameplay_mats.has(exp_family):
-			printerr("[FAIL Test 83 Regression] Level ", test_lvl, " during active gameplay must use strictly ONE dominant family (", exp_family, "), got: ", gameplay_mats.keys())
+		if gameplay_mats.size() != 1 or not gameplay_mats.has(active_sess_mat):
+			printerr("[FAIL Test 83 Regression] Level ", test_lvl, " during active gameplay must use strictly ONE dominant family matching session (", active_sess_mat, "), got: ", gameplay_mats.keys())
 			get_tree().quit(1)
 			return
+
+	# Verify that restarting a level is capable of selecting materials randomly
+	var seen_session_mats := {}
+	for _attempt in range(25):
+		game_state.start_game_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING, 1)
+		var s_mat: String = game_state.get_session_material_palette()[0]
+		seen_session_mats[s_mat] = true
+		if seen_session_mats.size() > 1:
+			break
+	if seen_session_mats.size() < 2:
+		printerr("[FAIL Test 83 Regression] Restarting level 1 should be capable of selecting different materials across sessions, got: ", seen_session_mats.keys())
+		get_tree().quit(1)
+		return
+
+	# Verify that pausing and resuming within the same session preserves the selected material
+	var cur_sess_mat: String = game_state.get_session_material_palette()[0]
+	game_state.pause_game(true)
+	if game_state.get_session_material_palette()[0] != cur_sess_mat:
+		printerr("[FAIL Test 83 Regression] Pausing must preserve session material!")
+		get_tree().quit(1)
+		return
+	game_state.pause_game(false)
+	if game_state.get_session_material_palette()[0] != cur_sess_mat:
+		printerr("[FAIL Test 83 Regression] Resuming must preserve session material!")
+		get_tree().quit(1)
+		return
 	game_state.current_state = GameStateScript.State.MENU
-	print("[TEST 83/90] Single dominant block material family per level, zero plain gray stone in Level 1, richer milestone effects: PASSED")
+	game_state.session_material_palette.clear()
+	print("[TEST 83/90] Single dominant block material family per session & level, zero plain gray stone in Level 1, richer milestone effects: PASSED")
 
 	# =========================================================================
 	# TEST 84: Block Material & Color Identity Preserved (Spawn/Tray/Next -> Active Falling/Dragging -> Preview -> Placed Board)
@@ -3133,7 +3163,7 @@ func _ready() -> void:
 		printerr("[FAIL Test 93] Difficulty progression must scale smoothly from Level 1 onward! L1=", prof_l1, " L10=", prof_l10, " L50=", prof_l50)
 		get_tree().quit(1)
 		return
-	# Verify Level 1 Drag & Drop and Falling modes both spawn the curated spatial-planning opening pieces on the 12x10 board
+	# Verify Level 1 Drag & Drop and Falling modes both spawn curated spatial-planning opening pieces on the 8x10 board
 	game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP, 1)
 	var dd93 = ModernModeScript.new()
 	dd93.configure_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP)
@@ -3146,11 +3176,43 @@ func _ready() -> void:
 		String(tray93.active_pieces[1].shape_data.get("id", "")),
 		String(tray93.active_pieces[2].shape_data.get("id", ""))
 	]
-	if r1_spawned_ids != PolyominoLib.get_opening_tray_shape_ids(1, 1) or dd93.get_board().GRID_WIDTH != 8 or dd93.get_board().GRID_HEIGHT != 10:
-		printerr("[FAIL Test 93] Level 1 Drag & Drop did not spawn curated spatial-planning Round 1 pieces on 8x10 board! Got: ", r1_spawned_ids)
+	for pid in r1_spawned_ids:
+		if not (pid in PolyominoLib.SPATIAL_COMPLEX_SHAPES) or (pid in PolyominoLib.SIMPLE_FLAT_SHAPES):
+			printerr("[FAIL Test 93] Opening tray piece ", pid, " is not a valid 4-cell spatial complex shape!")
+			get_tree().quit(1)
+			return
+	if r1_spawned_ids[0] == r1_spawned_ids[1] or r1_spawned_ids[1] == r1_spawned_ids[2] or r1_spawned_ids[0] == r1_spawned_ids[2]:
+		printerr("[FAIL Test 93] Opening tray pieces must be distinct shapes, got: ", r1_spawned_ids)
+		get_tree().quit(1)
+		return
+	if dd93.get_board().GRID_WIDTH != 8 or dd93.get_board().GRID_HEIGHT != 10:
+		printerr("[FAIL Test 93] Level 1 Drag & Drop board must be 8x10!")
 		get_tree().quit(1)
 		return
 	dd93.queue_free()
+
+	# Verify Drag & Drop mode randomizes opening tray shapes across multiple starts/restarts
+	var seen_tray_openings := {}
+	for _dd_i in range(25):
+		var dd_test = ModernModeScript.new()
+		dd_test.configure_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP)
+		add_child(dd_test)
+		dd_test.initialize_mode()
+		dd_test.start_mode()
+		var t_p = dd_test.get_piece_tray()
+		var opening_key: String = "%s_%s_%s" % [
+			String(t_p.active_pieces[0].shape_data.get("id", "")),
+			String(t_p.active_pieces[1].shape_data.get("id", "")),
+			String(t_p.active_pieces[2].shape_data.get("id", ""))
+		]
+		seen_tray_openings[opening_key] = true
+		dd_test.queue_free()
+		if seen_tray_openings.size() > 1:
+			break
+	if seen_tray_openings.size() < 2:
+		printerr("[FAIL Test 93] Drag & Drop mode opening tray shapes must be randomized across level starts/restarts!")
+		get_tree().quit(1)
+		return
 
 	game_state.start_game_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING, 1)
 	var fm93 = ClassicModeScript.new()
@@ -3158,12 +3220,35 @@ func _ready() -> void:
 	add_child(fm93)
 	fm93.initialize_mode()
 	fm93.start_mode()
-	if String(fm93.current_piece.get("id", "")) != PolyominoLib.get_falling_opening_shape_id(1, 0) or String(fm93.next_piece.get("id", "")) != PolyominoLib.get_falling_opening_shape_id(1, 1):
-		printerr("[FAIL Test 93] Level 1 Falling mode did not spawn curated spatial-planning opening sequence!")
+	var fm_cur_id: String = String(fm93.current_piece.get("id", ""))
+	var fm_next_id: String = String(fm93.next_piece.get("id", ""))
+	if not (fm_cur_id in PolyominoLib.SPATIAL_COMPLEX_SHAPES) or not (fm_next_id in PolyominoLib.SPATIAL_COMPLEX_SHAPES):
+		printerr("[FAIL Test 93] Level 1 Falling mode did not spawn curated spatial complex shapes! cur=", fm_cur_id, " next=", fm_next_id)
 		get_tree().quit(1)
 		return
 	fm93.queue_free()
-	print("[TEST 93/94] Level 1 spatial planning challenge, non-trivial opening, 100% solvability & controlled progression: PASSED")
+
+	# Verify Falling mode randomizes opening sequence across multiple starts/restarts
+	var seen_falling_openings := {}
+	for _fm_i in range(25):
+		var fm_test = ClassicModeScript.new()
+		fm_test.configure_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING)
+		add_child(fm_test)
+		fm_test.initialize_mode()
+		fm_test.start_mode()
+		var fall_key: String = "%s_%s" % [
+			String(fm_test.current_piece.get("id", "")),
+			String(fm_test.next_piece.get("id", ""))
+		]
+		seen_falling_openings[fall_key] = true
+		fm_test.queue_free()
+		if seen_falling_openings.size() > 1:
+			break
+	if seen_falling_openings.size() < 2:
+		printerr("[FAIL Test 93] Falling mode opening sequence must be randomized across level starts/restarts!")
+		get_tree().quit(1)
+		return
+	print("[TEST 93/94] Level 1 spatial planning challenge, randomized opening shapes, 100% solvability & controlled progression: PASSED")
 
 	# =========================================================================
 	# TEST 94: QA Issue 4 — Critical Acceptance Test for Rebuilt 3D World Map Architecture

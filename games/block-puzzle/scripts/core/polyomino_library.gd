@@ -529,17 +529,49 @@ static func get_level_material_family(level_num: int = 1) -> String:
 	return String(LEVEL_MATERIAL_FAMILY_BY_PALETTE_ID.get(pal_id, "crystal"))
 
 
-## Returns the single-material palette for a given level (strictly 1 material family per level).
+## Returns a single random material family selected from the curated material definitions.
+static func get_random_session_material() -> String:
+	if MATERIAL_IDS.is_empty():
+		return "crystal"
+	return MATERIAL_IDS[randi() % MATERIAL_IDS.size()]
+
+
+## Returns the material palette for a level:
+## During active play, returns the single session material family.
+## Otherwise returns the level's single dominant material family.
 static func get_level_material_palette(level_num: int = 1) -> Array[String]:
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		var gs = main_loop.root.get_node_or_null("GameState")
+		if gs and gs.has_method("get_session_material_palette"):
+			var is_playing: bool = false
+			if "current_state" in gs:
+				var st: int = int(gs.current_state)
+				is_playing = (st == 1 or st == 2)
+			if is_playing:
+				var pal: Array[String] = gs.get_session_material_palette()
+				if not pal.is_empty() and BLOCK_MATERIALS.has(pal[0]):
+					return [pal[0]]
 	var fam: String = get_level_material_family(level_num)
-	var single_pal: Array[String] = [fam]
-	return single_pal
+	return [fam]
 
 
 ## Resolves material ID for block in a level:
-## Each level selects strictly ONE dominant block material family, and ALL playable blocks
-## in that level use that same material family (while color_id provides distinct color shades).
+## When a play session is active, all blocks share the same session material family.
+## Outside an active session (e.g. menu / chapter map queries), returns the level's dominant material family.
 static func get_material_id_for_block(_color_id: int, level_num: int = 1) -> String:
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		var gs = main_loop.root.get_node_or_null("GameState")
+		if gs and gs.has_method("get_session_material_palette"):
+			var is_playing: bool = false
+			if "current_state" in gs:
+				var st: int = int(gs.current_state)
+				is_playing = (st == 1 or st == 2)
+			if is_playing:
+				var pal: Array[String] = gs.get_session_material_palette()
+				if not pal.is_empty() and BLOCK_MATERIALS.has(pal[0]):
+					return pal[0]
 	return get_level_material_family(level_num)
 
 
@@ -1104,44 +1136,58 @@ static func get_level_difficulty_profile(level_num: int = 1) -> Dictionary:
 	}
 
 
-## Returns the curated opening piece IDs for the first few rounds/turns of a level.
-## Level 1's opening pieces ("l_shape_4_h", "t_shape_up", "z_shape", followed by "j_shape_4_h", "s_shape", "t_shape")
-## require genuine spatial planning and board space management:
-## - Placing them blindly side-by-side or dropping them straight down never auto-clears a row.
-## - Rotating and interlocking their notches/steps packs clean 10-column rows.
-static func get_opening_tray_shape_ids(level_num: int = 1, round_number: int = 1) -> Array[String]:
-	var safe_lvl: int = max(1, level_num)
+const OPENING_TRAY_SETS_R1: Array = [
+	["l_shape_4_h", "t_shape_up", "z_shape"],
+	["j_shape_4_h", "t_shape", "s_shape"],
+	["l_shape_4", "z_shape", "t_shape_up"],
+	["j_shape_4", "s_shape", "t_shape"],
+	["t_shape", "l_shape_4_h", "s_shape"],
+	["z_shape", "j_shape_4_h", "l_shape_4"],
+	["t_shape_up", "j_shape_4", "z_shape"],
+	["s_shape", "l_shape_4", "t_shape"],
+	["j_shape_4_h", "z_shape", "t_shape_up"],
+	["l_shape_4_h", "s_shape", "t_shape_up"]
+]
+
+const OPENING_TRAY_SETS_R2: Array = [
+	["j_shape_4_h", "s_shape", "t_shape"],
+	["l_shape_4_h", "z_shape", "j_shape_4"],
+	["t_shape", "l_shape_4_h", "s_shape"],
+	["z_shape", "j_shape_4_h", "l_shape_4"],
+	["l_shape_4_h", "t_shape_up", "z_shape"],
+	["j_shape_4_h", "t_shape", "s_shape"],
+	["s_shape", "t_shape_up", "j_shape_4"],
+	["z_shape", "t_shape", "l_shape_4_h"]
+]
+
+const FALLING_OPENING_SEQUENCES: Array = [
+	["l_shape_4_h", "t_shape_up", "z_shape", "j_shape_4_h", "s_shape", "t_shape"],
+	["j_shape_4_h", "z_shape", "t_shape", "l_shape_4_h", "t_shape_up", "s_shape"],
+	["t_shape_up", "s_shape", "l_shape_4", "z_shape", "j_shape_4_h", "t_shape"],
+	["z_shape", "l_shape_4_h", "s_shape", "t_shape", "j_shape_4", "t_shape_up"],
+	["s_shape", "j_shape_4", "t_shape_up", "l_shape_4", "z_shape", "t_shape"],
+	["t_shape", "j_shape_4_h", "s_shape", "l_shape_4", "z_shape", "t_shape_up"]
+]
+
+## Returns the randomized opening piece IDs for the opening rounds of Drag & Drop mode.
+## Randomly selects a curated valid 4-cell spatial-planning shape set on every level start and restart.
+static func get_opening_tray_shape_ids(_level_num: int = 1, round_number: int = 1, set_index: int = -1) -> Array[String]:
 	if round_number == 1:
-		var r1_sets: Array = [
-			["l_shape_4_h", "t_shape_up", "z_shape"],
-			["j_shape_4_h", "t_shape", "s_shape"],
-			["l_shape_4", "z_shape", "t_shape_up"],
-			["j_shape_4", "s_shape", "t_shape"]
-		]
-		var pick1: Array = r1_sets[(safe_lvl - 1) % r1_sets.size()]
+		var idx1: int = set_index if set_index >= 0 else randi()
+		var pick1: Array = OPENING_TRAY_SETS_R1[posmod(idx1, OPENING_TRAY_SETS_R1.size())]
 		return [String(pick1[0]), String(pick1[1]), String(pick1[2])]
 	elif round_number == 2:
-		var r2_sets: Array = [
-			["j_shape_4_h", "s_shape", "t_shape"],
-			["l_shape_4_h", "z_shape", "j_shape_4"],
-			["t_shape", "l_shape_4_h", "s_shape"],
-			["z_shape", "j_shape_4_h", "l_shape_4"]
-		]
-		var pick2: Array = r2_sets[(safe_lvl - 1) % r2_sets.size()]
+		var idx2: int = set_index if set_index >= 0 else randi()
+		var pick2: Array = OPENING_TRAY_SETS_R2[posmod(idx2, OPENING_TRAY_SETS_R2.size())]
 		return [String(pick2[0]), String(pick2[1]), String(pick2[2])]
 	return []
 
 
-## Returns the curated opening sequence for Falling mode so the first few falling pieces
-## require horizontal positioning and rotation rather than trivial center-drop auto-clears.
-static func get_falling_opening_shape_id(level_num: int = 1, spawn_index: int = 0) -> String:
-	var safe_lvl: int = max(1, level_num)
-	var opening_sequences: Array = [
-		["l_shape_4_h", "t_shape_up", "z_shape", "j_shape_4_h", "s_shape", "t_shape"],
-		["j_shape_4_h", "z_shape", "t_shape", "l_shape_4_h", "t_shape_up", "s_shape"],
-		["t_shape_up", "s_shape", "l_shape_4", "z_shape", "j_shape_4_h", "t_shape"]
-	]
-	var seq: Array = opening_sequences[(safe_lvl - 1) % opening_sequences.size()]
+## Returns the opening piece ID for Falling mode from a randomized sequence.
+## Whenever a level starts or restarts, a randomized sequence of spatial complex shapes is used.
+static func get_falling_opening_shape_id(_level_num: int = 1, spawn_index: int = 0, seq_index: int = -1) -> String:
+	var idx: int = seq_index if seq_index >= 0 else randi()
+	var seq: Array = FALLING_OPENING_SEQUENCES[posmod(idx, FALLING_OPENING_SEQUENCES.size())]
 	if spawn_index >= 0 and spawn_index < seq.size():
 		return String(seq[spawn_index])
 	return ""

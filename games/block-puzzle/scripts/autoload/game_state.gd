@@ -2874,9 +2874,8 @@ func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -
 	
 	var PolyominoLibScript = preload("res://scripts/core/polyomino_library.gd")
 	session_material_palette.clear()
-	var lvl_pal: Array[String] = PolyominoLibScript.get_level_material_palette(target_lvl)
-	for item in lvl_pal:
-		session_material_palette.append(String(item))
+	var random_mat: String = PolyominoLibScript.get_random_session_material()
+	session_material_palette.append(random_mat)
 	
 	var audio_mgr = get_node_or_null("/root/AudioManager")
 	if audio_mgr:

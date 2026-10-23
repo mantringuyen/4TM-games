@@ -33,6 +33,7 @@ var drop_timer: float = 0.0
 var drop_interval: float = 0.74
 var is_falling: bool = false
 var spawn_count: int = 0
+var opening_seq_index: int = -1
 
 var touch_start_pos: Vector2 = Vector2.ZERO
 var touch_last_pos: Vector2 = Vector2.ZERO
@@ -91,6 +92,7 @@ func _on_mode_started() -> void:
 	if board.has_method("spawn_milestone_special_items"):
 		board.spawn_milestone_special_items(cur_lvl, allow_milestone_items)
 	spawn_count = 0
+	opening_seq_index = randi()
 	var prof: Dictionary = PolyominoLib.get_level_difficulty_profile(cur_lvl)
 	drop_interval = float(prof.get("falling_drop_interval", 0.74))
 	current_piece = _pick_next_falling_piece(cur_lvl)
@@ -103,11 +105,11 @@ func _on_mode_started() -> void:
 
 
 func _pick_next_falling_piece(cur_lvl: int) -> Dictionary:
-	var opening_id: String = PolyominoLib.get_falling_opening_shape_id(cur_lvl, spawn_count)
+	var opening_id: String = PolyominoLib.get_falling_opening_shape_id(cur_lvl, spawn_count, opening_seq_index)
 	spawn_count += 1
 	if not opening_id.is_empty():
 		var pal: Array[String] = PolyominoLib.get_level_material_palette(cur_lvl)
-		var forced_mat: String = pal[(spawn_count - 1) % pal.size()] if not pal.is_empty() else ""
+		var forced_mat: String = pal[0] if not pal.is_empty() else ""
 		return PolyominoLib.stamp_piece_material(PolyominoLib.get_shape(opening_id), cur_lvl, forced_mat)
 	return PolyominoLib.get_random_shape(cur_lvl)
 
