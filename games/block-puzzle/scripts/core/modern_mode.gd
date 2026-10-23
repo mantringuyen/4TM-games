@@ -593,7 +593,16 @@ func check_game_over() -> bool:
 	return false
 
 
+func _cleanup_listeners() -> void:
+	var state_mgr = get_node_or_null("/root/GameState")
+	if state_mgr and state_mgr.has_signal("state_changed") and state_mgr.state_changed.is_connected(_on_game_state_changed_while_dragging):
+		state_mgr.state_changed.disconnect(_on_game_state_changed_while_dragging)
+	if is_inside_tree() and get_viewport() and get_viewport().size_changed.is_connected(_update_layout):
+		get_viewport().size_changed.disconnect(_update_layout)
+
+
 func _on_mode_ended() -> void:
+	_cleanup_listeners()
 	cancel_pending_special_item()
 	if board:
 		board.clear_board()
@@ -615,3 +624,8 @@ func _on_mode_reset() -> void:
 			board.spawn_milestone_special_items(cur_lvl, allow_milestone_items)
 	if piece_tray:
 		piece_tray.spawn_new_round()
+
+
+func _exit_tree() -> void:
+	_cleanup_listeners()
+	super._exit_tree()

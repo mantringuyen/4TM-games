@@ -57,6 +57,14 @@ func _find_node_by_name(node_name: String) -> Control:
 	return find_child(node_name, true, false) as Control
 
 
+func _on_language_changed_modal(_l) -> void:
+	_render_modal_state()
+
+
+func _on_inventory_changed_modal(_inv) -> void:
+	_render_modal_state()
+
+
 func _ready() -> void:
 	_ensure_nodes()
 	_rewarded_ad = RewardedAdScript.new()
@@ -92,11 +100,12 @@ func _ready() -> void:
 	
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
-		state_mgr.game_over_triggered.connect(_on_game_over)
-		if state_mgr.has_signal("language_changed"):
-			state_mgr.language_changed.connect(func(_l): _render_modal_state())
-		if state_mgr.has_signal("special_item_inventory_changed"):
-			state_mgr.special_item_inventory_changed.connect(func(_inv): _render_modal_state())
+		if not state_mgr.game_over_triggered.is_connected(_on_game_over):
+			state_mgr.game_over_triggered.connect(_on_game_over)
+		if state_mgr.has_signal("language_changed") and not state_mgr.language_changed.is_connected(_on_language_changed_modal):
+			state_mgr.language_changed.connect(_on_language_changed_modal)
+		if state_mgr.has_signal("special_item_inventory_changed") and not state_mgr.special_item_inventory_changed.is_connected(_on_inventory_changed_modal):
+			state_mgr.special_item_inventory_changed.connect(_on_inventory_changed_modal)
 	UIIconScript.setup_all_buttons_feedback(self)
 
 

@@ -188,23 +188,30 @@ func _ready() -> void:
 	points_popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(points_popup)
 	
+func _on_energy_changed_hud(_c = 0, _m = 0) -> void:
+	update_energy_display()
+
+
+func _ready() -> void:
 	var state_mgr = _get_game_state()
 	if state_mgr:
-		state_mgr.score_updated.connect(_on_score_updated)
-		state_mgr.level_updated.connect(_on_level_updated)
-		if state_mgr.has_signal("game_started"):
+		if not state_mgr.score_updated.is_connected(_on_score_updated):
+			state_mgr.score_updated.connect(_on_score_updated)
+		if not state_mgr.level_updated.is_connected(_on_level_updated):
+			state_mgr.level_updated.connect(_on_level_updated)
+		if state_mgr.has_signal("game_started") and not state_mgr.game_started.is_connected(_on_game_started):
 			state_mgr.game_started.connect(_on_game_started)
-		if state_mgr.has_signal("mode_changed"):
+		if state_mgr.has_signal("mode_changed") and not state_mgr.mode_changed.is_connected(_on_mode_changed):
 			state_mgr.mode_changed.connect(_on_mode_changed)
-		if state_mgr.has_signal("language_changed"):
+		if state_mgr.has_signal("language_changed") and not state_mgr.language_changed.is_connected(_on_language_changed):
 			state_mgr.language_changed.connect(_on_language_changed)
-		if state_mgr.has_signal("level_completed"):
+		if state_mgr.has_signal("level_completed") and not state_mgr.level_completed.is_connected(_on_level_completed):
 			state_mgr.level_completed.connect(_on_level_completed)
-		if state_mgr.has_signal("special_item_discovered"):
+		if state_mgr.has_signal("special_item_discovered") and not state_mgr.special_item_discovered.is_connected(_on_special_item_discovered):
 			state_mgr.special_item_discovered.connect(_on_special_item_discovered)
-		if state_mgr.has_signal("energy_changed"):
-			state_mgr.energy_changed.connect(func(_c, _m): update_energy_display())
-		if state_mgr.has_signal("special_item_inventory_changed"):
+		if state_mgr.has_signal("energy_changed") and not state_mgr.energy_changed.is_connected(_on_energy_changed_hud):
+			state_mgr.energy_changed.connect(_on_energy_changed_hud)
+		if state_mgr.has_signal("special_item_inventory_changed") and not state_mgr.special_item_inventory_changed.is_connected(_on_special_inventory_changed):
 			state_mgr.special_item_inventory_changed.connect(_on_special_inventory_changed)
 		_refresh_language()
 		_on_score_updated(state_mgr.score, 0)
@@ -242,6 +249,8 @@ func _exit_tree() -> void:
 			state_mgr.level_completed.disconnect(_on_level_completed)
 		if state_mgr.has_signal("special_item_discovered") and state_mgr.special_item_discovered.is_connected(_on_special_item_discovered):
 			state_mgr.special_item_discovered.disconnect(_on_special_item_discovered)
+		if state_mgr.has_signal("energy_changed") and state_mgr.energy_changed.is_connected(_on_energy_changed_hud):
+			state_mgr.energy_changed.disconnect(_on_energy_changed_hud)
 		if state_mgr.has_signal("special_item_inventory_changed") and state_mgr.special_item_inventory_changed.is_connected(_on_special_inventory_changed):
 			state_mgr.special_item_inventory_changed.disconnect(_on_special_inventory_changed)
 

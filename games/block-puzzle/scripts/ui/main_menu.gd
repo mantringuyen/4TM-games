@@ -255,6 +255,65 @@ func _tr(key: String) -> String:
 	return String(GameStateScript.TRANSLATIONS["en"].get(key, key))
 
 
+func _on_gs_progression_updated(_u, _s, _c) -> void:
+	_refresh_all_ui()
+
+
+func _on_gs_energy_changed(_e, _m) -> void:
+	_refresh_energy_ui()
+
+
+func _on_gs_inventory_changed(_inv) -> void:
+	update_life_display()
+
+
+func _on_gs_language_changed(_lang) -> void:
+	_refresh_all_ui()
+
+
+func _on_gs_voice_changed(_vm) -> void:
+	_update_settings_buttons()
+
+
+func _on_gs_mode_changed(m) -> void:
+	selected_mode = int(m)
+	_update_mode_selection_ui()
+
+
+func _on_gs_play_style_changed(st) -> void:
+	selected_play_style = int(st)
+	_update_mode_selection_ui()
+
+
+func _on_gs_state_changed(ns, _ps) -> void:
+	if ns == GameStateScript.State.MENU:
+		_sync_selection_from_state()
+		_refresh_all_ui()
+
+
+func _exit_tree() -> void:
+	var gs = get_node_or_null("/root/GameState")
+	if gs:
+		if gs.has_signal("progression_updated") and gs.progression_updated.is_connected(_on_gs_progression_updated):
+			gs.progression_updated.disconnect(_on_gs_progression_updated)
+		if gs.has_signal("energy_changed") and gs.energy_changed.is_connected(_on_gs_energy_changed):
+			gs.energy_changed.disconnect(_on_gs_energy_changed)
+		if gs.has_signal("energy_updated") and gs.energy_updated.is_connected(_on_gs_energy_changed):
+			gs.energy_updated.disconnect(_on_gs_energy_changed)
+		if gs.has_signal("special_item_inventory_changed") and gs.special_item_inventory_changed.is_connected(_on_gs_inventory_changed):
+			gs.special_item_inventory_changed.disconnect(_on_gs_inventory_changed)
+		if gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_gs_language_changed):
+			gs.language_changed.disconnect(_on_gs_language_changed)
+		if gs.has_signal("voice_settings_changed") and gs.voice_settings_changed.is_connected(_on_gs_voice_changed):
+			gs.voice_settings_changed.disconnect(_on_gs_voice_changed)
+		if gs.has_signal("mode_changed") and gs.mode_changed.is_connected(_on_gs_mode_changed):
+			gs.mode_changed.disconnect(_on_gs_mode_changed)
+		if gs.has_signal("play_style_changed") and gs.play_style_changed.is_connected(_on_gs_play_style_changed):
+			gs.play_style_changed.disconnect(_on_gs_play_style_changed)
+		if gs.has_signal("state_changed") and gs.state_changed.is_connected(_on_gs_state_changed):
+			gs.state_changed.disconnect(_on_gs_state_changed)
+
+
 func _ready() -> void:
 	_sync_selection_from_state()
 	_ensure_account_modal_structure()
@@ -363,34 +422,24 @@ func _ready() -> void:
 	update_life_display()
 	var gs = get_node_or_null("/root/GameState")
 	if gs:
-		if gs.has_signal("progression_updated"):
-			gs.progression_updated.connect(func(_u, _s, _c): _refresh_all_ui())
-		if gs.has_signal("energy_changed"):
-			gs.energy_changed.connect(func(_e, _m): _refresh_energy_ui())
-		if gs.has_signal("energy_updated"):
-			gs.energy_updated.connect(func(_e, _m): _refresh_energy_ui())
-		if gs.has_signal("special_item_inventory_changed"):
-			gs.special_item_inventory_changed.connect(func(_inv): update_life_display())
-		if gs.has_signal("language_changed"):
-			gs.language_changed.connect(func(_lang): _refresh_all_ui())
-		if gs.has_signal("voice_settings_changed"):
-			gs.voice_settings_changed.connect(func(_vm): _update_settings_buttons())
-		if gs.has_signal("mode_changed"):
-			gs.mode_changed.connect(func(m):
-				selected_mode = int(m)
-				_update_mode_selection_ui()
-			)
-		if gs.has_signal("play_style_changed"):
-			gs.play_style_changed.connect(func(st):
-				selected_play_style = int(st)
-				_update_mode_selection_ui()
-			)
-		if gs.has_signal("state_changed"):
-			gs.state_changed.connect(func(ns, _ps):
-				if ns == GameStateScript.State.MENU:
-					_sync_selection_from_state()
-					_refresh_all_ui()
-			)
+		if gs.has_signal("progression_updated") and not gs.progression_updated.is_connected(_on_gs_progression_updated):
+			gs.progression_updated.connect(_on_gs_progression_updated)
+		if gs.has_signal("energy_changed") and not gs.energy_changed.is_connected(_on_gs_energy_changed):
+			gs.energy_changed.connect(_on_gs_energy_changed)
+		if gs.has_signal("energy_updated") and not gs.energy_updated.is_connected(_on_gs_energy_changed):
+			gs.energy_updated.connect(_on_gs_energy_changed)
+		if gs.has_signal("special_item_inventory_changed") and not gs.special_item_inventory_changed.is_connected(_on_gs_inventory_changed):
+			gs.special_item_inventory_changed.connect(_on_gs_inventory_changed)
+		if gs.has_signal("language_changed") and not gs.language_changed.is_connected(_on_gs_language_changed):
+			gs.language_changed.connect(_on_gs_language_changed)
+		if gs.has_signal("voice_settings_changed") and not gs.voice_settings_changed.is_connected(_on_gs_voice_changed):
+			gs.voice_settings_changed.connect(_on_gs_voice_changed)
+		if gs.has_signal("mode_changed") and not gs.mode_changed.is_connected(_on_gs_mode_changed):
+			gs.mode_changed.connect(_on_gs_mode_changed)
+		if gs.has_signal("play_style_changed") and not gs.play_style_changed.is_connected(_on_gs_play_style_changed):
+			gs.play_style_changed.connect(_on_gs_play_style_changed)
+		if gs.has_signal("state_changed") and not gs.state_changed.is_connected(_on_gs_state_changed):
+			gs.state_changed.connect(_on_gs_state_changed)
 	
 	_refresh_all_ui()
 	if is_inside_tree() and get_viewport():

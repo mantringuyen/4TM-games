@@ -37,6 +37,14 @@ func _get_audio_manager() -> Node:
 	return null
 
 
+func _on_language_changed_audio(_l) -> void:
+	_refresh_audio_labels()
+
+
+func _on_voice_changed_audio(_v) -> void:
+	_refresh_audio_labels()
+
+
 func _ready() -> void:
 	if lbl_title:
 		GameTypographyScript.apply_heading_typography(lbl_title, 34)
@@ -80,11 +88,13 @@ func _ready() -> void:
 	if not resized.is_connected(_on_resized):
 		resized.connect(_on_resized)
 	var gs = get_node_or_null("/root/GameState")
-	if gs and gs.has_signal("language_changed"):
-		gs.language_changed.connect(func(_l): _refresh_audio_labels())
-	if gs and gs.has_signal("voice_settings_changed"):
-		gs.voice_settings_changed.connect(func(_v): _refresh_audio_labels())
-	visibility_changed.connect(_refresh_audio_labels)
+	if gs:
+		if gs.has_signal("language_changed") and not gs.language_changed.is_connected(_on_language_changed_audio):
+			gs.language_changed.connect(_on_language_changed_audio)
+		if gs.has_signal("voice_settings_changed") and not gs.voice_settings_changed.is_connected(_on_voice_changed_audio):
+			gs.voice_settings_changed.connect(_on_voice_changed_audio)
+	if not visibility_changed.is_connected(_refresh_audio_labels):
+		visibility_changed.connect(_refresh_audio_labels)
 	_refresh_audio_labels()
 	UIIconScript.setup_all_buttons_feedback(self)
 
