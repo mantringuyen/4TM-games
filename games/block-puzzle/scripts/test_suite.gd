@@ -2613,38 +2613,35 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	# Regression test: Single dominant material family during active gameplay and session palette state
+	# Regression test: Level-based single dominant material family during active gameplay and session palette state
 	for test_lvl in [1, 2, 3, 5, 10]:
 		game_state.start_game_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING, test_lvl)
+		var exp_family: String = PolyominoLib.get_level_material_family(test_lvl)
 		var sess_pal: Array[String] = game_state.get_session_material_palette()
-		if sess_pal.size() != 1 or not PolyominoLib.BLOCK_MATERIALS.has(sess_pal[0]):
-			printerr("[FAIL Test 83 Regression] Session palette for level ", test_lvl, " must contain exactly 1 valid material family, got: ", sess_pal)
+		if sess_pal.size() != 1 or sess_pal[0] != exp_family:
+			printerr("[FAIL Test 83 Regression] Session palette for level ", test_lvl, " must match predefined level material family (", exp_family, "), got: ", sess_pal)
 			get_tree().quit(1)
 			return
-		var active_sess_mat: String = sess_pal[0]
 		var gameplay_mats := {}
 		for cid in range(1, 9):
 			var m_id: String = PolyominoLib.get_material_id_for_block(cid, test_lvl)
 			gameplay_mats[m_id] = true
-		if gameplay_mats.size() != 1 or not gameplay_mats.has(active_sess_mat):
-			printerr("[FAIL Test 83 Regression] Level ", test_lvl, " during active gameplay must use strictly ONE dominant family matching session (", active_sess_mat, "), got: ", gameplay_mats.keys())
+		if gameplay_mats.size() != 1 or not gameplay_mats.has(exp_family):
+			printerr("[FAIL Test 83 Regression] Level ", test_lvl, " during active gameplay must use strictly ONE dominant family (", exp_family, "), got: ", gameplay_mats.keys())
 			get_tree().quit(1)
 			return
 
-	# Verify that restarting a level is capable of selecting materials randomly
-	var seen_session_mats := {}
-	for _attempt in range(25):
+	# Verify that restarting the same level preserves its predefined material family consistently
+	for _attempt in range(5):
 		game_state.start_game_combination(GameStateScript.GameMode.CLASSIC, GameStateScript.PlayStyle.FALLING, 1)
 		var s_mat: String = game_state.get_session_material_palette()[0]
-		seen_session_mats[s_mat] = true
-		if seen_session_mats.size() > 1:
-			break
-	if seen_session_mats.size() < 2:
-		printerr("[FAIL Test 83 Regression] Restarting level 1 should be capable of selecting different materials across sessions, got: ", seen_session_mats.keys())
-		get_tree().quit(1)
-		return
+		var exp_l1_mat: String = PolyominoLib.get_level_material_family(1)
+		if s_mat != exp_l1_mat:
+			printerr("[FAIL Test 83 Regression] Level 1 must consistently use its predefined material family (", exp_l1_mat, "), got: ", s_mat)
+			get_tree().quit(1)
+			return
 
-	# Verify that pausing and resuming within the same session preserves the selected material
+	# Verify that pausing and resuming within the same session preserves the material
 	var cur_sess_mat: String = game_state.get_session_material_palette()[0]
 	game_state.pause_game(true)
 	if game_state.get_session_material_palette()[0] != cur_sess_mat:
@@ -2658,7 +2655,7 @@ func _ready() -> void:
 		return
 	game_state.current_state = GameStateScript.State.MENU
 	game_state.session_material_palette.clear()
-	print("[TEST 83/90] Single dominant block material family per session & level, zero plain gray stone in Level 1, richer milestone effects: PASSED")
+	print("[TEST 83/90] Predefined level-based dominant block material family per level, zero plain gray stone in Level 1, richer milestone effects: PASSED")
 
 	# =========================================================================
 	# TEST 84: Block Material & Color Identity Preserved (Spawn/Tray/Next -> Active Falling/Dragging -> Preview -> Placed Board)
@@ -2808,26 +2805,42 @@ func _ready() -> void:
 	print("[TEST 87/90] Exact line-clear announcer voice callouts (1 line -> SFX only, 1+1 -> COMBO, 2 -> GOOD/NICE, 3 -> GREAT, 4 -> EXCELLENT, 5+ -> AMAZING): PASSED")
 
 	# =========================================================================
-	# TEST 88: Multiple Original BGM Tracks & Random Selection on New Game/Session
+	# TEST 88: Multiple Full-Length (3-5 min) BGM Tracks & Random Selection per Session
 	# =========================================================================
 	var bgm_info88: Dictionary = audio_mgr.get_bgm_tracks_info()
-	if int(bgm_info88.get("track_count", 0)) < 4 or int(bgm_info88.get("distinct_track_count", 0)) < 4 or not bool(bgm_info88.get("all_tracks_loop_cleanly", false)) or not bool(bgm_info88.get("is_4tm_cohesive_identity", false)):
-		printerr("[FAIL Test 88] AudioManager must provide at least 4 original casual-puzzle BGM tracks with clean looping and cohesive 4TM identity: ", bgm_info88)
+	if int(bgm_info88.get("track_count", 0)) < 6 or int(bgm_info88.get("distinct_track_count", 0)) < 6 or not bool(bgm_info88.get("is_4tm_cohesive_identity", false)):
+		printerr("[FAIL Test 88] AudioManager must provide 6 full-length BGM tracks with cohesive 4TM identity: ", bgm_info88)
 		get_tree().quit(1)
 		return
+	var specs88: Dictionary = bgm_info88.get("track_specs", {})
+	for tid_check in bgm_info88.get("track_ids", []):
+		var sp_check: Dictionary = specs88.get(tid_check, {})
+		var dur_check: float = float(sp_check.get("duration_sec", 0.0))
+		if dur_check < 180.0:
+			printerr("[FAIL Test 88] Track ", tid_check, " duration (", dur_check, "s) is less than 3 minutes (180s)!")
+			get_tree().quit(1)
+			return
 	var selected_tracks88 := {}
-	for _s88 in range(12):
+	for _s88 in range(25):
 		var tid88: String = audio_mgr.select_random_bgm_track_for_new_session()
 		selected_tracks88[tid88] = true
 		if not audio_mgr.bgm_player.stream or audio_mgr.current_bgm_track_id != tid88:
 			printerr("[FAIL Test 88] Selecting BGM track ", tid88, " did not update bgm_player stream!")
 			get_tree().quit(1)
 			return
-	if selected_tracks88.size() < 2:
-		printerr("[FAIL Test 88] Random BGM track selection across sessions never varied track index!")
+	if selected_tracks88.size() < 3:
+		printerr("[FAIL Test 88] Random BGM track selection across sessions did not vary sufficiently across 25 picks: ", selected_tracks88.keys())
 		get_tree().quit(1)
 		return
-	print("[TEST 88/90] 4 original casual-puzzle BGM tracks with random track selection on new game/session: PASSED")
+	var prev_idx88: int = audio_mgr.current_bgm_track_index
+	for _tf in range(20):
+		audio_mgr._on_bgm_track_finished()
+		if audio_mgr.current_bgm_track_index == prev_idx88:
+			printerr("[FAIL Test 88] _on_bgm_track_finished immediately repeated previous track index ", prev_idx88)
+			get_tree().quit(1)
+			return
+		prev_idx88 = audio_mgr.current_bgm_track_index
+	print("[TEST 88/90] 6 full-length (3-5 min) BGM tracks with random selection on new session & auto-advance: PASSED")
 
 	# =========================================================================
 	# TEST 89: Distinct Single-Biome MapPages (Biomes, Terrain, Landmarks, Path Archetypes)
@@ -3206,6 +3219,11 @@ func _ready() -> void:
 			String(t_p.active_pieces[2].shape_data.get("id", ""))
 		]
 		seen_tray_openings[opening_key] = true
+		for p_chk in t_p.active_pieces:
+			if String(p_chk.material_id) != PolyominoLib.get_level_material_family(1):
+				printerr("[FAIL Test 93] Shape randomization altered material! Expected level 1 material, got: ", p_chk.material_id)
+				get_tree().quit(1)
+				return
 		dd_test.queue_free()
 		if seen_tray_openings.size() > 1:
 			break
@@ -3228,7 +3246,7 @@ func _ready() -> void:
 		return
 	fm93.queue_free()
 
-	# Verify Falling mode randomizes opening sequence across multiple starts/restarts
+	# Verify Falling mode randomizes opening sequence across multiple starts/restarts while preserving level material
 	var seen_falling_openings := {}
 	for _fm_i in range(25):
 		var fm_test = ClassicModeScript.new()
@@ -3241,6 +3259,10 @@ func _ready() -> void:
 			String(fm_test.next_piece.get("id", ""))
 		]
 		seen_falling_openings[fall_key] = true
+		if String(fm_test.current_piece.get("material_id", "")) != PolyominoLib.get_level_material_family(1):
+			printerr("[FAIL Test 93] Falling shape randomization altered material! Expected level 1 material, got: ", fm_test.current_piece.get("material_id", ""))
+			get_tree().quit(1)
+			return
 		fm_test.queue_free()
 		if seen_falling_openings.size() > 1:
 			break

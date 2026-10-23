@@ -46,6 +46,51 @@ const BGM_FILE_PATHS: Dictionary = {
 	"alpine_aurora_chimes": "res://assets/audio/music/bgm_local_forecast.ogg"
 }
 
+const BGM_TRACK_METADATA: Dictionary = {
+	"sunlit_marimba_meadow": {
+		"title": "Sunlit Marimba Meadow",
+		"file_name": "bgm_carefree.ogg",
+		"duration_sec": 205.14,
+		"tempo_bpm": 120,
+		"mood": "Playful, buoyant acoustic marimba, ukulele, and gentle woodwinds"
+	},
+	"crystal_lagoon_breeze": {
+		"title": "Crystal Lagoon Breeze",
+		"file_name": "bgm_daily_beetle.ogg",
+		"duration_sec": 316.87,
+		"tempo_bpm": 108,
+		"mood": "Contemplative, relaxing acoustic guitar, upright bass, and soft brush percussion"
+	},
+	"velvet_starlight_lounge": {
+		"title": "Velvet Starlight Lounge",
+		"file_name": "bgm_life_of_riley.ogg",
+		"duration_sec": 235.36,
+		"tempo_bpm": 112,
+		"mood": "Upbeat, melodic acoustic folk with whistle motifs and bright strumming"
+	},
+	"amber_woodland_waltz": {
+		"title": "Amber Woodland Waltz",
+		"file_name": "bgm_wallpaper.ogg",
+		"duration_sec": 220.06,
+		"tempo_bpm": 105,
+		"mood": "Soothing, warm lounge jazz with Rhodes chords, gentle bass, and brush drums"
+	},
+	"desert_mirage_caravan": {
+		"title": "Desert Mirage Caravan",
+		"file_name": "bgm_pixelland.ogg",
+		"duration_sec": 233.80,
+		"tempo_bpm": 116,
+		"mood": "Charming, whimsical hybrid chiptune-acoustic groove with flowing melodies"
+	},
+	"alpine_aurora_chimes": {
+		"title": "Alpine Aurora Chimes",
+		"file_name": "bgm_local_forecast.ogg",
+		"duration_sec": 189.20,
+		"tempo_bpm": 110,
+		"mood": "Breezy, mellow bossa-nova groove with warm vibraphone and acoustic piano"
+	}
+}
+
 var _music_enabled: bool = true
 var music_enabled: bool:
 	get:
@@ -569,21 +614,24 @@ func select_bgm_track(track_index: int) -> String:
 	bgm_stream = bgm_tracks[idx]
 	if bgm_player:
 		var was_playing: bool = bgm_player.playing
-		if bgm_player.stream != bgm_stream:
+		var stream_changed: bool = (bgm_player.stream != bgm_stream)
+		if stream_changed:
 			bgm_player.stream = bgm_stream
 		if _music_enabled:
-			bgm_player.play()
+			if stream_changed or not was_playing:
+				bgm_player.play()
 		elif was_playing:
 			bgm_player.stop()
 	return current_bgm_track_id
 
 
-func select_random_bgm_track_for_new_session() -> String:
+func select_random_bgm_track_for_new_session(avoid_immediate_repeat: bool = true) -> String:
 	if bgm_tracks.is_empty():
 		return current_bgm_track_id
-	var pick_idx: int = randi() % bgm_tracks.size()
-	if bgm_tracks.size() > 1 and pick_idx == current_bgm_track_index:
-		pick_idx = (pick_idx + 1 + (randi() % (bgm_tracks.size() - 1))) % bgm_tracks.size()
+	var n_tracks: int = bgm_tracks.size()
+	var pick_idx: int = randi() % n_tracks
+	if avoid_immediate_repeat and n_tracks > 1 and pick_idx == current_bgm_track_index:
+		pick_idx = (pick_idx + 1 + (randi() % (n_tracks - 1))) % n_tracks
 	bgm_session_selection_count += 1
 	return select_bgm_track(pick_idx)
 
@@ -603,15 +651,8 @@ func select_bgm_for_level(level_num: int, seed_offset: int = 0) -> String:
 	return select_bgm_track(pick_idx)
 
 
-func select_random_bgm_for_level(level_num: int, avoid_immediate_repeat: bool = true) -> String:
-	if bgm_tracks.is_empty():
-		return current_bgm_track_id
-	var n_tracks: int = bgm_tracks.size()
-	var pick_idx: int = posmod((level_num * 3) + randi(), n_tracks)
-	if avoid_immediate_repeat and n_tracks > 1 and pick_idx == current_bgm_track_index:
-		pick_idx = posmod(pick_idx + 1 + (randi() % (n_tracks - 1)), n_tracks)
-	bgm_session_selection_count += 1
-	return select_bgm_track(pick_idx)
+func select_random_bgm_for_level(_level_num: int = 1, avoid_immediate_repeat: bool = true) -> String:
+	return select_random_bgm_track_for_new_session(avoid_immediate_repeat)
 
 
 func get_bgm_tracks_info() -> Dictionary:
@@ -683,25 +724,48 @@ func _pregenerate_all_audio() -> void:
 	for t_i in range(BGM_TRACK_IDS.size()):
 		var track_id: String = BGM_TRACK_IDS[t_i]
 		var file_path: String = String(BGM_FILE_PATHS.get(track_id, ""))
+		var meta: Dictionary = BGM_TRACK_METADATA.get(track_id, {})
 		var trk_stream: AudioStream = null
-		if file_path != "" and FileAccess.file_exists(file_path):
-			trk_stream = AudioStreamOggVorbis.load_from_file(file_path)
-			if trk_stream is AudioStreamOggVorbis:
-				# loop is set to false so track-finished signal fires and seamlessly triggers randomized next-track playback
-				trk_stream.loop = false
+		
+		# Load complete, optimized audio asset (OGG Vorbis) via Godot resource loader or file/buffer loader
+		if file_path != "":
+			if ResourceLoader.exists(file_path):
+				var loaded_res = load(file_path)
+				if loaded_res is AudioStream:
+					trk_stream = loaded_res
+			if trk_stream == null and FileAccess.file_exists(file_path):
+				trk_stream = AudioStreamOggVorbis.load_from_file(file_path)
+			if trk_stream == null and FileAccess.file_exists(file_path):
+				var raw_bytes = FileAccess.get_file_as_bytes(file_path)
+				if not raw_bytes.is_empty():
+					trk_stream = AudioStreamOggVorbis.load_from_buffer(raw_bytes)
+					
+		if trk_stream is AudioStreamOggVorbis:
+			# Non-looping so the finished signal fires upon completion and seamlessly triggers the next randomized track
+			trk_stream.loop = false
+		
 		if trk_stream == null:
 			trk_stream = _generate_bgm_track(t_i)
 		
-		var dur: float = trk_stream.get_length() if trk_stream.has_method("get_length") else 0.0
+		var dur: float = 0.0
+		if trk_stream != null and trk_stream.has_method("get_length"):
+			dur = float(trk_stream.get_length())
+		if dur <= 0.0:
+			dur = float(meta.get("duration_sec", 200.0))
+		
 		bgm_track_specs[track_id] = {
 			"id": track_id,
 			"track_index": t_i,
+			"title": String(meta.get("title", track_id)),
 			"duration_sec": dur,
 			"file_path": file_path,
+			"file_name": String(meta.get("file_name", "")),
 			"signature": "%s_%.2f" % [track_id, dur],
 			"is_looping": true,
 			"is_full_length": dur >= 180.0,
-			"is_4tm_cohesive_identity": true
+			"is_4tm_cohesive_identity": true,
+			"mood": String(meta.get("mood", "")),
+			"tempo_bpm": int(meta.get("tempo_bpm", 110))
 		}
 		bgm_tracks.append(trk_stream)
 	bgm_stream = bgm_tracks[0] if not bgm_tracks.is_empty() else _generate_bgm_loop()
@@ -1738,17 +1802,18 @@ func _generate_bgm_track(track_idx: int) -> AudioStreamWAV:
 		
 		buf[i] = ((lead_voice * 0.34) + (pad * 0.26) + (bass * 0.24)) * loop_env
 	
-	bgm_track_specs[track_id] = {
-		"id": track_id,
-		"track_index": idx,
-		"step_dur": step_dur,
-		"duration_sec": total_dur,
-		"first_melody_hz": melody_notes[0],
-		"first_bass_hz": bass_notes[0],
-		"signature": "%s_%.2f_%.2f_%.2f" % [track_id, step_dur, melody_notes[0], bass_notes[0]],
-		"is_looping": true,
-		"is_4tm_original": true
-	}
+	if not bgm_track_specs.has(track_id):
+		bgm_track_specs[track_id] = {
+			"id": track_id,
+			"track_index": idx,
+			"step_dur": step_dur,
+			"duration_sec": total_dur,
+			"first_melody_hz": melody_notes[0],
+			"first_bass_hz": bass_notes[0],
+			"signature": "%s_%.2f_%.2f_%.2f" % [track_id, step_dur, melody_notes[0], bass_notes[0]],
+			"is_looping": true,
+			"is_4tm_original": true
+		}
 	return _pack_16bit_wav(buf, true, true)
 
 

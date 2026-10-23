@@ -529,49 +529,17 @@ static func get_level_material_family(level_num: int = 1) -> String:
 	return String(LEVEL_MATERIAL_FAMILY_BY_PALETTE_ID.get(pal_id, "crystal"))
 
 
-## Returns a single random material family selected from the curated material definitions.
-static func get_random_session_material() -> String:
-	if MATERIAL_IDS.is_empty():
-		return "crystal"
-	return MATERIAL_IDS[randi() % MATERIAL_IDS.size()]
-
-
-## Returns the material palette for a level:
-## During active play, returns the single session material family.
-## Otherwise returns the level's single dominant material family.
+## Returns the single-material palette for a given level (strictly 1 material family per level).
 static func get_level_material_palette(level_num: int = 1) -> Array[String]:
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		var gs = main_loop.root.get_node_or_null("GameState")
-		if gs and gs.has_method("get_session_material_palette"):
-			var is_playing: bool = false
-			if "current_state" in gs:
-				var st: int = int(gs.current_state)
-				is_playing = (st == 1 or st == 2)
-			if is_playing:
-				var pal: Array[String] = gs.get_session_material_palette()
-				if not pal.is_empty() and BLOCK_MATERIALS.has(pal[0]):
-					return [pal[0]]
 	var fam: String = get_level_material_family(level_num)
-	return [fam]
+	var single_pal: Array[String] = [fam]
+	return single_pal
 
 
 ## Resolves material ID for block in a level:
-## When a play session is active, all blocks share the same session material family.
-## Outside an active session (e.g. menu / chapter map queries), returns the level's dominant material family.
+## Each level selects strictly ONE predefined dominant block material family, and ALL playable blocks
+## in that level use that same material family (while color_id provides distinct color shades).
 static func get_material_id_for_block(_color_id: int, level_num: int = 1) -> String:
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		var gs = main_loop.root.get_node_or_null("GameState")
-		if gs and gs.has_method("get_session_material_palette"):
-			var is_playing: bool = false
-			if "current_state" in gs:
-				var st: int = int(gs.current_state)
-				is_playing = (st == 1 or st == 2)
-			if is_playing:
-				var pal: Array[String] = gs.get_session_material_palette()
-				if not pal.is_empty() and BLOCK_MATERIALS.has(pal[0]):
-					return pal[0]
 	return get_level_material_family(level_num)
 
 
