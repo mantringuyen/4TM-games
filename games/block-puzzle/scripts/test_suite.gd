@@ -2805,11 +2805,12 @@ func _ready() -> void:
 	print("[TEST 87/90] Exact line-clear announcer voice callouts (1 line -> SFX only, 1+1 -> COMBO, 2 -> GOOD/NICE, 3 -> GREAT, 4 -> EXCELLENT, 5+ -> AMAZING): PASSED")
 
 	# =========================================================================
-	# TEST 88: Multiple Full-Length (3-5 min) BGM Tracks & Random Selection per Session
+	# =========================================================================
+	# TEST 88: 20 Full-Length (3-5 min) Distinct BGM Tracks, Random Session Selection, Auto-Advance & Pause Continuity
 	# =========================================================================
 	var bgm_info88: Dictionary = audio_mgr.get_bgm_tracks_info()
-	if int(bgm_info88.get("track_count", 0)) < 6 or int(bgm_info88.get("distinct_track_count", 0)) < 6 or not bool(bgm_info88.get("is_4tm_cohesive_identity", false)):
-		printerr("[FAIL Test 88] AudioManager must provide 6 full-length BGM tracks with cohesive 4TM identity: ", bgm_info88)
+	if int(bgm_info88.get("track_count", 0)) < 20 or int(bgm_info88.get("distinct_track_count", 0)) < 20 or not bool(bgm_info88.get("is_4tm_cohesive_identity", false)):
+		printerr("[FAIL Test 88] AudioManager must provide 20 full-length distinct BGM tracks with cohesive 4TM identity, got: ", bgm_info88)
 		get_tree().quit(1)
 		return
 	var specs88: Dictionary = bgm_info88.get("track_specs", {})
@@ -2821,26 +2822,52 @@ func _ready() -> void:
 			get_tree().quit(1)
 			return
 	var selected_tracks88 := {}
-	for _s88 in range(25):
+	for _s88 in range(35):
 		var tid88: String = audio_mgr.select_random_bgm_track_for_new_session()
 		selected_tracks88[tid88] = true
 		if not audio_mgr.bgm_player.stream or audio_mgr.current_bgm_track_id != tid88:
 			printerr("[FAIL Test 88] Selecting BGM track ", tid88, " did not update bgm_player stream!")
 			get_tree().quit(1)
 			return
-	if selected_tracks88.size() < 3:
-		printerr("[FAIL Test 88] Random BGM track selection across sessions did not vary sufficiently across 25 picks: ", selected_tracks88.keys())
+	if selected_tracks88.size() < 5:
+		printerr("[FAIL Test 88] Random BGM track selection across sessions did not vary sufficiently across 35 picks: ", selected_tracks88.keys())
 		get_tree().quit(1)
 		return
 	var prev_idx88: int = audio_mgr.current_bgm_track_index
-	for _tf in range(20):
+	for _tf in range(25):
 		audio_mgr._on_bgm_track_finished()
 		if audio_mgr.current_bgm_track_index == prev_idx88:
 			printerr("[FAIL Test 88] _on_bgm_track_finished immediately repeated previous track index ", prev_idx88)
 			get_tree().quit(1)
 			return
 		prev_idx88 = audio_mgr.current_bgm_track_index
-	print("[TEST 88/90] 6 full-length (3-5 min) BGM tracks with random selection on new session & auto-advance: PASSED")
+
+	# Verify pause and resume continues current track from existing position
+	var active_tid: String = audio_mgr.current_bgm_track_id
+	audio_mgr.pause_bgm()
+	if not audio_mgr.bgm_player.stream_paused:
+		printerr("[FAIL Test 88] pause_bgm() did not set stream_paused on bgm_player!")
+		get_tree().quit(1)
+		return
+	audio_mgr.resume_bgm()
+	if audio_mgr.bgm_player.stream_paused or audio_mgr.current_bgm_track_id != active_tid:
+		printerr("[FAIL Test 88] resume_bgm() failed to resume current track!")
+		get_tree().quit(1)
+		return
+
+	# Verify Music ON/OFF independent from SFX
+	var orig_sfx88: bool = audio_mgr.sound_enabled
+	audio_mgr.set_music_enabled(false)
+	if audio_mgr.sound_enabled != orig_sfx88 or audio_mgr.is_music_playing():
+		printerr("[FAIL Test 88] Disabling music must not alter sound_enabled and must stop music playback!")
+		get_tree().quit(1)
+		return
+	audio_mgr.set_music_enabled(true)
+	if not audio_mgr.is_music_playing():
+		printerr("[FAIL Test 88] Re-enabling music failed to resume playback!")
+		get_tree().quit(1)
+		return
+	print("[TEST 88/90] 20 full-length (3-5 min) distinct BGM tracks with random selection on new session, auto-advance & pause continuity: PASSED")
 
 	# =========================================================================
 	# TEST 89: Distinct Single-Biome MapPages (Biomes, Terrain, Landmarks, Path Archetypes)

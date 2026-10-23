@@ -34,7 +34,21 @@ const BGM_TRACK_IDS: Array[String] = [
 	"velvet_starlight_lounge",
 	"amber_woodland_waltz",
 	"desert_mirage_caravan",
-	"alpine_aurora_chimes"
+	"alpine_aurora_chimes",
+	"midnight_airport_lounge",
+	"golden_autumn_pastoral",
+	"bossa_antigua_sunset",
+	"fretless_midnight_groove",
+	"george_street_swing_shuffle",
+	"cosmopolitan_lobby_jazz",
+	"moonlight_nocturne_reverie",
+	"poppers_and_prosecco_bossa",
+	"tea_roots_whispers",
+	"slow_burn_cafe_blues",
+	"study_and_relax_lofi",
+	"cool_vibes_twilight",
+	"calmant_celestial_harp",
+	"simple_acoustic_duet"
 ]
 
 const BGM_FILE_PATHS: Dictionary = {
@@ -43,7 +57,21 @@ const BGM_FILE_PATHS: Dictionary = {
 	"velvet_starlight_lounge": "res://assets/audio/music/bgm_life_of_riley.ogg",
 	"amber_woodland_waltz": "res://assets/audio/music/bgm_wallpaper.ogg",
 	"desert_mirage_caravan": "res://assets/audio/music/bgm_pixelland.ogg",
-	"alpine_aurora_chimes": "res://assets/audio/music/bgm_local_forecast.ogg"
+	"alpine_aurora_chimes": "res://assets/audio/music/bgm_local_forecast.ogg",
+	"midnight_airport_lounge": "res://assets/audio/music/bgm_airport_lounge.ogg",
+	"golden_autumn_pastoral": "res://assets/audio/music/bgm_autumn_day.ogg",
+	"bossa_antigua_sunset": "res://assets/audio/music/bgm_bossa_antigua.ogg",
+	"fretless_midnight_groove": "res://assets/audio/music/bgm_fretless.ogg",
+	"george_street_swing_shuffle": "res://assets/audio/music/bgm_george_street_shuffle.ogg",
+	"cosmopolitan_lobby_jazz": "res://assets/audio/music/bgm_lobby_time.ogg",
+	"moonlight_nocturne_reverie": "res://assets/audio/music/bgm_mining_by_moonlight.ogg",
+	"poppers_and_prosecco_bossa": "res://assets/audio/music/bgm_poppers_and_prosecco.ogg",
+	"tea_roots_whispers": "res://assets/audio/music/bgm_tea_roots.ogg",
+	"slow_burn_cafe_blues": "res://assets/audio/music/bgm_slow_burn.ogg",
+	"study_and_relax_lofi": "res://assets/audio/music/bgm_study_and_relax.ogg",
+	"cool_vibes_twilight": "res://assets/audio/music/bgm_cool_vibes.ogg",
+	"calmant_celestial_harp": "res://assets/audio/music/bgm_calmant.ogg",
+	"simple_acoustic_duet": "res://assets/audio/music/bgm_simple_duet.ogg"
 }
 
 const BGM_TRACK_METADATA: Dictionary = {
@@ -88,18 +116,123 @@ const BGM_TRACK_METADATA: Dictionary = {
 		"duration_sec": 189.20,
 		"tempo_bpm": 110,
 		"mood": "Breezy, mellow bossa-nova groove with warm vibraphone and acoustic piano"
+	},
+	"midnight_airport_lounge": {
+		"title": "Midnight Airport Lounge",
+		"file_name": "bgm_airport_lounge.ogg",
+		"duration_sec": 307.67,
+		"tempo_bpm": 118,
+		"mood": "Smooth lounge jazz with warm vibraphone, electric piano, and upright bass"
+	},
+	"golden_autumn_pastoral": {
+		"title": "Golden Autumn Pastoral",
+		"file_name": "bgm_autumn_day.ogg",
+		"duration_sec": 184.82,
+		"tempo_bpm": 106,
+		"mood": "Warm acoustic guitar strumming, melodic piano, and gentle folk breezes"
+	},
+	"bossa_antigua_sunset": {
+		"title": "Bossa Antigua Sunset",
+		"file_name": "bgm_bossa_antigua.ogg",
+		"duration_sec": 283.35,
+		"tempo_bpm": 118,
+		"mood": "Relaxed Latin groove with nylon-string guitar, subtle percussion, and mellow chords"
+	},
+	"fretless_midnight_groove": {
+		"title": "Fretless Midnight Groove",
+		"file_name": "bgm_fretless.ogg",
+		"duration_sec": 336.07,
+		"tempo_bpm": 104,
+		"mood": "Smooth fretless bass melodies, Rhodes keyboard, and tight syncopated rhythm"
+	},
+	"george_street_swing_shuffle": {
+		"title": "George Street Swing Shuffle",
+		"file_name": "bgm_george_street_shuffle.ogg",
+		"duration_sec": 268.30,
+		"tempo_bpm": 124,
+		"mood": "Bouncy swing rhythm, playful piano accents, and classic acoustic energy"
+	},
+	"cosmopolitan_lobby_jazz": {
+		"title": "Cosmopolitan Lobby Jazz",
+		"file_name": "bgm_lobby_time.ogg",
+		"duration_sec": 193.20,
+		"tempo_bpm": 100,
+		"mood": "Brushed drums, mellow electric piano, and breezy casual puzzle elegance"
+	},
+	"moonlight_nocturne_reverie": {
+		"title": "Moonlight Nocturne Reverie",
+		"file_name": "bgm_mining_by_moonlight.ogg",
+		"duration_sec": 203.66,
+		"tempo_bpm": 88,
+		"mood": "Slow, calming acoustic piano melodies and atmospheric nighttime reverie"
+	},
+	"poppers_and_prosecco_bossa": {
+		"title": "Poppers and Prosecco Bossa",
+		"file_name": "bgm_poppers_and_prosecco.ogg",
+		"duration_sec": 193.78,
+		"tempo_bpm": 125,
+		"mood": "Lighthearted bossa groove with airy flute melodies and cheerful syncopation"
+	},
+	"tea_roots_whispers": {
+		"title": "Tea Roots Whispers",
+		"file_name": "bgm_tea_roots.ogg",
+		"duration_sec": 279.51,
+		"tempo_bpm": 102,
+		"mood": "Gentle acoustic guitar, flute, and earthy contemplative warmth"
+	},
+	"slow_burn_cafe_blues": {
+		"title": "Slow Burn Cafe Blues",
+		"file_name": "bgm_slow_burn.ogg",
+		"duration_sec": 228.78,
+		"tempo_bpm": 95,
+		"mood": "Mellow, smoky jazz blues with muted brass, organ, and relaxed cadence"
+	},
+	"study_and_relax_lofi": {
+		"title": "Study and Relax Lofi",
+		"file_name": "bgm_study_and_relax.ogg",
+		"duration_sec": 223.40,
+		"tempo_bpm": 85,
+		"mood": "Soothing lofi puzzle study beat with mellow electric keys and vinyl warmth"
+	},
+	"cool_vibes_twilight": {
+		"title": "Cool Vibes Twilight",
+		"file_name": "bgm_cool_vibes.ogg",
+		"duration_sec": 218.38,
+		"tempo_bpm": 110,
+		"mood": "Chill vibraphone melodies over soft bass and brush percussion"
+	},
+	"calmant_celestial_harp": {
+		"title": "Calmant Celestial Harp",
+		"file_name": "bgm_calmant.ogg",
+		"duration_sec": 204.07,
+		"tempo_bpm": 80,
+		"mood": "Tranquil, meditative acoustic harp and ambient piano for deep concentration"
+	},
+	"simple_acoustic_duet": {
+		"title": "Simple Acoustic Duet",
+		"file_name": "bgm_simple_duet.ogg",
+		"duration_sec": 199.34,
+		"tempo_bpm": 96,
+		"mood": "Warm acoustic piano and cello duet with flowing classical harmony"
 	}
 }
 
 var _music_enabled: bool = true
+var _bgm_saved_pause_position: float = 0.0
+
 var music_enabled: bool:
 	get:
 		return _music_enabled
 	set(val):
 		if _music_enabled == val and bgm_player != null:
 			if val and not bgm_player.playing:
-				bgm_player.play()
-			elif not val and bgm_player.playing:
+				if bgm_player.stream_paused:
+					bgm_player.stream_paused = false
+				else:
+					bgm_player.play(_bgm_saved_pause_position)
+			elif not val and (bgm_player.playing or bgm_player.stream_paused):
+				_bgm_saved_pause_position = bgm_player.get_playback_position()
+				bgm_player.stream_paused = false
 				bgm_player.stop()
 			return
 		_music_enabled = val
@@ -375,12 +508,38 @@ func _apply_music_state() -> void:
 		return
 	if bgm_stream and bgm_player.stream != bgm_stream:
 		bgm_player.stream = bgm_stream
+		_bgm_saved_pause_position = 0.0
 	if _music_enabled:
-		if not bgm_player.playing:
-			bgm_player.play()
+		if bgm_player.stream_paused:
+			bgm_player.stream_paused = false
+		elif not bgm_player.playing:
+			bgm_player.play(_bgm_saved_pause_position)
 	else:
 		if bgm_player.playing:
+			_bgm_saved_pause_position = bgm_player.get_playback_position()
+		bgm_player.stream_paused = false
+		if bgm_player.playing:
 			bgm_player.stop()
+
+
+func pause_bgm() -> void:
+	if bgm_player and bgm_player.playing:
+		_bgm_saved_pause_position = bgm_player.get_playback_position()
+		bgm_player.stream_paused = true
+
+
+func resume_bgm() -> void:
+	if bgm_player and _music_enabled:
+		if bgm_player.stream_paused:
+			bgm_player.stream_paused = false
+		elif not bgm_player.playing:
+			bgm_player.play(_bgm_saved_pause_position)
+
+
+func get_bgm_playback_position() -> float:
+	if bgm_player:
+		return bgm_player.get_playback_position()
+	return 0.0
 
 
 func _trigger_bgm_ducking(duration: float = 0.88) -> void:
@@ -612,15 +771,18 @@ func select_bgm_track(track_index: int) -> String:
 	current_bgm_track_index = idx
 	current_bgm_track_id = BGM_TRACK_IDS[idx] if idx < BGM_TRACK_IDS.size() else ("track_%d" % idx)
 	bgm_stream = bgm_tracks[idx]
+	_bgm_saved_pause_position = 0.0
 	if bgm_player:
-		var was_playing: bool = bgm_player.playing
+		var was_playing: bool = bgm_player.playing or bgm_player.stream_paused
 		var stream_changed: bool = (bgm_player.stream != bgm_stream)
 		if stream_changed:
 			bgm_player.stream = bgm_stream
+			bgm_player.stream_paused = false
 		if _music_enabled:
 			if stream_changed or not was_playing:
 				bgm_player.play()
 		elif was_playing:
+			bgm_player.stream_paused = false
 			bgm_player.stop()
 	return current_bgm_track_id
 
