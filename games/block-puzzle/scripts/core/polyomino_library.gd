@@ -1260,8 +1260,8 @@ static func get_random_tray_set(count: int = 3, level_num: int = 1, round_number
 ## Verifies that Level 1's opening sequence is NOT a trivial auto-clear sequence under naive placement,
 ## while remaining 100% solvable to reach Level 1's target score when placed with spatial planning.
 static func verify_level_1_challenge_and_solvability() -> Dictionary:
-	var r1: Array[String] = get_opening_tray_shape_ids(1, 1)
-	var r2: Array[String] = get_opening_tray_shape_ids(1, 2)
+	var r1: Array[String] = get_opening_tray_shape_ids(1, 1, 0)
+	var r2: Array[String] = get_opening_tray_shape_ids(1, 2, 0)
 	var has_trivial_opening_piece: bool = false
 	for sid in r1:
 		if sid in SIMPLE_FLAT_SHAPES:
