@@ -21,6 +21,14 @@ var active_backdrop_manifest: Dictionary = {}
 var backdrop_anim_time: float = 0.0
 
 
+func _on_game_started_event(_mode) -> void:
+	_refresh_active_level_backdrop()
+
+
+func _on_level_updated_event(_level, _coins) -> void:
+	_refresh_active_level_backdrop()
+
+
 func _ready() -> void:
 	_setup_level_backdrop_layer()
 	UIIconScript.remove_all_focus_outlines(self)
@@ -31,10 +39,10 @@ func _ready() -> void:
 	if state_mgr:
 		if not state_mgr.state_changed.is_connected(_on_game_state_changed):
 			state_mgr.state_changed.connect(_on_game_state_changed)
-		if state_mgr.has_signal("game_started") and not state_mgr.game_started.is_connected(_refresh_active_level_backdrop):
-			state_mgr.game_started.connect(func(_m): _refresh_active_level_backdrop())
-		if state_mgr.has_signal("level_updated") and not state_mgr.level_updated.is_connected(_refresh_active_level_backdrop):
-			state_mgr.level_updated.connect(func(_l, _c): _refresh_active_level_backdrop())
+		if state_mgr.has_signal("game_started") and not state_mgr.game_started.is_connected(_on_game_started_event):
+			state_mgr.game_started.connect(_on_game_started_event)
+		if state_mgr.has_signal("level_updated") and not state_mgr.level_updated.is_connected(_on_level_updated_event):
+			state_mgr.level_updated.connect(_on_level_updated_event)
 		_refresh_active_level_backdrop()
 		_update_ui_state(state_mgr.current_state, state_mgr.current_state)
 	else:

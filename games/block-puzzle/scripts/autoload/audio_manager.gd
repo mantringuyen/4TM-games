@@ -274,6 +274,8 @@ var sfx_player_index: int = 0
 
 var sfx_cache: Dictionary = {}
 var bgm_stream_cache: Dictionary = {}
+var bgm_cache_order: Array[String] = []
+const MAX_CACHED_BGM_STREAMS: int = 4
 var voice_cache: Dictionary = {}
 var voice_cache_male: Dictionary = {}
 var voice_cache_female: Dictionary = {}
@@ -973,7 +975,14 @@ func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
 		trk_stream = _generate_bgm_track(maxi(0, t_i))
 
 	if trk_stream != null:
+		if bgm_cache_order.has(track_id):
+			bgm_cache_order.erase(track_id)
+		bgm_cache_order.append(track_id)
 		bgm_stream_cache[track_id] = trk_stream
+		if bgm_cache_order.size() > MAX_CACHED_BGM_STREAMS:
+			var oldest_id = bgm_cache_order.pop_front()
+			if bgm_stream_cache.has(oldest_id):
+				bgm_stream_cache.erase(oldest_id)
 
 	return trk_stream
 
