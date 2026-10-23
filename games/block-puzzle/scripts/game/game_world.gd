@@ -125,12 +125,13 @@ func _on_state_changed(new_state: int, _prev_state: int) -> void:
 
 
 func _clear_active_mode() -> void:
+	var now_ms: int = Time.get_ticks_msec()
 	if active_mode_node and is_instance_valid(active_mode_node):
 		if active_mode_node.has_method("end_mode"):
 			active_mode_node.end_mode()
 		if active_mode_node.get_parent():
 			active_mode_node.get_parent().remove_child(active_mode_node)
-		active_mode_node.free()
+		active_mode_node.queue_free()
 		active_mode_node = null
 	if mode_container:
 		for child in mode_container.get_children():
@@ -139,5 +140,6 @@ func _clear_active_mode() -> void:
 					child.end_mode()
 				if child.get_parent():
 					child.get_parent().remove_child(child)
-				child.free()
-	print("[LIFECYCLE] GameWorld: Active mode cleared and freed immediately.")
+				child.queue_free()
+	print("[%d] [LIFECYCLE] GameWorld: Active mode cleared and queued for deferred cleanup." % now_ms)
+

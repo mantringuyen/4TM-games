@@ -820,8 +820,6 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 
 	if bgm_tracks.size() != total_tracks:
 		bgm_tracks.resize(total_tracks)
-	for i in range(total_tracks):
-		bgm_tracks[i] = null
 
 	var idx: int = BGM_TRACK_IDS.find(target_track_id)
 	var new_stream: AudioStream = _load_bgm_stream_for_track(target_track_id)
@@ -835,7 +833,9 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 		bgm_player.stream = new_stream
 		bgm_player.stream_paused = false
 		bgm_player.play(_bgm_saved_pause_position)
+	print("[%d] [AUDIO] AudioManager: BGM deferred load completed for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
 	bgm_stream_loaded.emit(target_track_id, new_stream)
+
 
 
 func ensure_bgm_loaded() -> AudioStream:

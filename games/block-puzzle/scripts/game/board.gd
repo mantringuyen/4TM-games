@@ -635,6 +635,15 @@ func place_piece(shape_cells: Array, origin: Vector2i, color_id: int = 1, materi
 	return true
 
 
+func _exit_tree() -> void:
+	if flash_tween and flash_tween.is_valid():
+		flash_tween.kill()
+	flash_tween = null
+	if floating_callout_tween and floating_callout_tween.is_valid():
+		floating_callout_tween.kill()
+	floating_callout_tween = null
+
+
 func clear_board() -> void:
 	if grid_data.size() != GRID_HEIGHT or (grid_data.size() > 0 and grid_data[0].size() != GRID_WIDTH):
 		_init_grid_data()
@@ -649,14 +658,19 @@ func clear_board() -> void:
 	clear_light_beams.clear()
 	impact_rings.clear()
 	burst_particles.clear()
+	if flash_tween and flash_tween.is_valid():
+		flash_tween.kill()
+	flash_tween = null
 	if floating_callout_tween and floating_callout_tween.is_valid():
 		floating_callout_tween.kill()
+	floating_callout_tween = null
 	floating_callout_text = ""
 	floating_callout_alpha = 0.0
 	bomb_target_active = false
 	clear_preview()
 	queue_redraw()
 	board_cleared.emit()
+
 
 
 func get_cell(coords: Vector2i) -> int:

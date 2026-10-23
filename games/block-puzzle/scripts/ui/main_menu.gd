@@ -3520,13 +3520,13 @@ func _populate_level_map_page(page_idx: int) -> void:
 	for child in level_grid.get_children():
 		if child != _level_map_viewport_container and not (child in _level_map_grid_buttons):
 			level_grid.remove_child(child)
-			child.free()
+			child.queue_free()
 	while _level_map_grid_buttons.size() > entries.size():
 		var extra_btn: Button = _level_map_grid_buttons.pop_back()
 		if extra_btn != null and is_instance_valid(extra_btn):
 			if extra_btn.get_parent() == level_grid:
 				level_grid.remove_child(extra_btn)
-			extra_btn.free()
+			extra_btn.queue_free()
 	while _level_map_grid_buttons.size() < entries.size():
 		var new_btn := Button.new()
 		new_btn.clip_text = true

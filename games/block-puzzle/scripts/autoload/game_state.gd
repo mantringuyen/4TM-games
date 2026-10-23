@@ -2887,6 +2887,7 @@ func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -
 		elif audio_mgr.has_method("select_random_bgm_track_for_new_session"):
 			audio_mgr.select_random_bgm_track_for_new_session()
 	
+	print("[%d] [LIFECYCLE] GameState: start_game mode=%d style=%d level=%d" % [Time.get_ticks_msec(), current_mode, current_play_style, target_lvl])
 	mode_changed.emit(current_mode)
 	play_style_changed.emit(current_play_style)
 	state_changed.emit(current_state, prev_state)
@@ -3043,7 +3044,9 @@ func return_to_menu() -> void:
 	get_tree().paused = false
 	placement_checkpoints.clear()
 	session_stats.clear()
+	print("[%d] [LIFECYCLE] GameState: return_to_menu (state_changed -> MENU)" % Time.get_ticks_msec())
 	state_changed.emit(current_state, prev_state)
+
 
 
 func add_score(points: int) -> void:
