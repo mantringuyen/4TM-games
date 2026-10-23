@@ -131,6 +131,10 @@ func _find_lbl_level() -> Label:
 	return l
 
 
+func _on_energy_changed_hud(_c = 0, _m = 0) -> void:
+	update_energy_display()
+
+
 func _ready() -> void:
 	if not lbl_score:
 		lbl_score = _find_lbl_score()
@@ -151,7 +155,8 @@ func _ready() -> void:
 		var gear_ctrl := UIIconScript.attach_to_button(btn_settings, "gear", Vector2(52, 52), "center", Color(0.70, 0.73, 0.77, 1.0))
 		if gear_ctrl:
 			gear_ctrl.secondary_color = Color(0.20, 0.24, 0.35, 1.0)
-		btn_settings.pressed.connect(_on_btn_settings_pressed)
+		if not btn_settings.pressed.is_connected(_on_btn_settings_pressed):
+			btn_settings.pressed.connect(_on_btn_settings_pressed)
 	if is_inside_tree() and get_viewport():
 		if not get_viewport().size_changed.is_connected(_on_viewport_size_changed):
 			get_viewport().size_changed.connect(_on_viewport_size_changed)
@@ -187,12 +192,7 @@ func _ready() -> void:
 	points_popup.modulate.a = 0.0
 	points_popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(points_popup)
-	
-func _on_energy_changed_hud(_c = 0, _m = 0) -> void:
-	update_energy_display()
 
-
-func _ready() -> void:
 	var state_mgr = _get_game_state()
 	if state_mgr:
 		if not state_mgr.score_updated.is_connected(_on_score_updated):
@@ -224,7 +224,8 @@ func _ready() -> void:
 	_apply_score_panel_progress_style()
 	
 	if special_items_bar and special_items_bar.has_signal("item_clicked"):
-		special_items_bar.item_clicked.connect(_on_special_item_clicked)
+		if not special_items_bar.item_clicked.is_connected(_on_special_item_clicked):
+			special_items_bar.item_clicked.connect(_on_special_item_clicked)
 	UIIconScript.setup_all_buttons_feedback(self)
 
 
