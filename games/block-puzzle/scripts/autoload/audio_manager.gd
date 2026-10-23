@@ -783,8 +783,27 @@ func select_bgm_track(track_index: int) -> String:
 
 	current_bgm_track_index = idx
 	current_bgm_track_id = target_track_id
+	_bgm_saved_pause_position = 0.0
 
-	# Safely stop and dereference the previous stream to free Vorbis buffer memory
+	# Defer heavy audio loading and stream initialization from the Start critical path to avoid mobile WebKit OOM / main-thread stall
+	if _music_enabled:
+		call_deferred("_load_and_play_bgm_deferred", target_track_id)
+	else:
+		if bgm_player:
+			bgm_player.stop()
+			bgm_player.stream = null
+		bgm_stream = null
+
+	return current_bgm_track_id
+
+
+func _load_and_play_bgm_deferred(target_track_id: String) -> void:
+	if not _music_enabled:
+		return
+	if current_bgm_track_id != target_track_id:
+		return
+
+	var total_tracks: int = BGM_TRACK_IDS.size()
 	if bgm_player:
 		bgm_player.stop()
 		bgm_player.stream = null
@@ -795,21 +814,16 @@ func select_bgm_track(track_index: int) -> String:
 	for i in range(total_tracks):
 		bgm_tracks[i] = null
 
-	# Load ONLY the selected track stream on demand
+	var idx: int = BGM_TRACK_IDS.find(target_track_id)
 	var new_stream: AudioStream = _load_bgm_stream_for_track(target_track_id)
 	bgm_stream = new_stream
-	bgm_tracks[idx] = new_stream
-	_bgm_saved_pause_position = 0.0
+	if idx >= 0:
+		bgm_tracks[idx] = new_stream
 
-	if bgm_player and new_stream != null:
+	if bgm_player and new_stream != null and _music_enabled:
 		bgm_player.stream = new_stream
 		bgm_player.stream_paused = false
-		if _music_enabled:
-			bgm_player.play()
-		else:
-			bgm_player.stop()
-
-	return current_bgm_track_id
+		bgm_player.play(_bgm_saved_pause_position)
 
 
 func select_random_bgm_track_for_new_session(avoid_immediate_repeat: bool = true) -> String:
