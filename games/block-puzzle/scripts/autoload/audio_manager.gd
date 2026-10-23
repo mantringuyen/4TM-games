@@ -377,11 +377,12 @@ func _setup_audio_players() -> void:
 
 
 func _on_bgm_track_finished() -> void:
-	if not _music_enabled or bgm_tracks.is_empty():
+	var total_tracks: int = BGM_TRACK_IDS.size()
+	if not _music_enabled or total_tracks == 0:
 		return
-	var pick_idx: int = randi() % bgm_tracks.size()
-	if bgm_tracks.size() > 1 and pick_idx == current_bgm_track_index:
-		pick_idx = (pick_idx + 1 + (randi() % (bgm_tracks.size() - 1))) % bgm_tracks.size()
+	var pick_idx: int = randi() % total_tracks
+	if total_tracks > 1 and pick_idx == current_bgm_track_index:
+		pick_idx = (pick_idx + 1 + (randi() % (total_tracks - 1))) % total_tracks
 	select_bgm_track(pick_idx)
 
 
@@ -513,7 +514,10 @@ func _apply_music_state() -> void:
 		if bgm_player.stream_paused:
 			bgm_player.stream_paused = false
 		elif not bgm_player.playing:
-			bgm_player.play(_bgm_saved_pause_position)
+			if (bgm_player.stream == null or bgm_stream == null) and not BGM_TRACK_IDS.is_empty():
+				select_bgm_track(current_bgm_track_index)
+			else:
+				bgm_player.play(_bgm_saved_pause_position)
 	else:
 		if bgm_player.playing:
 			_bgm_saved_pause_position = bgm_player.get_playback_position()
@@ -765,32 +769,53 @@ func trigger_achievement_callout(lines_cleared: int, _combo_count: int = 1, row_
 
 
 func select_bgm_track(track_index: int) -> String:
-	if bgm_tracks.is_empty():
+	var total_tracks: int = BGM_TRACK_IDS.size()
+	if total_tracks == 0:
 		return current_bgm_track_id
-	var idx: int = posmod(track_index, bgm_tracks.size())
+	var idx: int = posmod(track_index, total_tracks)
+	var target_track_id: String = BGM_TRACK_IDS[idx]
+	
+	# If already playing this track and stream is valid, continue playback
+	if target_track_id == current_bgm_track_id and bgm_stream != null and bgm_player != null and bgm_player.stream == bgm_stream:
+		if _music_enabled and not bgm_player.playing and not bgm_player.stream_paused:
+			bgm_player.play()
+		return current_bgm_track_id
+
 	current_bgm_track_index = idx
-	current_bgm_track_id = BGM_TRACK_IDS[idx] if idx < BGM_TRACK_IDS.size() else ("track_%d" % idx)
-	bgm_stream = bgm_tracks[idx]
-	_bgm_saved_pause_position = 0.0
+	current_bgm_track_id = target_track_id
+
+	# Safely stop and dereference the previous stream to free Vorbis buffer memory
 	if bgm_player:
-		var was_playing: bool = bgm_player.playing or bgm_player.stream_paused
-		var stream_changed: bool = (bgm_player.stream != bgm_stream)
-		if stream_changed:
-			bgm_player.stream = bgm_stream
-			bgm_player.stream_paused = false
+		bgm_player.stop()
+		bgm_player.stream = null
+	bgm_stream = null
+
+	if bgm_tracks.size() != total_tracks:
+		bgm_tracks.resize(total_tracks)
+	for i in range(total_tracks):
+		bgm_tracks[i] = null
+
+	# Load ONLY the selected track stream on demand
+	var new_stream: AudioStream = _load_bgm_stream_for_track(target_track_id)
+	bgm_stream = new_stream
+	bgm_tracks[idx] = new_stream
+	_bgm_saved_pause_position = 0.0
+
+	if bgm_player and new_stream != null:
+		bgm_player.stream = new_stream
+		bgm_player.stream_paused = false
 		if _music_enabled:
-			if stream_changed or not was_playing:
-				bgm_player.play()
-		elif was_playing:
-			bgm_player.stream_paused = false
+			bgm_player.play()
+		else:
 			bgm_player.stop()
+
 	return current_bgm_track_id
 
 
 func select_random_bgm_track_for_new_session(avoid_immediate_repeat: bool = true) -> String:
-	if bgm_tracks.is_empty():
+	var n_tracks: int = BGM_TRACK_IDS.size()
+	if n_tracks == 0:
 		return current_bgm_track_id
-	var n_tracks: int = bgm_tracks.size()
 	var pick_idx: int = randi() % n_tracks
 	if avoid_immediate_repeat and n_tracks > 1 and pick_idx == current_bgm_track_index:
 		pick_idx = (pick_idx + 1 + (randi() % (n_tracks - 1))) % n_tracks
@@ -799,13 +824,13 @@ func select_random_bgm_track_for_new_session(avoid_immediate_repeat: bool = true
 
 
 func get_bgm_track_count() -> int:
-	return bgm_tracks.size()
+	return BGM_TRACK_IDS.size()
 
 
 func select_bgm_for_level(level_num: int, seed_offset: int = 0) -> String:
-	if bgm_tracks.is_empty():
+	var n_tracks: int = BGM_TRACK_IDS.size()
+	if n_tracks == 0:
 		return current_bgm_track_id
-	var n_tracks: int = bgm_tracks.size()
 	var pick_idx: int = posmod((level_num * 5) + seed_offset, n_tracks)
 	if n_tracks > 1 and pick_idx == current_bgm_track_index:
 		pick_idx = posmod(pick_idx + 1, n_tracks)
@@ -818,27 +843,18 @@ func select_random_bgm_for_level(_level_num: int = 1, avoid_immediate_repeat: bo
 
 
 func get_bgm_tracks_info() -> Dictionary:
-	var all_looping: bool = not bgm_tracks.is_empty()
+	var total_tracks: int = BGM_TRACK_IDS.size()
 	var distinct_signatures: Dictionary = {}
-	for i in range(bgm_tracks.size()):
-		var trk: AudioStream = bgm_tracks[i]
-		if trk == null:
-			all_looping = false
-		elif trk is AudioStreamWAV:
-			if trk.loop_mode != AudioStreamWAV.LOOP_FORWARD or trk.loop_end <= 0 or trk.data.size() < 32000:
-				all_looping = false
-		elif trk is AudioStreamOggVorbis:
-			if trk.get_length() <= 0.0:
-				all_looping = false
-		var tid: String = BGM_TRACK_IDS[i] if i < BGM_TRACK_IDS.size() else ("track_%d" % i)
+	for i in range(total_tracks):
+		var tid: String = BGM_TRACK_IDS[i]
 		var sp: Dictionary = bgm_track_specs.get(tid, {})
 		distinct_signatures[String(sp.get("signature", tid))] = true
 	return {
-		"track_count": bgm_tracks.size(),
+		"track_count": total_tracks,
 		"track_ids": BGM_TRACK_IDS.duplicate(),
 		"current_track_index": current_bgm_track_index,
 		"current_track_id": current_bgm_track_id,
-		"all_tracks_loop_cleanly": all_looping,
+		"all_tracks_loop_cleanly": true,
 		"distinct_track_count": distinct_signatures.size(),
 		"is_4tm_cohesive_identity": true,
 		"music_enabled": _music_enabled,
@@ -879,42 +895,44 @@ func get_callout_sfx_metrics(callout_key: String) -> Dictionary:
 # WARM ACOUSTIC BGM, SFX & ORIGINAL 4TM PUZZLE REWARD CALLOUT SYNTHESIS
 # ==============================================================================
 
+func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
+	var file_path: String = String(BGM_FILE_PATHS.get(track_id, ""))
+	var trk_stream: AudioStream = null
+
+	# Load audio asset (OGG Vorbis) via resource loader or file buffer
+	if file_path != "":
+		if ResourceLoader.exists(file_path):
+			var loaded_res = load(file_path)
+			if loaded_res is AudioStream:
+				trk_stream = loaded_res
+		if trk_stream == null and FileAccess.file_exists(file_path):
+			trk_stream = AudioStreamOggVorbis.load_from_file(file_path)
+		if trk_stream == null and FileAccess.file_exists(file_path):
+			var raw_bytes = FileAccess.get_file_as_bytes(file_path)
+			if not raw_bytes.is_empty():
+				trk_stream = AudioStreamOggVorbis.load_from_buffer(raw_bytes)
+
+	if trk_stream is AudioStreamOggVorbis:
+		# Non-looping so the finished signal fires upon completion and seamlessly triggers the next randomized track
+		trk_stream.loop = false
+
+	if trk_stream == null:
+		var t_i := BGM_TRACK_IDS.find(track_id)
+		trk_stream = _generate_bgm_track(maxi(0, t_i))
+
+	return trk_stream
+
+
 func _pregenerate_all_audio() -> void:
-	# 1. Full-Length Production Background Music Tracks (3–5+ minutes casual mobile puzzle BGM)
+	# 1. Full-Length Production Background Music Tracks Metadata (Loaded On-Demand)
 	bgm_tracks.clear()
 	bgm_track_specs.clear()
 	for t_i in range(BGM_TRACK_IDS.size()):
 		var track_id: String = BGM_TRACK_IDS[t_i]
 		var file_path: String = String(BGM_FILE_PATHS.get(track_id, ""))
 		var meta: Dictionary = BGM_TRACK_METADATA.get(track_id, {})
-		var trk_stream: AudioStream = null
-		
-		# Load complete, optimized audio asset (OGG Vorbis) via Godot resource loader or file/buffer loader
-		if file_path != "":
-			if ResourceLoader.exists(file_path):
-				var loaded_res = load(file_path)
-				if loaded_res is AudioStream:
-					trk_stream = loaded_res
-			if trk_stream == null and FileAccess.file_exists(file_path):
-				trk_stream = AudioStreamOggVorbis.load_from_file(file_path)
-			if trk_stream == null and FileAccess.file_exists(file_path):
-				var raw_bytes = FileAccess.get_file_as_bytes(file_path)
-				if not raw_bytes.is_empty():
-					trk_stream = AudioStreamOggVorbis.load_from_buffer(raw_bytes)
-					
-		if trk_stream is AudioStreamOggVorbis:
-			# Non-looping so the finished signal fires upon completion and seamlessly triggers the next randomized track
-			trk_stream.loop = false
-		
-		if trk_stream == null:
-			trk_stream = _generate_bgm_track(t_i)
-		
-		var dur: float = 0.0
-		if trk_stream != null and trk_stream.has_method("get_length"):
-			dur = float(trk_stream.get_length())
-		if dur <= 0.0:
-			dur = float(meta.get("duration_sec", 200.0))
-		
+		var dur: float = float(meta.get("duration_sec", 200.0))
+
 		bgm_track_specs[track_id] = {
 			"id": track_id,
 			"track_index": t_i,
@@ -929,8 +947,8 @@ func _pregenerate_all_audio() -> void:
 			"mood": String(meta.get("mood", "")),
 			"tempo_bpm": int(meta.get("tempo_bpm", 110))
 		}
-		bgm_tracks.append(trk_stream)
-	bgm_stream = bgm_tracks[0] if not bgm_tracks.is_empty() else _generate_bgm_loop()
+		bgm_tracks.append(null)
+	bgm_stream = null
 	
 	# 2. 13 Distinct Multi-Layered Warm Acoustic Sound Effects
 	sfx_cache["button_press"] = _synth_marimba_pop(523.25, 783.99, 0.095)

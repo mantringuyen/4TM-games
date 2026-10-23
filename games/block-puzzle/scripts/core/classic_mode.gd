@@ -953,7 +953,16 @@ func get_touch_controls() -> Control:
 	return touch_controls
 
 
+func _cleanup_listeners() -> void:
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_language_changed):
+		gs.language_changed.disconnect(_on_language_changed)
+	if is_inside_tree() and get_viewport() and get_viewport().size_changed.is_connected(_update_layout):
+		get_viewport().size_changed.disconnect(_update_layout)
+
+
 func _on_mode_ended() -> void:
+	_cleanup_listeners()
 	cancel_pending_special_item()
 	is_falling = false
 	if board:
@@ -965,3 +974,8 @@ func _on_mode_reset() -> void:
 	is_falling = false
 	if board:
 		board.clear_board()
+
+
+func _exit_tree() -> void:
+	_cleanup_listeners()
+	super._exit_tree()

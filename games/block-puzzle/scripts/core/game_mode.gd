@@ -57,6 +57,7 @@ func pause_mode(is_paused: bool) -> void:
 
 func end_mode() -> void:
 	is_active = false
+	_cleanup_input_listeners()
 	_on_mode_ended()
 
 
@@ -67,10 +68,31 @@ func reset_mode() -> void:
 func _setup_input_listeners() -> void:
 	var input_mgr = get_node_or_null("/root/InputManager")
 	if input_mgr:
-		input_mgr.pointer_pressed.connect(_on_pointer_press)
-		input_mgr.pointer_released.connect(_on_pointer_release)
-		input_mgr.drag_updated.connect(_on_drag_update)
-		input_mgr.swipe_detected.connect(_on_swipe)
+		if not input_mgr.pointer_pressed.is_connected(_on_pointer_press):
+			input_mgr.pointer_pressed.connect(_on_pointer_press)
+		if not input_mgr.pointer_released.is_connected(_on_pointer_release):
+			input_mgr.pointer_released.connect(_on_pointer_release)
+		if not input_mgr.drag_updated.is_connected(_on_drag_update):
+			input_mgr.drag_updated.connect(_on_drag_update)
+		if not input_mgr.swipe_detected.is_connected(_on_swipe):
+			input_mgr.swipe_detected.connect(_on_swipe)
+
+
+func _cleanup_input_listeners() -> void:
+	var input_mgr = get_node_or_null("/root/InputManager")
+	if input_mgr:
+		if input_mgr.pointer_pressed.is_connected(_on_pointer_press):
+			input_mgr.pointer_pressed.disconnect(_on_pointer_press)
+		if input_mgr.pointer_released.is_connected(_on_pointer_release):
+			input_mgr.pointer_released.disconnect(_on_pointer_release)
+		if input_mgr.drag_updated.is_connected(_on_drag_update):
+			input_mgr.drag_updated.disconnect(_on_drag_update)
+		if input_mgr.swipe_detected.is_connected(_on_swipe):
+			input_mgr.swipe_detected.disconnect(_on_swipe)
+
+
+func _exit_tree() -> void:
+	_cleanup_input_listeners()
 
 
 # Virtual hooks for subclasses

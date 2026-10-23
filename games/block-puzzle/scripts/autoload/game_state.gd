@@ -3041,6 +3041,8 @@ func return_to_menu() -> void:
 	var prev_state := current_state
 	current_state = State.MENU
 	get_tree().paused = false
+	placement_checkpoints.clear()
+	session_stats.clear()
 	state_changed.emit(current_state, prev_state)
 
 

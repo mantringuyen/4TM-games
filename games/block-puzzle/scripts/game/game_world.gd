@@ -126,5 +126,13 @@ func _clear_active_mode() -> void:
 	if active_mode_node:
 		if active_mode_node.has_method("end_mode"):
 			active_mode_node.end_mode()
+		if active_mode_node.get_parent():
+			active_mode_node.get_parent().remove_child(active_mode_node)
 		active_mode_node.queue_free()
 		active_mode_node = null
+	if mode_container:
+		for child in mode_container.get_children():
+			if child.has_method("end_mode"):
+				child.end_mode()
+			mode_container.remove_child(child)
+			child.queue_free()
