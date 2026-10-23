@@ -29,10 +29,11 @@ func _ready() -> void:
 			get_viewport().size_changed.connect(_refresh_active_level_backdrop)
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
-		state_mgr.state_changed.connect(_on_game_state_changed)
-		if state_mgr.has_signal("game_started"):
+		if not state_mgr.state_changed.is_connected(_on_game_state_changed):
+			state_mgr.state_changed.connect(_on_game_state_changed)
+		if state_mgr.has_signal("game_started") and not state_mgr.game_started.is_connected(_refresh_active_level_backdrop):
 			state_mgr.game_started.connect(func(_m): _refresh_active_level_backdrop())
-		if state_mgr.has_signal("level_updated"):
+		if state_mgr.has_signal("level_updated") and not state_mgr.level_updated.is_connected(_refresh_active_level_backdrop):
 			state_mgr.level_updated.connect(func(_l, _c): _refresh_active_level_backdrop())
 		_refresh_active_level_backdrop()
 		_update_ui_state(state_mgr.current_state, state_mgr.current_state)

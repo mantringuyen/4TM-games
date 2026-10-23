@@ -273,6 +273,7 @@ const MAX_SFX_PLAYERS: int = 8
 var sfx_player_index: int = 0
 
 var sfx_cache: Dictionary = {}
+var bgm_stream_cache: Dictionary = {}
 var voice_cache: Dictionary = {}
 var voice_cache_male: Dictionary = {}
 var voice_cache_female: Dictionary = {}
@@ -944,6 +945,9 @@ func get_callout_sfx_metrics(callout_key: String) -> Dictionary:
 # ==============================================================================
 
 func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
+	if bgm_stream_cache.has(track_id) and bgm_stream_cache[track_id] != null:
+		return bgm_stream_cache[track_id]
+
 	var file_path: String = String(BGM_FILE_PATHS.get(track_id, ""))
 	var trk_stream: AudioStream = null
 
@@ -967,6 +971,9 @@ func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
 	if trk_stream == null:
 		var t_i := BGM_TRACK_IDS.find(track_id)
 		trk_stream = _generate_bgm_track(maxi(0, t_i))
+
+	if trk_stream != null:
+		bgm_stream_cache[track_id] = trk_stream
 
 	return trk_stream
 

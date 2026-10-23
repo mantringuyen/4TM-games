@@ -32,8 +32,10 @@ var world_sparkles: Array = [
 func _ready() -> void:
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
-		state_mgr.game_started.connect(_on_game_started)
-		state_mgr.state_changed.connect(_on_state_changed)
+		if not state_mgr.game_started.is_connected(_on_game_started):
+			state_mgr.game_started.connect(_on_game_started)
+		if not state_mgr.state_changed.is_connected(_on_state_changed):
+			state_mgr.state_changed.connect(_on_state_changed)
 		is_modern_world = (state_mgr.current_mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
 	queue_redraw()
 
