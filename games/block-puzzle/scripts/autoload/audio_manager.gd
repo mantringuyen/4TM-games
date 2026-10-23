@@ -14,6 +14,7 @@ signal music_toggled(enabled: bool)
 signal sound_toggled(enabled: bool)
 signal voice_mode_changed(mode: String)
 signal voice_callout_triggered(callout_text: String)
+signal bgm_stream_loaded(track_id: String, stream: AudioStream)
 
 const SETTINGS_PATH: String = "user://block_puzzle_4tm_audio.cfg"
 const SAMPLE_RATE: int = 22050
@@ -219,6 +220,7 @@ const BGM_TRACK_METADATA: Dictionary = {
 
 var _music_enabled: bool = true
 var _bgm_saved_pause_position: float = 0.0
+var _bgm_load_generation: int = 0
 
 var music_enabled: bool:
 	get:
@@ -784,10 +786,12 @@ func select_bgm_track(track_index: int) -> String:
 	current_bgm_track_index = idx
 	current_bgm_track_id = target_track_id
 	_bgm_saved_pause_position = 0.0
+	_bgm_load_generation += 1
+	var gen := _bgm_load_generation
 
 	# Defer heavy audio loading and stream initialization from the Start critical path to avoid mobile WebKit OOM / main-thread stall
 	if _music_enabled:
-		call_deferred("_load_and_play_bgm_deferred", target_track_id)
+		call_deferred("_load_and_play_bgm_deferred", target_track_id, gen)
 	else:
 		if bgm_player:
 			bgm_player.stop()
@@ -797,7 +801,9 @@ func select_bgm_track(track_index: int) -> String:
 	return current_bgm_track_id
 
 
-func _load_and_play_bgm_deferred(target_track_id: String) -> void:
+func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
+	if gen != _bgm_load_generation:
+		return
 	if not _music_enabled:
 		return
 	if current_bgm_track_id != target_track_id:
@@ -816,6 +822,8 @@ func _load_and_play_bgm_deferred(target_track_id: String) -> void:
 
 	var idx: int = BGM_TRACK_IDS.find(target_track_id)
 	var new_stream: AudioStream = _load_bgm_stream_for_track(target_track_id)
+	if gen != _bgm_load_generation:
+		return
 	bgm_stream = new_stream
 	if idx >= 0:
 		bgm_tracks[idx] = new_stream
@@ -824,6 +832,32 @@ func _load_and_play_bgm_deferred(target_track_id: String) -> void:
 		bgm_player.stream = new_stream
 		bgm_player.stream_paused = false
 		bgm_player.play(_bgm_saved_pause_position)
+	bgm_stream_loaded.emit(target_track_id, new_stream)
+
+
+func ensure_bgm_loaded() -> AudioStream:
+	_bgm_load_generation += 1
+	if bgm_stream != null:
+		if bgm_player and bgm_player.stream != bgm_stream and _music_enabled:
+			bgm_player.stream = bgm_stream
+			if not bgm_player.playing and not bgm_player.stream_paused:
+				bgm_player.play()
+		return bgm_stream
+	
+	var new_stream: AudioStream = _load_bgm_stream_for_track(current_bgm_track_id)
+	bgm_stream = new_stream
+	var idx: int = BGM_TRACK_IDS.find(current_bgm_track_id)
+	if idx >= 0:
+		if bgm_tracks.size() <= idx:
+			bgm_tracks.resize(BGM_TRACK_IDS.size())
+		bgm_tracks[idx] = new_stream
+	if bgm_player and new_stream != null and _music_enabled:
+		bgm_player.stream = new_stream
+		bgm_player.stream_paused = false
+		if not bgm_player.playing:
+			bgm_player.play(_bgm_saved_pause_position)
+	bgm_stream_loaded.emit(current_bgm_track_id, new_stream)
+	return bgm_stream
 
 
 func select_random_bgm_track_for_new_session(avoid_immediate_repeat: bool = true) -> String:

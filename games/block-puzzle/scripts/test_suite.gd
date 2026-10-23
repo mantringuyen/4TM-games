@@ -404,6 +404,7 @@ func _ready() -> void:
 			printerr("[FAIL Test 22] Missing distinct SFX stream: ", s_key)
 			get_tree().quit(1)
 			return
+	audio_mgr.ensure_bgm_loaded()
 	if audio_mgr.bgm_stream == null or ((audio_mgr.bgm_stream is AudioStreamWAV) and audio_mgr.bgm_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD):
 		printerr("[FAIL Test 22] Looping BGM stream missing or invalid")
 		get_tree().quit(1)
@@ -2824,6 +2825,7 @@ func _ready() -> void:
 	var selected_tracks88 := {}
 	for _s88 in range(35):
 		var tid88: String = audio_mgr.select_random_bgm_track_for_new_session()
+		audio_mgr.ensure_bgm_loaded()
 		selected_tracks88[tid88] = true
 		if not audio_mgr.bgm_player.stream or audio_mgr.current_bgm_track_id != tid88:
 			printerr("[FAIL Test 88] Selecting BGM track ", tid88, " did not update bgm_player stream!")
