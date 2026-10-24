@@ -822,12 +822,15 @@ func select_bgm_track(track_index: int) -> String:
 
 func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 	if gen != _bgm_load_generation:
+		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
 		return
 	if not _music_enabled:
 		return
 	if current_bgm_track_id != target_track_id:
+		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED for '%s' (track mismatch)" % [Time.get_ticks_msec(), target_track_id])
 		return
 
+	print("[%d] [AUDIO] AudioManager: BGM deferred load STARTED for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
 	var total_tracks: int = BGM_TRACK_IDS.size()
 	if bgm_player:
 		bgm_player.stop()
@@ -840,6 +843,7 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 	var idx: int = BGM_TRACK_IDS.find(target_track_id)
 	var new_stream: AudioStream = _load_bgm_stream_for_track(target_track_id)
 	if gen != _bgm_load_generation:
+		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED after load for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
 		return
 	bgm_stream = new_stream
 	if idx >= 0:
@@ -849,7 +853,7 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 		bgm_player.stream = new_stream
 		bgm_player.stream_paused = false
 		bgm_player.play(_bgm_saved_pause_position)
-	print("[%d] [AUDIO] AudioManager: BGM deferred load completed for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
+	print("[%d] [AUDIO] AudioManager: BGM deferred load COMPLETED for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
 	bgm_stream_loaded.emit(target_track_id, new_stream)
 
 

@@ -723,6 +723,7 @@ var _web_vibration_capability_supported: bool = false
 var _simulated_date_str: String = ""
 var lucky_wheel_extra_spins: int = 0
 var lucky_wheel_consecutive_extra_spins: int = 0
+var session_start_counter: int = 0
 
 # Centralized Scoring Constants (Placement itself gives 0 points; score increases ONLY on line clear)
 const POINTS_PER_CELL_PLACED: int = 0
@@ -2887,7 +2888,8 @@ func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -
 		elif audio_mgr.has_method("select_random_bgm_track_for_new_session"):
 			audio_mgr.select_random_bgm_track_for_new_session()
 	
-	print("[%d] [LIFECYCLE] GameState: start_game mode=%d style=%d level=%d" % [Time.get_ticks_msec(), current_mode, current_play_style, target_lvl])
+	session_start_counter += 1
+	print("[%d] [LIFECYCLE] GameState: start_game (session #%d, mode=%d, style=%d, level=%d)" % [Time.get_ticks_msec(), session_start_counter, current_mode, current_play_style, target_lvl])
 	mode_changed.emit(current_mode)
 	play_style_changed.emit(current_play_style)
 	state_changed.emit(current_state, prev_state)

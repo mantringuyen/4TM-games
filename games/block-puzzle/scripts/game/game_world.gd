@@ -83,14 +83,17 @@ func _draw() -> void:
 
 func _on_game_started(mode: int) -> void:
 	var start_ms: int = Time.get_ticks_msec()
-	_clear_active_mode()
-	is_modern_world = (mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
-	queue_redraw()
-	
 	var state_mgr = get_node_or_null("/root/GameState")
 	var style: int = GameStateScript.PlayStyle.FALLING if mode == GameStateScript.GameMode.CLASSIC else GameStateScript.PlayStyle.DRAG_AND_DROP
 	if state_mgr and "current_play_style" in state_mgr:
 		style = state_mgr.current_play_style
+	
+	var sess_num: int = state_mgr.session_start_counter if (state_mgr and "session_start_counter" in state_mgr) else 0
+	print("[%d] [LIFECYCLE] GameWorld: _on_game_started STARTED (session #%d, mode=%d, style=%d)" % [start_ms, sess_num, mode, style])
+	
+	_clear_active_mode()
+	is_modern_world = (mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
+	queue_redraw()
 	
 	match style:
 		GameStateScript.PlayStyle.FALLING:
@@ -106,7 +109,7 @@ func _on_game_started(mode: int) -> void:
 			active_mode_node.initialize_mode()
 		if active_mode_node.has_method("start_mode"):
 			active_mode_node.start_mode()
-	print("[%d] [LIFECYCLE] GameWorld: _on_game_started complete (mode=%d style=%d took=%dms)" % [Time.get_ticks_msec(), mode, style, Time.get_ticks_msec() - start_ms])
+	print("[%d] [LIFECYCLE] GameWorld: _on_game_started COMPLETED (took=%dms)" % [Time.get_ticks_msec(), Time.get_ticks_msec() - start_ms])
 
 
 func use_special_item(item_id: String) -> bool:
@@ -137,7 +140,9 @@ func _on_state_changed(new_state: int, _prev_state: int) -> void:
 
 
 func _clear_active_mode() -> void:
-	var now_ms: int = Time.get_ticks_msec()
+	var start_ms: int = Time.get_ticks_msec()
+	var child_cnt: int = mode_container.get_child_count() if mode_container else 0
+	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode STARTED (children=%d)" % [start_ms, child_cnt])
 	if active_mode_node and is_instance_valid(active_mode_node):
 		if active_mode_node.has_method("end_mode"):
 			active_mode_node.end_mode()
@@ -153,5 +158,6 @@ func _clear_active_mode() -> void:
 				if child.get_parent():
 					child.get_parent().remove_child(child)
 				child.queue_free()
-	print("[%d] [LIFECYCLE] GameWorld: Active mode cleared and queued for deferred cleanup." % now_ms)
+	var took_ms: int = Time.get_ticks_msec() - start_ms
+	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode COMPLETED (took=%dms)" % [Time.get_ticks_msec(), took_ms])
 

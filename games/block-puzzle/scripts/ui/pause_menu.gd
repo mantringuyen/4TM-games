@@ -99,6 +99,15 @@ func _ready() -> void:
 	UIIconScript.setup_all_buttons_feedback(self)
 
 
+func _exit_tree() -> void:
+	var gs = get_node_or_null("/root/GameState")
+	if gs:
+		if gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_language_changed_audio):
+			gs.language_changed.disconnect(_on_language_changed_audio)
+		if gs.has_signal("voice_settings_changed") and gs.voice_settings_changed.is_connected(_on_voice_changed_audio):
+			gs.voice_settings_changed.disconnect(_on_voice_changed_audio)
+
+
 func _on_resized() -> void:
 	update_responsive_layout(get_viewport_rect().size)
 

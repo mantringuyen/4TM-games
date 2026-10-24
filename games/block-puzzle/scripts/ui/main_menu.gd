@@ -5134,6 +5134,7 @@ func _animate_button_tap(btn: Button) -> void:
 
 func _on_btn_start_pressed() -> void:
 	if _is_starting_game:
+		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (re-entrancy lock active)" % Time.get_ticks_msec())
 		return
 	_is_starting_game = true
 	_play_sfx("click")
@@ -5141,10 +5142,12 @@ func _on_btn_start_pressed() -> void:
 	if state_mgr:
 		if state_mgr.has_method("can_start_play_session") and not state_mgr.can_start_play_session():
 			_is_starting_game = false
+			print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (insufficient energy)" % Time.get_ticks_msec())
 			var msg: String = state_mgr.tr_text("energy_empty_toast") if state_mgr.has_method("tr_text") else "Out of Energy! Watch an ad (+) or wait for hourly refill."
 			_show_reward_toast(msg)
 			_refresh_energy_ui()
 			return
+		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — ACCEPTED" % Time.get_ticks_msec())
 		var started: bool = false
 		if state_mgr.has_method("start_game_combination"):
 			started = state_mgr.start_game_combination(selected_mode, selected_play_style)
@@ -5152,6 +5155,7 @@ func _on_btn_start_pressed() -> void:
 			started = state_mgr.start_game(selected_mode)
 		if not started:
 			_is_starting_game = false
+			print("[%d] [LIFECYCLE] MainMenu: Start game failed — lock reset" % Time.get_ticks_msec())
 	else:
 		_is_starting_game = false
 
