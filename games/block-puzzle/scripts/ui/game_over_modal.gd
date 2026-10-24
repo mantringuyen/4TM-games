@@ -456,12 +456,3 @@ func _on_btn_menu_pressed() -> void:
 	var state_mgr = _get_game_state()
 	if state_mgr:
 		state_mgr.return_to_menu()
-
-
-func _get_game_state() -> Node:
-	if is_inside_tree():
-		return get_node_or_null("/root/GameState")
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		return main_loop.root.get_node_or_null("GameState")
-	return null
