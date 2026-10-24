@@ -29,6 +29,16 @@ var world_sparkles: Array = [
 ]
 
 
+func _exit_tree() -> void:
+	var state_mgr = get_node_or_null("/root/GameState")
+	if state_mgr:
+		if state_mgr.game_started.is_connected(_on_game_started):
+			state_mgr.game_started.disconnect(_on_game_started)
+		if state_mgr.state_changed.is_connected(_on_state_changed):
+			state_mgr.state_changed.disconnect(_on_state_changed)
+	_clear_active_mode()
+
+
 func _ready() -> void:
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
@@ -72,6 +82,7 @@ func _draw() -> void:
 
 
 func _on_game_started(mode: int) -> void:
+	var start_ms: int = Time.get_ticks_msec()
 	_clear_active_mode()
 	is_modern_world = (mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
 	queue_redraw()
@@ -95,6 +106,7 @@ func _on_game_started(mode: int) -> void:
 			active_mode_node.initialize_mode()
 		if active_mode_node.has_method("start_mode"):
 			active_mode_node.start_mode()
+	print("[%d] [LIFECYCLE] GameWorld: _on_game_started complete (mode=%d style=%d took=%dms)" % [Time.get_ticks_msec(), mode, style, Time.get_ticks_msec() - start_ms])
 
 
 func use_special_item(item_id: String) -> bool:

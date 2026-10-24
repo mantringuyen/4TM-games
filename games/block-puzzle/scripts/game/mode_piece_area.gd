@@ -51,12 +51,22 @@ class PiecePreviewDrawer extends Control:
 			PolyominoLib.draw_material_block_cell(self, rect, shape_color_id, shape_material_id, cur_lvl)
 
 
+func _exit_tree() -> void:
+	var state_mgr = get_node_or_null("/root/GameState")
+	if state_mgr:
+		if state_mgr.game_started.is_connected(_on_game_started):
+			state_mgr.game_started.disconnect(_on_game_started)
+		if state_mgr.has_signal("language_changed") and state_mgr.language_changed.is_connected(_on_language_changed):
+			state_mgr.language_changed.disconnect(_on_language_changed)
+
+
 func _ready() -> void:
 	_ensure_nodes()
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
-		state_mgr.game_started.connect(_on_game_started)
-		if state_mgr.has_signal("language_changed"):
+		if not state_mgr.game_started.is_connected(_on_game_started):
+			state_mgr.game_started.connect(_on_game_started)
+		if state_mgr.has_signal("language_changed") and not state_mgr.language_changed.is_connected(_on_language_changed):
 			state_mgr.language_changed.connect(_on_language_changed)
 		if state_mgr.current_play_style == GameStateScript.PlayStyle.FALLING:
 			if classic_area:

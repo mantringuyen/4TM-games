@@ -275,7 +275,7 @@ var sfx_player_index: int = 0
 var sfx_cache: Dictionary = {}
 var bgm_stream_cache: Dictionary = {}
 var bgm_cache_order: Array[String] = []
-const MAX_CACHED_BGM_STREAMS: int = 4
+const MAX_CACHED_BGM_STREAMS: int = 2
 var voice_cache: Dictionary = {}
 var voice_cache_male: Dictionary = {}
 var voice_cache_female: Dictionary = {}
@@ -310,7 +310,18 @@ func _ready() -> void:
 	_setup_audio_players()
 	_pregenerate_all_audio()
 	_load_settings()
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_signal("state_changed"):
+		if not gs.state_changed.is_connected(_on_game_state_changed):
+			gs.state_changed.connect(_on_game_state_changed)
 	select_random_bgm_track_for_new_session()
+
+
+func _on_game_state_changed(new_state: int, _prev_state: int) -> void:
+	# If returning to MENU, invalidate pending BGM loads to prevent stale cross-session playback
+	if new_state == 0: # GameStateScript.State.MENU
+		_bgm_load_generation += 1
+		print("[%d] [AUDIO] AudioManager: GameState transitioned to MENU (load gen -> %d)" % [Time.get_ticks_msec(), _bgm_load_generation])
 
 
 func _process(delta: float) -> void:
@@ -340,9 +351,14 @@ func stop_all_audio() -> void:
 
 func shutdown_audio() -> void:
 	set_process(false)
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_signal("state_changed") and gs.state_changed.is_connected(_on_game_state_changed):
+		gs.state_changed.disconnect(_on_game_state_changed)
 	stop_all_audio()
 	bgm_stream = null
 	bgm_tracks.clear()
+	bgm_stream_cache.clear()
+	bgm_cache_order.clear()
 	sfx_cache.clear()
 	voice_cache.clear()
 	voice_cache_male.clear()
@@ -983,6 +999,10 @@ func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
 			var oldest_id = bgm_cache_order.pop_front()
 			if bgm_stream_cache.has(oldest_id):
 				bgm_stream_cache.erase(oldest_id)
+			var o_idx: int = BGM_TRACK_IDS.find(oldest_id)
+			if o_idx >= 0 and o_idx < bgm_tracks.size():
+				bgm_tracks[o_idx] = null
+			print("[%d] [AUDIO] Evicted oldest BGM stream '%s' from cache (cache_size=%d)" % [Time.get_ticks_msec(), oldest_id, bgm_stream_cache.size()])
 
 	return trk_stream
 

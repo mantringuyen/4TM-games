@@ -636,6 +636,10 @@ func place_piece(shape_cells: Array, origin: Vector2i, color_id: int = 1, materi
 
 
 func _exit_tree() -> void:
+	var audio_mgr = get_node_or_null("/root/AudioManager")
+	if audio_mgr and audio_mgr.has_signal("voice_callout_triggered"):
+		if audio_mgr.voice_callout_triggered.is_connected(_on_board_voice_callout):
+			audio_mgr.voice_callout_triggered.disconnect(_on_board_voice_callout)
 	if flash_tween and flash_tween.is_valid():
 		flash_tween.kill()
 	flash_tween = null

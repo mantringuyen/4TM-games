@@ -39,6 +39,16 @@ var board_cell_gap: float = 4.0
 var board_to_tray_gap: float = 68.0
 
 
+func _exit_tree() -> void:
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_language_changed):
+		gs.language_changed.disconnect(_on_language_changed)
+	if btn_drag_rotate and is_instance_valid(btn_drag_rotate) and btn_drag_rotate.pressed.is_connected(_on_btn_drag_rotate_pressed):
+		btn_drag_rotate.pressed.disconnect(_on_btn_drag_rotate_pressed)
+	clear_all_pieces()
+	active_dragging_piece = null
+
+
 func _ready() -> void:
 	_ensure_slots()
 	_ensure_rotate_control()

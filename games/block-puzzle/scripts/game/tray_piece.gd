@@ -106,6 +106,12 @@ var is_placed: bool:
 var tween: Tween
 
 
+func _exit_tree() -> void:
+	if tween and tween.is_valid():
+		tween.kill()
+	tween = null
+
+
 func _ready() -> void:
 	custom_minimum_size = Vector2(140, 140)
 	mouse_filter = Control.MOUSE_FILTER_PASS

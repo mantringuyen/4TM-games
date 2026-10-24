@@ -19,6 +19,8 @@ var level_backdrop_canvas: Control = null
 var active_backdrop_theme: Dictionary = {}
 var active_backdrop_manifest: Dictionary = {}
 var backdrop_anim_time: float = 0.0
+var _menu_fade_tween: Tween = null
+var _hud_fade_tween: Tween = null
 
 
 func _on_game_started_event(_mode) -> void:
@@ -167,6 +169,26 @@ func _on_game_state_changed(new_state: int, prev_state: int) -> void:
 	_update_ui_state(new_state, prev_state)
 
 
+func _exit_tree() -> void:
+	if _menu_fade_tween and _menu_fade_tween.is_valid():
+		_menu_fade_tween.kill()
+	_menu_fade_tween = null
+	if _hud_fade_tween and _hud_fade_tween.is_valid():
+		_hud_fade_tween.kill()
+	_hud_fade_tween = null
+	var state_mgr = get_node_or_null("/root/GameState")
+	if state_mgr:
+		if state_mgr.state_changed.is_connected(_on_game_state_changed):
+			state_mgr.state_changed.disconnect(_on_game_state_changed)
+		if state_mgr.has_signal("game_started") and state_mgr.game_started.is_connected(_on_game_started_event):
+			state_mgr.game_started.disconnect(_on_game_started_event)
+		if state_mgr.has_signal("level_updated") and state_mgr.level_updated.is_connected(_on_level_updated_event):
+			state_mgr.level_updated.disconnect(_on_level_updated_event)
+	if is_inside_tree() and get_viewport():
+		if get_viewport().size_changed.is_connected(_refresh_active_level_backdrop):
+			get_viewport().size_changed.disconnect(_refresh_active_level_backdrop)
+
+
 func _update_ui_state(state: int, prev_state: int = -1) -> void:
 	var in_gameplay: bool = (state == GameStateScript.State.PLAYING or state == GameStateScript.State.PAUSED or state == GameStateScript.State.GAME_OVER)
 	if level_backdrop_canvas:
@@ -175,17 +197,33 @@ func _update_ui_state(state: int, prev_state: int = -1) -> void:
 	if main_menu:
 		var show_menu = (state == GameStateScript.State.MENU)
 		main_menu.visible = show_menu
-		if show_menu and prev_state != GameStateScript.State.MENU and is_inside_tree():
-			main_menu.modulate.a = 0.0
-			var tw = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-			tw.tween_property(main_menu, "modulate:a", 1.0, 0.22)
+		if _menu_fade_tween and _menu_fade_tween.is_valid():
+			_menu_fade_tween.kill()
+		_menu_fade_tween = null
+		if show_menu:
+			if prev_state != GameStateScript.State.MENU and is_inside_tree():
+				main_menu.modulate.a = 0.0
+				_menu_fade_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				_menu_fade_tween.tween_property(main_menu, "modulate:a", 1.0, 0.22)
+			else:
+				main_menu.modulate.a = 1.0
+		else:
+			main_menu.modulate.a = 1.0
 	if hud:
 		var show_hud = (state == GameStateScript.State.PLAYING or state == GameStateScript.State.PAUSED)
 		hud.visible = show_hud
-		if show_hud and prev_state == GameStateScript.State.MENU and is_inside_tree():
-			hud.modulate.a = 0.0
-			var tw_h = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-			tw_h.tween_property(hud, "modulate:a", 1.0, 0.22)
+		if _hud_fade_tween and _hud_fade_tween.is_valid():
+			_hud_fade_tween.kill()
+		_hud_fade_tween = null
+		if show_hud:
+			if prev_state == GameStateScript.State.MENU and is_inside_tree():
+				hud.modulate.a = 0.0
+				_hud_fade_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				_hud_fade_tween.tween_property(hud, "modulate:a", 1.0, 0.22)
+			else:
+				hud.modulate.a = 1.0
+		else:
+			hud.modulate.a = 1.0
 	if pause_menu:
 		pause_menu.visible = (state == GameStateScript.State.PAUSED)
 	if game_over_modal:

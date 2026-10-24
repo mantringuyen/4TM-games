@@ -285,8 +285,12 @@ func _on_gs_play_style_changed(st) -> void:
 	_update_mode_selection_ui()
 
 
+var _is_starting_game: bool = false
+
+
 func _on_gs_state_changed(ns, _ps) -> void:
 	if ns == GameStateScript.State.MENU:
+		_is_starting_game = false
 		_sync_selection_from_state()
 		_refresh_all_ui()
 
@@ -5129,18 +5133,27 @@ func _animate_button_tap(btn: Button) -> void:
 
 
 func _on_btn_start_pressed() -> void:
+	if _is_starting_game:
+		return
+	_is_starting_game = true
 	_play_sfx("click")
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
 		if state_mgr.has_method("can_start_play_session") and not state_mgr.can_start_play_session():
+			_is_starting_game = false
 			var msg: String = state_mgr.tr_text("energy_empty_toast") if state_mgr.has_method("tr_text") else "Out of Energy! Watch an ad (+) or wait for hourly refill."
 			_show_reward_toast(msg)
 			_refresh_energy_ui()
 			return
+		var started: bool = false
 		if state_mgr.has_method("start_game_combination"):
-			state_mgr.start_game_combination(selected_mode, selected_play_style)
+			started = state_mgr.start_game_combination(selected_mode, selected_play_style)
 		else:
-			state_mgr.start_game(selected_mode)
+			started = state_mgr.start_game(selected_mode)
+		if not started:
+			_is_starting_game = false
+	else:
+		_is_starting_game = false
 
 
 func _make_card_style(bg_col: Color, border_col: Color, border_w: int = 2) -> StyleBoxFlat:
