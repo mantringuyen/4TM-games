@@ -139,7 +139,7 @@ func set_board_cell_metrics(new_cell_size: float, new_cell_gap: float) -> void:
 
 
 func setup_piece(data: Dictionary, slot_idx: int) -> void:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	shape_data = PolyominoLib.stamp_piece_material(data.duplicate(true), cur_lvl)
 	cells = shape_data.get("cells", []).duplicate(true)
@@ -203,7 +203,7 @@ func rotate_dragged_piece(source: String = "rotate_button") -> bool:
 	visible = true
 	modulate.a = 1.0
 	queue_redraw()
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_method("play_rotation"):
 		audio_mgr.play_rotation()
 	piece_rotated.emit(self)
@@ -626,7 +626,7 @@ func _start_drag(pointer_pos: Vector2, touch_idx: int = -1) -> void:
 	move_to_front()
 	z_index = 100
 	
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr:
 		audio_mgr.play_piece_pickup()
 	
@@ -794,7 +794,7 @@ func _draw() -> void:
 	if cells.is_empty() or (piece_state == PieceState.DRAGGING and is_snapped_to_board_preview):
 		return
 	
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	var mat_id: String = material_id if not material_id.is_empty() else String(shape_data.get("material_id", ""))
 	if mat_id.is_empty():
@@ -804,3 +804,21 @@ func _draw() -> void:
 		var cell_pos = Vector2(c.x * (cell_size + cell_gap), c.y * (cell_size + cell_gap))
 		var rect = Rect2(cell_pos, Vector2(cell_size, cell_size))
 		PolyominoLib.draw_material_block_cell(self, rect, color_id, mat_id, cur_lvl)
+
+
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null
+
+
+func _get_audio_manager() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/AudioManager")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("AudioManager")
+	return null

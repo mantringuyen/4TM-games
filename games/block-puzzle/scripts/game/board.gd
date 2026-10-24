@@ -231,12 +231,30 @@ func configure_grid_dimensions(cols: int = DEFAULT_GRID_COLS, rows: int = DEFAUL
 	queue_redraw()
 
 
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null
+
+
+func _get_audio_manager() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/AudioManager")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("AudioManager")
+	return null
+
+
 func _ready() -> void:
 	callout_display_font = _build_callout_display_font()
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if gs and "current_mode" in gs:
 		is_modern_visual_theme = (gs.current_mode == 1)
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_signal("voice_callout_triggered"):
 		if not audio_mgr.voice_callout_triggered.is_connected(_on_board_voice_callout):
 			audio_mgr.voice_callout_triggered.connect(_on_board_voice_callout)
@@ -425,7 +443,7 @@ static func normalize_special_item_type(item_type: String) -> String:
 
 
 func is_special_milestone_level_for_board(level_num: int = -1) -> bool:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var eff_lvl: int = level_num if level_num >= 1 else (int(gs.active_level) if (gs and "active_level" in gs) else 1)
 	if gs and gs.has_method("is_special_milestone_level"):
 		return bool(gs.is_special_milestone_level(eff_lvl))
@@ -447,7 +465,7 @@ func set_cell_special_item(coords: Vector2i, item_type: String, ensure_occupied_
 		grid_special_items[coords.y][coords.x] = ""
 		queue_redraw()
 		return true
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var eff_lvl: int = level_num if level_num >= 1 else (int(gs.active_level) if (gs and "active_level" in gs) else 1)
 	if gs and gs.has_method("has_special_items") and not gs.has_special_items(gs.current_mode):
 		return false
@@ -511,7 +529,7 @@ func get_special_item_count_on_board(item_type: String = "") -> int:
 
 
 func spawn_milestone_special_items(level_num: int = -1, allow_special: bool = true) -> Array[Dictionary]:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var eff_lvl: int = level_num if level_num >= 1 else (int(gs.active_level) if (gs and "active_level" in gs) else 1)
 	if not allow_special or not is_special_milestone_level_for_board(eff_lvl):
 		clear_special_items()
@@ -544,7 +562,7 @@ func spawn_milestone_special_items(level_num: int = -1, allow_special: bool = tr
 
 
 func try_spawn_milestone_special_item_in_occupied_cell(item_type: String = "", level_num: int = -1, allow_special: bool = true) -> Dictionary:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var eff_lvl: int = level_num if level_num >= 1 else (int(gs.active_level) if (gs and "active_level" in gs) else 1)
 	if not allow_special or not is_special_milestone_level_for_board(eff_lvl):
 		return {"spawned": false, "reason": "not_special_milestone_level"}
@@ -608,7 +626,7 @@ func has_any_valid_placement(shape_cells: Array) -> bool:
 func place_piece(shape_cells: Array, origin: Vector2i, color_id: int = 1, material_id: String = "", piece_special_items: Dictionary = {}) -> bool:
 	if not can_place_piece(shape_cells, origin):
 		return false
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if gs and gs.has_method("record_placement_checkpoint") and "current_state" in gs and int(gs.current_state) == 1:
 		gs.record_placement_checkpoint(self)
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
@@ -636,7 +654,7 @@ func place_piece(shape_cells: Array, origin: Vector2i, color_id: int = 1, materi
 
 
 func _exit_tree() -> void:
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_signal("voice_callout_triggered"):
 		if audio_mgr.voice_callout_triggered.is_connected(_on_board_voice_callout):
 			audio_mgr.voice_callout_triggered.disconnect(_on_board_voice_callout)
@@ -689,7 +707,7 @@ func get_cell_material_id(coords: Vector2i) -> String:
 	var stored_mat: String = String(grid_materials[coords.y][coords.x])
 	if not stored_mat.is_empty():
 		return stored_mat
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	return PolyominoLib.get_material_id_for_block(int(grid_data[coords.y][coords.x]), cur_lvl)
 
@@ -1118,7 +1136,7 @@ func resolve_piece_origin_from_visual_center(visual_center_world: Vector2, shape
 # ==============================================================================
 
 func set_preview(shape_cells: Array, origin: Vector2i, is_valid: bool, tint_color: Color = Color.WHITE, p_color_id: int = -1, p_material_id: String = "") -> void:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	var resolved_cid: int = 1
 	if p_color_id >= 1:
@@ -1168,7 +1186,7 @@ func clear_preview() -> void:
 func _draw() -> void:
 	var board_size = get_board_pixel_size()
 	var bg_rect = Rect2(Vector2.ZERO, board_size)
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	
 	# 1. Ultra-Transparent Glass Perimeter Rim (Level environment shines directly through empty cells)

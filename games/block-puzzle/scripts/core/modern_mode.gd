@@ -31,7 +31,7 @@ func _on_mode_initialized() -> void:
 	if is_inside_tree() and get_viewport():
 		if not get_viewport().size_changed.is_connected(_update_layout):
 			get_viewport().size_changed.connect(_update_layout)
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.has_signal("state_changed"):
 		if not state_mgr.state_changed.is_connected(_on_game_state_changed_while_dragging):
 			state_mgr.state_changed.connect(_on_game_state_changed_while_dragging)
@@ -55,7 +55,7 @@ func _on_mode_started() -> void:
 	board.clear_board()
 	if board.has_method("set_visual_mode"):
 		board.set_visual_mode(has_special_items())
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	var cur_lvl: int = state_mgr.active_level if (state_mgr and "active_level" in state_mgr) else 1
 	var allow_milestone_items: bool = has_special_items() and (
 		(state_mgr != null and state_mgr.has_method("can_level_have_special_board_items") and state_mgr.can_level_have_special_board_items(cur_lvl, rule_mode))
@@ -335,7 +335,7 @@ func _on_piece_drag_ended(piece: Control, release_pointer_pos: Vector2) -> void:
 	if piece.has_method("set_snapped_to_board_preview"):
 		piece.set_snapped_to_board_preview(false)
 	
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if not _is_pointer_in_valid_board_drop_zone(release_pointer_pos, piece):
 		_restore_dragged_piece(piece)
 		board.clear_preview()
@@ -365,7 +365,7 @@ func _on_piece_drag_ended(piece: Control, release_pointer_pos: Vector2) -> void:
 			)
 			piece_tray.consume_piece(piece)
 			
-			var state_mgr = get_node_or_null("/root/GameState")
+			var state_mgr = _get_game_state()
 			if state_mgr:
 				state_mgr.process_move_result(
 					cell_count,
@@ -411,7 +411,7 @@ func apply_special_item(item_id: String) -> bool:
 	if not has_special_items() or not board or not piece_tray:
 		return false
 	
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if item_id == "extra_life":
 		# Extra Life must ONLY work at Game Over; while actively playing it must do nothing and not modify state.
 		if state_mgr and state_mgr.current_state != GameStateScript.State.GAME_OVER:
@@ -467,7 +467,7 @@ func confirm_bomb_target(target_coord: Vector2i) -> bool:
 	if not board.is_valid_cell(target_coord):
 		return false
 	
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.has_method("get_special_item_count") and state_mgr.get_special_item_count("bomb") <= 0:
 		cancel_pending_special_item()
 		return false
@@ -483,7 +483,7 @@ func confirm_bomb_target(target_coord: Vector2i) -> bool:
 		for col_id in res.get("collected_special_items", []):
 			state_mgr.collect_board_special_item(String(col_id), state_mgr.active_level)
 	
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_method("play_special_item"):
 		audio_mgr.play_special_item("bomb")
 	
@@ -500,7 +500,7 @@ func confirm_change_block(_slot_idx: int = -1) -> bool:
 	if not has_special_items() or not piece_tray:
 		return false
 	
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.has_method("get_special_item_count") and state_mgr.get_special_item_count("change_block") <= 0:
 		cancel_pending_special_item()
 		return false
@@ -518,7 +518,7 @@ func confirm_change_block(_slot_idx: int = -1) -> bool:
 	if state_mgr and state_mgr.has_method("consume_special_item"):
 		state_mgr.consume_special_item("change_block")
 	
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_method("play_special_item"):
 		audio_mgr.play_special_item("change_block")
 	
@@ -530,7 +530,7 @@ func confirm_change_block(_slot_idx: int = -1) -> bool:
 func confirm_extra_life() -> bool:
 	if not has_special_items() or not board:
 		return false
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if not state_mgr or state_mgr.current_state != GameStateScript.State.GAME_OVER:
 		return false
 	if state_mgr.has_method("can_use_extra_life_now") and not state_mgr.can_use_extra_life_now():
@@ -562,7 +562,7 @@ func confirm_extra_life() -> bool:
 	if state_mgr.has_method("revive_from_extra_life"):
 		state_mgr.revive_from_extra_life()
 	
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_method("play_special_item"):
 		audio_mgr.play_special_item("extra_life")
 	
@@ -594,7 +594,7 @@ func check_game_over() -> bool:
 
 
 func _cleanup_listeners() -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.has_signal("state_changed") and state_mgr.state_changed.is_connected(_on_game_state_changed_while_dragging):
 		state_mgr.state_changed.disconnect(_on_game_state_changed_while_dragging)
 	if is_inside_tree() and get_viewport() and get_viewport().size_changed.is_connected(_update_layout):
@@ -610,11 +610,29 @@ func _on_mode_ended() -> void:
 		piece_tray.clear_all_pieces()
 
 
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null
+
+
+func _get_audio_manager() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/AudioManager")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("AudioManager")
+	return null
+
+
 func _on_mode_reset() -> void:
 	cancel_pending_special_item()
 	if board:
 		board.clear_board()
-		var state_mgr = get_node_or_null("/root/GameState")
+		var state_mgr = _get_game_state()
 		var cur_lvl: int = state_mgr.active_level if (state_mgr and "active_level" in state_mgr) else 1
 		var allow_milestone_items: bool = has_special_items() and (
 			(state_mgr != null and state_mgr.has_method("can_level_have_special_board_items") and state_mgr.can_level_have_special_board_items(cur_lvl, rule_mode))

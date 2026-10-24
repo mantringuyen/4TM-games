@@ -443,7 +443,7 @@ func _on_btn_next_level_pressed() -> void:
 
 
 func _on_btn_retry_pressed() -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if state_mgr.has_method("start_game_combination"):
 			state_mgr.start_game_combination(state_mgr.current_mode, state_mgr.current_play_style, state_mgr.active_level)
@@ -453,6 +453,15 @@ func _on_btn_retry_pressed() -> void:
 
 func _on_btn_menu_pressed() -> void:
 	# MAIN MENU never consumes Extra Life
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		state_mgr.return_to_menu()
+
+
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null

@@ -30,7 +30,7 @@ var world_sparkles: Array = [
 
 
 func _exit_tree() -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if state_mgr.game_started.is_connected(_on_game_started):
 			state_mgr.game_started.disconnect(_on_game_started)
@@ -40,7 +40,7 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if not state_mgr.game_started.is_connected(_on_game_started):
 			state_mgr.game_started.connect(_on_game_started)
@@ -83,7 +83,7 @@ func _draw() -> void:
 
 func _on_game_started(mode: int) -> void:
 	var start_ms: int = Time.get_ticks_msec()
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	var style: int = GameStateScript.PlayStyle.FALLING if mode == GameStateScript.GameMode.CLASSIC else GameStateScript.PlayStyle.DRAG_AND_DROP
 	if state_mgr and "current_play_style" in state_mgr:
 		style = state_mgr.current_play_style
@@ -114,7 +114,7 @@ func _on_game_started(mode: int) -> void:
 
 func use_special_item(item_id: String) -> bool:
 	if item_id == "extra_life":
-		var state_mgr = get_node_or_null("/root/GameState")
+		var state_mgr = _get_game_state()
 		if not state_mgr or state_mgr.current_state != GameStateScript.State.GAME_OVER:
 			return false
 		if state_mgr.has_method("can_use_extra_life_now") and not state_mgr.can_use_extra_life_now():
@@ -141,7 +141,7 @@ func _on_state_changed(new_state: int, _prev_state: int) -> void:
 
 func _clear_active_mode() -> void:
 	var start_ms: int = Time.get_ticks_msec()
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	var active_teardown_id: int = state_mgr.teardown_session_id if (state_mgr and "teardown_session_id" in state_mgr) else 0
 	var child_cnt: int = mode_container.get_child_count() if mode_container else 0
 	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode STARTED (teardown_id=%d, children=%d)" % [start_ms, active_teardown_id, child_cnt])
@@ -180,11 +180,20 @@ func _on_teardown_frame_completed(teardown_id: int) -> void:
 
 
 func _complete_teardown_for_id(teardown_id: int) -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and "teardown_session_id" in state_mgr:
 		if state_mgr.teardown_session_id == teardown_id:
 			state_mgr.is_teardown_pending = false
 			print("[%d] [LIFECYCLE] GameWorld: Teardown #%d GENUINELY COMPLETED (teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
 		else:
 			print("[%d] [LIFECYCLE] GameWorld: Teardown #%d superseded by newer teardown #%d" % [Time.get_ticks_msec(), teardown_id, state_mgr.teardown_session_id])
+
+
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null
 

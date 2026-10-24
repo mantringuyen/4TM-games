@@ -42,7 +42,7 @@ class PiecePreviewDrawer extends Control:
 			
 		var shape_sz = Vector2(dims.x * cell_sz + (dims.x - 1) * gap, dims.y * cell_sz + (dims.y - 1) * gap)
 		var origin = (panel_sz - shape_sz) * 0.5
-		var gs = get_node_or_null("/root/GameState")
+		var gs = _get_game_state()
 		var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 
 		for c in shape_cells:
@@ -52,7 +52,7 @@ class PiecePreviewDrawer extends Control:
 
 
 func _exit_tree() -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if state_mgr.game_started.is_connected(_on_game_started):
 			state_mgr.game_started.disconnect(_on_game_started)
@@ -62,7 +62,7 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	_ensure_nodes()
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if not state_mgr.game_started.is_connected(_on_game_started):
 			state_mgr.game_started.connect(_on_game_started)
@@ -123,14 +123,14 @@ func _on_language_changed(_lang: String) -> void:
 
 func _refresh_language() -> void:
 	_ensure_nodes()
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if lbl_title and state_mgr and state_mgr.has_method("tr_text"):
 		lbl_title.text = state_mgr.tr_text("next_piece")
 
 
 func _on_game_started(mode: int) -> void:
 	_refresh_language()
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.current_play_style == GameStateScript.PlayStyle.FALLING:
 		_ensure_nodes()
 		current_mode = mode
@@ -143,7 +143,7 @@ func _on_game_started(mode: int) -> void:
 func set_game_mode(mode: int) -> void:
 	_ensure_nodes()
 	current_mode = mode
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	var is_falling = (mode == GameStateScript.GameMode.CLASSIC)
 	if state_mgr and "current_play_style" in state_mgr and state_mgr._play_style_explicit:
 		is_falling = (state_mgr.current_play_style == GameStateScript.PlayStyle.FALLING)
@@ -226,3 +226,12 @@ func _update_preview_panel(panel: Control, shape_data: Dictionary) -> void:
 		panel.add_child(drawer)
 	
 	drawer.setup_shape(shape_data)
+
+
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null

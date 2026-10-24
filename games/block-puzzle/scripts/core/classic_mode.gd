@@ -54,7 +54,7 @@ func _init() -> void:
 
 func _on_mode_initialized() -> void:
 	_setup_board_and_piece_area()
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if gs and gs.has_signal("language_changed"):
 		if not gs.language_changed.is_connected(_on_language_changed):
 			gs.language_changed.connect(_on_language_changed)
@@ -83,7 +83,7 @@ func _on_mode_started() -> void:
 		elif mode_piece_area.has_method("set_game_mode"):
 			mode_piece_area.set_game_mode(GameStateScript.GameMode.CLASSIC)
 		
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	var allow_milestone_items: bool = has_special_items() and (
 		(gs != null and gs.has_method("can_level_have_special_board_items") and gs.can_level_have_special_board_items(cur_lvl, rule_mode))
@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 	if not is_active or not is_falling:
 		return
 		
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.current_state != GameStateScript.State.PLAYING:
 		return
 		
@@ -131,7 +131,7 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_active:
 		return
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.current_state != GameStateScript.State.PLAYING:
 		return
 	
@@ -234,10 +234,10 @@ func _spawn_current_piece() -> void:
 	
 	if not board.can_place_piece(shape_cells, current_pos):
 		is_falling = false
-		var audio_mgr = get_node_or_null("/root/AudioManager")
+		var audio_mgr = _get_audio_manager()
 		if audio_mgr:
 			audio_mgr.play_game_over()
-		var state_mgr = get_node_or_null("/root/GameState")
+		var state_mgr = _get_game_state()
 		if state_mgr:
 			var mode_label = "modern_falling" if has_special_items() else "classic_falling"
 			state_mgr.trigger_game_over({"reason": "cannot_place_spawn", "mode": mode_label})
@@ -245,7 +245,7 @@ func _spawn_current_piece() -> void:
 		
 	is_falling = true
 	drop_timer = 0.0
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	PolyominoLib.stamp_piece_material(current_piece, cur_lvl)
 	board.set_preview(
@@ -288,7 +288,7 @@ func _step_down() -> void:
 
 
 func _on_piece_locked() -> void:
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr:
 		audio_mgr.play_piece_placement()
 		
@@ -298,7 +298,7 @@ func _on_piece_locked() -> void:
 		int(current_piece.get("color_id", 0)) == 9 or
 		String(current_piece.get("material_id", "")) in ["rainbow", "seven_color"]
 	)
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	
 	var pass_count := 0
 	while pass_count < 20:
@@ -359,7 +359,7 @@ func move_left() -> void:
 	var target = current_pos + Vector2i(-1, 0)
 	if board.can_place_piece(current_piece["cells"], target):
 		current_pos = target
-		var audio_mgr = get_node_or_null("/root/AudioManager")
+		var audio_mgr = _get_audio_manager()
 		if audio_mgr and audio_mgr.has_method("play_piece_move"):
 			audio_mgr.play_piece_move()
 		board.set_preview(
@@ -378,7 +378,7 @@ func move_right() -> void:
 	var target = current_pos + Vector2i(1, 0)
 	if board.can_place_piece(current_piece["cells"], target):
 		current_pos = target
-		var audio_mgr = get_node_or_null("/root/AudioManager")
+		var audio_mgr = _get_audio_manager()
 		if audio_mgr and audio_mgr.has_method("play_piece_move"):
 			audio_mgr.play_piece_move()
 		board.set_preview(
@@ -419,7 +419,7 @@ func rotate_piece() -> void:
 		rotated_ok = true
 		
 	if rotated_ok:
-		var audio_mgr = get_node_or_null("/root/AudioManager")
+		var audio_mgr = _get_audio_manager()
 		if audio_mgr:
 			audio_mgr.play_rotation()
 		board.set_preview(
@@ -450,7 +450,7 @@ func quick_drop() -> void:
 func apply_special_item(item_id: String) -> bool:
 	if not has_special_items() or not board:
 		return false
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if item_id == "extra_life":
 		if state_mgr and state_mgr.current_state != GameStateScript.State.GAME_OVER:
 			return false
@@ -493,7 +493,7 @@ func confirm_bomb_target(target_coord: Vector2i) -> bool:
 		return false
 	if not board.is_valid_cell(target_coord):
 		return false
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.has_method("get_special_item_count") and state_mgr.get_special_item_count("bomb") <= 0:
 		cancel_pending_special_item()
 		return false
@@ -511,7 +511,7 @@ func confirm_bomb_target(target_coord: Vector2i) -> bool:
 	if state_mgr and state_mgr.has_method("collect_board_special_item"):
 		for col_id in res.get("collected_special_items", []):
 			state_mgr.collect_board_special_item(String(col_id), state_mgr.active_level)
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_method("play_special_item"):
 		audio_mgr.play_special_item("bomb")
 	special_item_Pending_changed.emit("")
@@ -522,7 +522,7 @@ func confirm_bomb_target(target_coord: Vector2i) -> bool:
 func confirm_change_block(target_slot: int = 0) -> bool:
 	if not has_special_items():
 		return false
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.has_method("get_special_item_count") and state_mgr.get_special_item_count("change_block") <= 0:
 		cancel_pending_special_item()
 		return false
@@ -571,7 +571,7 @@ func confirm_change_block(target_slot: int = 0) -> bool:
 	pending_special_item = ""
 	if state_mgr and state_mgr.has_method("consume_special_item"):
 		state_mgr.consume_special_item("change_block")
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_method("play_special_item"):
 		audio_mgr.play_special_item("change_block")
 	special_item_Pending_changed.emit("")
@@ -582,7 +582,7 @@ func confirm_change_block(target_slot: int = 0) -> bool:
 func confirm_extra_life() -> bool:
 	if not has_special_items() or not board:
 		return false
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if not state_mgr or state_mgr.current_state != GameStateScript.State.GAME_OVER:
 		return false
 	if state_mgr.has_method("can_use_extra_life_now") and not state_mgr.can_use_extra_life_now():
@@ -615,7 +615,7 @@ func confirm_extra_life() -> bool:
 		state_mgr.revive_from_extra_life()
 	if not is_falling:
 		_spawn_current_piece()
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	if audio_mgr and audio_mgr.has_method("play_special_item"):
 		audio_mgr.play_special_item("extra_life")
 	special_item_consumed.emit("extra_life")
@@ -896,7 +896,7 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 
 
 func _refresh_control_labels() -> void:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if not gs or not gs.has_method("tr_text"):
 		return
 	if btn_left: btn_left.text = "   " + gs.tr_text("ctrl_left")
@@ -953,8 +953,26 @@ func get_touch_controls() -> Control:
 	return touch_controls
 
 
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null
+
+
+func _get_audio_manager() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/AudioManager")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("AudioManager")
+	return null
+
+
 func _cleanup_listeners() -> void:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if gs and gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_language_changed):
 		gs.language_changed.disconnect(_on_language_changed)
 	if is_inside_tree() and get_viewport() and get_viewport().size_changed.is_connected(_update_layout):

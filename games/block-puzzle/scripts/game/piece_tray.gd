@@ -39,8 +39,17 @@ var board_cell_gap: float = 4.0
 var board_to_tray_gap: float = 68.0
 
 
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null
+
+
 func _exit_tree() -> void:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if gs and gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_language_changed):
 		gs.language_changed.disconnect(_on_language_changed)
 	if btn_drag_rotate and is_instance_valid(btn_drag_rotate) and btn_drag_rotate.pressed.is_connected(_on_btn_drag_rotate_pressed):
@@ -52,7 +61,7 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	_ensure_slots()
 	_ensure_rotate_control()
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if gs and gs.has_signal("language_changed"):
 		if not gs.language_changed.is_connected(_on_language_changed):
 			gs.language_changed.connect(_on_language_changed)
@@ -122,7 +131,7 @@ func _ensure_rotate_control() -> void:
 func _refresh_rotate_button_text() -> void:
 	if not btn_drag_rotate:
 		return
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var is_vi: bool = (gs.get_language() == "vi") if (gs and gs.has_method("get_language")) else false
 	btn_drag_rotate.text = "   XOAY 90°" if is_vi else "   ROTATE"
 
@@ -274,7 +283,7 @@ func _pick_valid_replacement_shape(old_id: String, cur_lvl: int, board_ref: Node
 
 
 func find_eligible_slot_for_change(board_ref: Node2D = null) -> int:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	var first_valid_slot: int = -1
 	for i in range(SLOT_COUNT):
@@ -301,7 +310,7 @@ func replace_piece_in_slot(slot_idx: int = -1, board_ref: Node2D = null) -> bool
 	if existing == null or not is_instance_valid(existing) or existing.is_queued_for_deletion() or existing.cells.is_empty():
 		return false
 	
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	var old_id: String = String(existing.shape_data.get("id", ""))
 	var new_shape: Dictionary = _pick_valid_replacement_shape(old_id, cur_lvl, board_ref)
@@ -332,7 +341,7 @@ func replace_all_pieces(board_ref: Node2D = null) -> bool:
 	if get_remaining_piece_count() <= 0:
 		return false
 	
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	
 	var all_four_cell_keys: Array[String] = []
@@ -464,7 +473,7 @@ func spawn_new_round() -> void:
 	clear_all_pieces()
 	round_number += 1
 	
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	var shapes = PolyominoLib.get_random_tray_set(SLOT_COUNT, cur_lvl, round_number)
 	for i in range(SLOT_COUNT):
@@ -495,7 +504,7 @@ func generate_fresh_valid_tray_for_recovery(board: Board = null, exclude_ids: Ar
 	clear_all_pieces()
 	round_number += 1
 	
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	
 	var all_ids: Array = PolyominoLib.SHAPES.keys()

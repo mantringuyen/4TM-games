@@ -37,7 +37,7 @@ func _ready() -> void:
 	if is_inside_tree() and get_viewport():
 		if not get_viewport().size_changed.is_connected(_refresh_active_level_backdrop):
 			get_viewport().size_changed.connect(_refresh_active_level_backdrop)
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if not state_mgr.state_changed.is_connected(_on_game_state_changed):
 			state_mgr.state_changed.connect(_on_game_state_changed)
@@ -79,7 +79,7 @@ func _get_effective_backdrop_viewport_size() -> Vector2:
 
 
 func _refresh_active_level_backdrop(override_viewport_size: Vector2 = Vector2.ZERO) -> void:
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	var eff_vp: Vector2 = override_viewport_size if (override_viewport_size.x > 10.0 and override_viewport_size.y > 10.0) else _get_effective_backdrop_viewport_size()
 	if gs and gs.has_method("get_level_visual_theme"):
@@ -114,7 +114,7 @@ func _refresh_active_level_backdrop(override_viewport_size: Vector2 = Vector2.ZE
 
 func get_active_level_backdrop_state(override_viewport_size: Vector2 = Vector2.ZERO) -> Dictionary:
 	_refresh_active_level_backdrop(override_viewport_size)
-	var audio_mgr = get_node_or_null("/root/AudioManager")
+	var audio_mgr = _get_audio_manager()
 	var out: Dictionary = active_backdrop_manifest.duplicate(true)
 	out["visible"] = level_backdrop_canvas != null and level_backdrop_canvas.visible
 	out["level"] = int(active_backdrop_theme.get("level", 1))
@@ -136,7 +136,7 @@ func _draw_level_backdrop_canvas() -> void:
 	if not level_backdrop_canvas:
 		return
 	var eff_vp: Vector2 = _get_effective_backdrop_viewport_size()
-	var gs = get_node_or_null("/root/GameState")
+	var gs = _get_game_state()
 	if gs and gs.has_method("get_map_data"):
 		var cur_lvl: int = int(active_backdrop_theme.get("level", gs.active_level if "active_level" in gs else 1))
 		var page = gs.get_map_data().get_page_for_level(cur_lvl)
@@ -176,7 +176,7 @@ func _exit_tree() -> void:
 	if _hud_fade_tween and _hud_fade_tween.is_valid():
 		_hud_fade_tween.kill()
 	_hud_fade_tween = null
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if state_mgr.state_changed.is_connected(_on_game_state_changed):
 			state_mgr.state_changed.disconnect(_on_game_state_changed)
@@ -228,3 +228,21 @@ func _update_ui_state(state: int, prev_state: int = -1) -> void:
 		pause_menu.visible = (state == GameStateScript.State.PAUSED)
 	if game_over_modal:
 		game_over_modal.visible = (state == GameStateScript.State.GAME_OVER)
+
+
+func _get_game_state() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/GameState")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("GameState")
+	return null
+
+
+func _get_audio_manager() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/AudioManager")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("AudioManager")
+	return null

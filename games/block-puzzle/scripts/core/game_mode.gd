@@ -65,8 +65,17 @@ func reset_mode() -> void:
 	_on_mode_reset()
 
 
+func _get_input_manager() -> Node:
+	if is_inside_tree():
+		return get_node_or_null("/root/InputManager")
+	var main_loop := Engine.get_main_loop() as SceneTree
+	if main_loop and main_loop.root:
+		return main_loop.root.get_node_or_null("InputManager")
+	return null
+
+
 func _setup_input_listeners() -> void:
-	var input_mgr = get_node_or_null("/root/InputManager")
+	var input_mgr = _get_input_manager()
 	if input_mgr:
 		if not input_mgr.pointer_pressed.is_connected(_on_pointer_press):
 			input_mgr.pointer_pressed.connect(_on_pointer_press)
@@ -79,7 +88,7 @@ func _setup_input_listeners() -> void:
 
 
 func _cleanup_input_listeners() -> void:
-	var input_mgr = get_node_or_null("/root/InputManager")
+	var input_mgr = _get_input_manager()
 	if input_mgr:
 		if input_mgr.pointer_pressed.is_connected(_on_pointer_press):
 			input_mgr.pointer_pressed.disconnect(_on_pointer_press)

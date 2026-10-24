@@ -3231,9 +3231,10 @@ func _ready() -> void:
 		printerr("[FAIL Test 93] Level 1 Drag & Drop board must be 8x10!")
 		get_tree().quit(1)
 		return
-	dd93.queue_free()
+	remove_child(dd93)
+	dd93.free()
 
-	# Verify Drag & Drop mode randomizes opening tray shapes across multiple starts/restarts
+	# Verify Drag & Drop mode randomizes opening tray shapes across multiple starts/restarts while preserving session material
 	var seen_tray_openings := {}
 	for _dd_i in range(25):
 		var dd_test = ModernModeScript.new()
@@ -3248,12 +3249,17 @@ func _ready() -> void:
 			String(t_p.active_pieces[2].shape_data.get("id", ""))
 		]
 		seen_tray_openings[opening_key] = true
+		var active_palette: Array[String] = game_state.get_session_material_palette()
+		var exp_family: String = PolyominoLib.get_level_material_family(1)
 		for p_chk in t_p.active_pieces:
-			if String(p_chk.material_id) != PolyominoLib.get_level_material_family(1):
-				printerr("[FAIL Test 93] Shape randomization altered material! Expected level 1 material, got: ", p_chk.material_id)
+			var p_mat: String = String(p_chk.material_id)
+			var matches_palette: bool = (not active_palette.is_empty() and p_mat in active_palette) or (p_mat == exp_family)
+			if not matches_palette:
+				printerr("[FAIL Test 93] Shape randomization altered material! Expected session palette material, got: ", p_chk.material_id)
 				get_tree().quit(1)
 				return
-		dd_test.queue_free()
+		remove_child(dd_test)
+		dd_test.free()
 		if seen_tray_openings.size() > 1:
 			break
 	if seen_tray_openings.size() < 2:
@@ -3273,7 +3279,8 @@ func _ready() -> void:
 		printerr("[FAIL Test 93] Level 1 Falling mode did not spawn curated spatial complex shapes! cur=", fm_cur_id, " next=", fm_next_id)
 		get_tree().quit(1)
 		return
-	fm93.queue_free()
+	remove_child(fm93)
+	fm93.free()
 
 	# Verify Falling mode randomizes opening sequence across multiple starts/restarts while preserving level material
 	var seen_falling_openings := {}
@@ -3288,11 +3295,16 @@ func _ready() -> void:
 			String(fm_test.next_piece.get("id", ""))
 		]
 		seen_falling_openings[fall_key] = true
-		if String(fm_test.current_piece.get("material_id", "")) != PolyominoLib.get_level_material_family(1):
-			printerr("[FAIL Test 93] Falling shape randomization altered material! Expected level 1 material, got: ", fm_test.current_piece.get("material_id", ""))
+		var cur_mat: String = String(fm_test.current_piece.get("material_id", ""))
+		var active_fm_palette: Array[String] = game_state.get_session_material_palette()
+		var exp_fm_family: String = PolyominoLib.get_level_material_family(1)
+		var fm_matches: bool = (not active_fm_palette.is_empty() and cur_mat in active_fm_palette) or (cur_mat == exp_fm_family)
+		if not fm_matches:
+			printerr("[FAIL Test 93] Falling shape randomization altered material! Expected session palette material, got: ", cur_mat)
 			get_tree().quit(1)
 			return
-		fm_test.queue_free()
+		remove_child(fm_test)
+		fm_test.free()
 		if seen_falling_openings.size() > 1:
 			break
 	if seen_falling_openings.size() < 2:
