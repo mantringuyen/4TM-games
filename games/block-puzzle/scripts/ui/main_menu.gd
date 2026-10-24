@@ -5133,12 +5133,15 @@ func _animate_button_tap(btn: Button) -> void:
 
 
 func _on_btn_start_pressed() -> void:
+	var state_mgr = get_node_or_null("/root/GameState")
 	if _is_starting_game:
 		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (re-entrancy lock active)" % Time.get_ticks_msec())
 		return
+	if state_mgr and "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
+		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (previous session teardown in progress)" % Time.get_ticks_msec())
+		return
 	_is_starting_game = true
 	_play_sfx("click")
-	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr:
 		if state_mgr.has_method("can_start_play_session") and not state_mgr.can_start_play_session():
 			_is_starting_game = false

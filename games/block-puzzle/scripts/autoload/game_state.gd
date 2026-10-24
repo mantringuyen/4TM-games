@@ -724,6 +724,7 @@ var _simulated_date_str: String = ""
 var lucky_wheel_extra_spins: int = 0
 var lucky_wheel_consecutive_extra_spins: int = 0
 var session_start_counter: int = 0
+var is_teardown_pending: bool = false
 
 # Centralized Scoring Constants (Placement itself gives 0 points; score increases ONLY on line clear)
 const POINTS_PER_CELL_PLACED: int = 0
@@ -3042,11 +3043,12 @@ func revive_from_watch_ad() -> void:
 
 func return_to_menu() -> void:
 	var prev_state := current_state
+	is_teardown_pending = true
 	current_state = State.MENU
 	get_tree().paused = false
 	placement_checkpoints.clear()
 	session_stats.clear()
-	print("[%d] [LIFECYCLE] GameState: return_to_menu (state_changed -> MENU)" % Time.get_ticks_msec())
+	print("[%d] [LIFECYCLE] GameState: return_to_menu (state_changed -> MENU, teardown_pending=true)" % Time.get_ticks_msec())
 	state_changed.emit(current_state, prev_state)
 
 

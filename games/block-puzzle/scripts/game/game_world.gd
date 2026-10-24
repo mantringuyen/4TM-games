@@ -148,7 +148,7 @@ func _clear_active_mode() -> void:
 			active_mode_node.end_mode()
 		if active_mode_node.get_parent():
 			active_mode_node.get_parent().remove_child(active_mode_node)
-		active_mode_node.queue_free()
+		active_mode_node.free()
 		active_mode_node = null
 	if mode_container:
 		for child in mode_container.get_children():
@@ -157,7 +157,10 @@ func _clear_active_mode() -> void:
 					child.end_mode()
 				if child.get_parent():
 					child.get_parent().remove_child(child)
-				child.queue_free()
+				child.free()
+	var state_mgr = get_node_or_null("/root/GameState")
+	if state_mgr and "is_teardown_pending" in state_mgr:
+		state_mgr.is_teardown_pending = false
 	var took_ms: int = Time.get_ticks_msec() - start_ms
-	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode COMPLETED (took=%dms)" % [Time.get_ticks_msec(), took_ms])
+	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode COMPLETED (took=%dms, teardown_pending=false)" % [Time.get_ticks_msec(), took_ms])
 
