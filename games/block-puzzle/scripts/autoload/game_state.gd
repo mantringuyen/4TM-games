@@ -725,6 +725,7 @@ var lucky_wheel_extra_spins: int = 0
 var lucky_wheel_consecutive_extra_spins: int = 0
 var session_start_counter: int = 0
 var is_teardown_pending: bool = false
+var teardown_session_id: int = 0
 
 # Centralized Scoring Constants (Placement itself gives 0 points; score increases ONLY on line clear)
 const POINTS_PER_CELL_PLACED: int = 0
@@ -2843,6 +2844,9 @@ func start_game_combination(mode: GameMode, style: PlayStyle, lvl: int = -1) -> 
 
 
 func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -> bool:
+	if is_teardown_pending:
+		print("[%d] [LIFECYCLE] GameState: start_game REJECTED (session teardown #%d still in progress)" % [Time.get_ticks_msec(), teardown_session_id])
+		return false
 	if not consume_energy_for_play(1):
 		return false
 	var target_lvl: int = lvl if lvl >= 1 else selected_map_level
@@ -3043,12 +3047,13 @@ func revive_from_watch_ad() -> void:
 
 func return_to_menu() -> void:
 	var prev_state := current_state
+	teardown_session_id += 1
 	is_teardown_pending = true
 	current_state = State.MENU
 	get_tree().paused = false
 	placement_checkpoints.clear()
 	session_stats.clear()
-	print("[%d] [LIFECYCLE] GameState: return_to_menu (state_changed -> MENU, teardown_pending=true)" % Time.get_ticks_msec())
+	print("[%d] [LIFECYCLE] GameState: return_to_menu (State -> MENU, teardown_id=%d, teardown_pending=true)" % [Time.get_ticks_msec(), teardown_session_id])
 	state_changed.emit(current_state, prev_state)
 
 

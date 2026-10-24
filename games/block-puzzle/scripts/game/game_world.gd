@@ -141,26 +141,50 @@ func _on_state_changed(new_state: int, _prev_state: int) -> void:
 
 func _clear_active_mode() -> void:
 	var start_ms: int = Time.get_ticks_msec()
+	var state_mgr = get_node_or_null("/root/GameState")
+	var active_teardown_id: int = state_mgr.teardown_session_id if (state_mgr and "teardown_session_id" in state_mgr) else 0
 	var child_cnt: int = mode_container.get_child_count() if mode_container else 0
-	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode STARTED (children=%d)" % [start_ms, child_cnt])
+	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode STARTED (teardown_id=%d, children=%d)" % [start_ms, active_teardown_id, child_cnt])
+	
+	var had_nodes_to_free: bool = false
 	if active_mode_node and is_instance_valid(active_mode_node):
+		had_nodes_to_free = true
 		if active_mode_node.has_method("end_mode"):
 			active_mode_node.end_mode()
 		if active_mode_node.get_parent():
 			active_mode_node.get_parent().remove_child(active_mode_node)
-		active_mode_node.free()
+		active_mode_node.queue_free()
 		active_mode_node = null
 	if mode_container:
 		for child in mode_container.get_children():
 			if is_instance_valid(child):
+				had_nodes_to_free = true
 				if child.has_method("end_mode"):
 					child.end_mode()
 				if child.get_parent():
 					child.get_parent().remove_child(child)
-				child.free()
-	var state_mgr = get_node_or_null("/root/GameState")
-	if state_mgr and "is_teardown_pending" in state_mgr:
-		state_mgr.is_teardown_pending = false
+				child.queue_free()
+	
 	var took_ms: int = Time.get_ticks_msec() - start_ms
-	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode COMPLETED (took=%dms, teardown_pending=false)" % [Time.get_ticks_msec(), took_ms])
+	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode unparented nodes (took=%dms)" % [Time.get_ticks_msec(), took_ms])
+	
+	if had_nodes_to_free and is_inside_tree() and get_tree():
+		if not get_tree().process_frame.is_connected(_on_teardown_frame_completed.bind(active_teardown_id)):
+			get_tree().process_frame.connect(_on_teardown_frame_completed.bind(active_teardown_id), CONNECT_ONE_SHOT)
+	else:
+		_complete_teardown_for_id(active_teardown_id)
+
+
+func _on_teardown_frame_completed(teardown_id: int) -> void:
+	_complete_teardown_for_id(teardown_id)
+
+
+func _complete_teardown_for_id(teardown_id: int) -> void:
+	var state_mgr = get_node_or_null("/root/GameState")
+	if state_mgr and "teardown_session_id" in state_mgr:
+		if state_mgr.teardown_session_id == teardown_id:
+			state_mgr.is_teardown_pending = false
+			print("[%d] [LIFECYCLE] GameWorld: Teardown #%d GENUINELY COMPLETED (teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
+		else:
+			print("[%d] [LIFECYCLE] GameWorld: Teardown #%d superseded by newer teardown #%d" % [Time.get_ticks_msec(), teardown_id, state_mgr.teardown_session_id])
 
