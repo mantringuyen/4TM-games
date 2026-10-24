@@ -42,7 +42,13 @@ class PiecePreviewDrawer extends Control:
 			
 		var shape_sz = Vector2(dims.x * cell_sz + (dims.x - 1) * gap, dims.y * cell_sz + (dims.y - 1) * gap)
 		var origin = (panel_sz - shape_sz) * 0.5
-		var gs = _get_game_state()
+		var gs: Node = null
+		if is_inside_tree():
+			gs = get_node_or_null("/root/GameState")
+		if not gs:
+			var ml := Engine.get_main_loop() as SceneTree
+			if ml and ml.root:
+				gs = ml.root.get_node_or_null("GameState")
 		var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 
 		for c in shape_cells:
