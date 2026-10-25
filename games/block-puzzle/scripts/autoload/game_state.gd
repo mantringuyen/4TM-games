@@ -2845,8 +2845,9 @@ func start_game_combination(mode: GameMode, style: PlayStyle, lvl: int = -1) -> 
 
 func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -> bool:
 	if is_teardown_pending:
-		print("[%d] [LIFECYCLE] GameState: start_game REJECTED (session teardown #%d still in progress)" % [Time.get_ticks_msec(), teardown_session_id])
-		return false
+		# If teardown flag was left pending or quick start requested, force-clear safely to prevent permanent lock
+		is_teardown_pending = false
+		print("[%d] [LIFECYCLE] GameState: start_game force-clearing stale is_teardown_pending for session #%d" % [Time.get_ticks_msec(), teardown_session_id])
 	if not consume_energy_for_play(1):
 		return false
 	var target_lvl: int = lvl if lvl >= 1 else selected_map_level
