@@ -2847,12 +2847,14 @@ func start_game_combination(mode: GameMode, style: PlayStyle, lvl: int = -1) -> 
 
 
 func complete_session_teardown(teardown_id: int) -> void:
-	if teardown_session_id == teardown_id or teardown_id <= 0:
-		is_teardown_pending = false
-		print("[%d] [LIFECYCLE] GameState: Teardown #%d completed (is_teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
-		session_teardown_completed.emit(teardown_id)
-	else:
-		print("[%d] [LIFECYCLE] GameState: Teardown #%d ignored (superseded by newer teardown #%d)" % [Time.get_ticks_msec(), teardown_id, teardown_session_id])
+	if not is_teardown_pending:
+		return
+	if teardown_id <= 0 or teardown_id != teardown_session_id:
+		print("[%d] [LIFECYCLE] GameState: Teardown #%d ignored (invalid or superseded by teardown #%d)" % [Time.get_ticks_msec(), teardown_id, teardown_session_id])
+		return
+	is_teardown_pending = false
+	print("[%d] [LIFECYCLE] GameState: Teardown #%d GENUINELY COMPLETED (is_teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
+	session_teardown_completed.emit(teardown_id)
 
 
 func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -> bool:

@@ -98,7 +98,7 @@ func _ready() -> void:
 	if not resized.is_connected(_on_resized):
 		resized.connect(_on_resized)
 	
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if not state_mgr.game_over_triggered.is_connected(_on_game_over):
 			state_mgr.game_over_triggered.connect(_on_game_over)
@@ -110,7 +110,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if state_mgr.game_over_triggered.is_connected(_on_game_over):
 			state_mgr.game_over_triggered.disconnect(_on_game_over)
@@ -266,7 +266,7 @@ func _on_game_over(final_score: int, final_level: int, stats: Dictionary) -> voi
 
 func _render_modal_state() -> void:
 	_ensure_nodes()
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	var is_complete: bool = bool(last_stats.get("level_complete", false))
 	last_was_level_complete = is_complete
 	last_next_level = int(last_stats.get("next_level", last_final_level + 1))
@@ -382,7 +382,7 @@ func _find_active_gameplay_mode() -> Node:
 func _on_btn_extra_life_pressed() -> bool:
 	if _recovery_in_progress or last_was_level_complete:
 		return false
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if not state_mgr or state_mgr.current_state != GameStateScript.State.GAME_OVER:
 		return false
 	if state_mgr.has_method("can_use_extra_life_now") and not state_mgr.can_use_extra_life_now():
@@ -411,7 +411,7 @@ func _on_btn_extra_life_pressed() -> bool:
 func _on_btn_watch_ad_pressed() -> bool:
 	if _recovery_in_progress or last_was_level_complete:
 		return false
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if not state_mgr or state_mgr.current_state != GameStateScript.State.GAME_OVER:
 		return false
 	_recovery_in_progress = true
@@ -434,7 +434,7 @@ func _on_btn_watch_ad_pressed() -> bool:
 
 
 func _on_btn_next_level_pressed() -> void:
-	var state_mgr = get_node_or_null("/root/GameState")
+	var state_mgr = _get_game_state()
 	if state_mgr:
 		if state_mgr.has_method("start_next_level"):
 			state_mgr.start_next_level()
@@ -456,3 +456,4 @@ func _on_btn_menu_pressed() -> void:
 	var state_mgr = _get_game_state()
 	if state_mgr:
 		state_mgr.return_to_menu()
+

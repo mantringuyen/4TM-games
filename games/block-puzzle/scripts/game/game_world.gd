@@ -36,11 +36,6 @@ func _exit_tree() -> void:
 			state_mgr.game_started.disconnect(_on_game_started)
 		if state_mgr.state_changed.is_connected(_on_state_changed):
 			state_mgr.state_changed.disconnect(_on_state_changed)
-		if "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
-			if state_mgr.has_method("complete_session_teardown"):
-				state_mgr.complete_session_teardown(state_mgr.teardown_session_id)
-			else:
-				state_mgr.is_teardown_pending = false
 	_clear_active_mode()
 
 
@@ -147,7 +142,9 @@ func _on_state_changed(new_state: int, _prev_state: int) -> void:
 func _clear_active_mode() -> void:
 	var start_ms: int = Time.get_ticks_msec()
 	var state_mgr = _get_game_state()
-	var active_teardown_id: int = state_mgr.teardown_session_id if (state_mgr and "teardown_session_id" in state_mgr) else 0
+	var active_teardown_id: int = 0
+	if state_mgr and "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
+		active_teardown_id = int(state_mgr.teardown_session_id)
 	var child_cnt: int = mode_container.get_child_count() if mode_container else 0
 	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode STARTED (teardown_id=%d, children=%d)" % [start_ms, active_teardown_id, child_cnt])
 	
@@ -173,11 +170,12 @@ func _clear_active_mode() -> void:
 	var took_ms: int = Time.get_ticks_msec() - start_ms
 	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode unparented nodes (took=%dms)" % [Time.get_ticks_msec(), took_ms])
 	
-	if had_nodes_to_free and is_inside_tree() and get_tree():
-		if not get_tree().process_frame.is_connected(_on_teardown_frame_completed.bind(active_teardown_id)):
-			get_tree().process_frame.connect(_on_teardown_frame_completed.bind(active_teardown_id), CONNECT_ONE_SHOT)
-	else:
-		_complete_teardown_for_id(active_teardown_id)
+	if active_teardown_id > 0:
+		if had_nodes_to_free and is_inside_tree() and get_tree():
+			if not get_tree().process_frame.is_connected(_on_teardown_frame_completed.bind(active_teardown_id)):
+				get_tree().process_frame.connect(_on_teardown_frame_completed.bind(active_teardown_id), CONNECT_ONE_SHOT)
+		else:
+			_complete_teardown_for_id(active_teardown_id)
 
 
 func _on_teardown_frame_completed(teardown_id: int) -> void:
@@ -185,6 +183,8 @@ func _on_teardown_frame_completed(teardown_id: int) -> void:
 
 
 func _complete_teardown_for_id(teardown_id: int) -> void:
+	if teardown_id <= 0:
+		return
 	var state_mgr = _get_game_state()
 	if state_mgr:
 		if state_mgr.has_method("complete_session_teardown"):
@@ -204,4 +204,5 @@ func _get_game_state() -> Node:
 	if main_loop and main_loop.root:
 		return main_loop.root.get_node_or_null("GameState")
 	return null
+
 

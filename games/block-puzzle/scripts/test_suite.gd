@@ -33,6 +33,7 @@ const MapDataScript = preload("res://scripts/map_core/map_data.gd")
 const BlockPuzzleMapConfigScript = preload("res://scripts/map_core/block_puzzle_map_config.gd")
 
 var _tests_completed: bool = false
+var _async_test_in_progress: bool = false
 var _quit_delay_frames: int = 0
 
 func _ready() -> void:
@@ -6943,6 +6944,7 @@ func _ready() -> void:
 	#   5. Subsequent normal delayed restart executes immediately without delay
 	# =========================================================================
 	print("[TEST 120] Verifying Rapid Restart Lifecycle Race Condition & Deferred Start Regression...")
+	_async_test_in_progress = true
 	game_state.reset_progression(true)
 	game_state.set_energy(24, false)
 
@@ -6990,8 +6992,9 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	# Step 5: Complete teardown frame
-	world120._on_teardown_frame_completed(tid120)
+	# Step 5: Complete teardown frame real sequence via process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
 	if game_state.is_teardown_pending or menu120._deferred_start_pending:
 		printerr("[FAIL Test 120.5] Deferred start must execute automatically when teardown completes! is_teardown_pending=", game_state.is_teardown_pending, " deferred_pending=", menu120._deferred_start_pending)
 		get_tree().quit(1)
@@ -7009,8 +7012,8 @@ func _ready() -> void:
 
 	# Step 6: Subsequent normal delayed restart
 	game_state.return_to_menu()
-	var tid120_b: int = game_state.teardown_session_id
-	world120._on_teardown_frame_completed(tid120_b)
+	await get_tree().process_frame
+	await get_tree().process_frame
 	if game_state.is_teardown_pending:
 		printerr("[FAIL Test 120.6] Teardown should be complete before delayed start!")
 		get_tree().quit(1)
@@ -7023,6 +7026,7 @@ func _ready() -> void:
 
 	world120.queue_free()
 	menu120.queue_free()
+	_async_test_in_progress = false
 	print("[TEST 120/120] Rapid Restart Lifecycle Race Condition & Deferred Start Regression: PASSED")
 
 	board.queue_free()
@@ -7046,6 +7050,8 @@ func _exit_tree() -> void:
 	_cleanup_test_runner_nodes()
 
 func _process(_delta: float) -> void:
+	if _async_test_in_progress:
+		return
 	if not _tests_completed:
 		printerr("[FAIL] TestRunner _ready() exited early due to a script error before completing all tests!")
 		_cleanup_test_runner_nodes()
