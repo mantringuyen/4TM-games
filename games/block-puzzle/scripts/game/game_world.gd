@@ -29,6 +29,10 @@ var world_sparkles: Array = [
 ]
 
 
+var _pending_teardown_id: int = 0
+var _pending_teardown_nodes: Array[Node] = []
+
+
 func _exit_tree() -> void:
 	var state_mgr = _get_game_state()
 	if state_mgr:
@@ -36,107 +40,18 @@ func _exit_tree() -> void:
 			state_mgr.game_started.disconnect(_on_game_started)
 		if state_mgr.state_changed.is_connected(_on_state_changed):
 			state_mgr.state_changed.disconnect(_on_state_changed)
+	var tid_to_complete: int = _pending_teardown_id
+	_stop_teardown_polling()
 	_clear_active_mode()
+	if tid_to_complete > 0:
+		_complete_teardown_for_id(tid_to_complete)
 
 
-func _ready() -> void:
-	var state_mgr = _get_game_state()
-	if state_mgr:
-		if not state_mgr.game_started.is_connected(_on_game_started):
-			state_mgr.game_started.connect(_on_game_started)
-		if not state_mgr.state_changed.is_connected(_on_state_changed):
-			state_mgr.state_changed.connect(_on_state_changed)
-		is_modern_world = (state_mgr.current_mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
-	queue_redraw()
-
-
-func _process(delta: float) -> void:
-	anim_time += delta
-
-
-func _draw() -> void:
-	var vp_size = get_viewport_rect().size if is_inside_tree() and get_viewport() else Vector2(720.0, 1280.0)
-	var w = vp_size.x if vp_size.x > 0 else 720.0
-	var h = vp_size.y if vp_size.y > 0 else 1280.0
-
-	# Keep GameWorld canvas transparent so Main's per-level LevelBackdropLayer remains
-	# 100% visible behind and through the transparent 12x10 play board.
-	# Only draw subtle ambient margin sparkles for depth.
-	for sp in world_sparkles:
-		var pulse = 0.55 + 0.45 * sin(anim_time * 2.4 + float(sp["phase"]))
-		var pos = Vector2(w * float(sp["x"]), h * float(sp["y"]))
-		var sr = float(sp["r"]) * pulse
-		var scol: Color = sp["col"]
-		scol.a *= pulse * 0.55
-		var star_pts = PackedVector2Array([
-			pos + Vector2(0, -sr * 1.5),
-			pos + Vector2(sr * 0.42, -sr * 0.42),
-			pos + Vector2(sr * 1.5, 0),
-			pos + Vector2(sr * 0.42, sr * 0.42),
-			pos + Vector2(0, sr * 1.5),
-			pos + Vector2(-sr * 0.42, sr * 0.42),
-			pos + Vector2(-sr * 1.5, 0),
-			pos + Vector2(-sr * 0.42, -sr * 0.42)
-		])
-		draw_colored_polygon(star_pts, scol)
-
-
-func _on_game_started(mode: int) -> void:
-	var start_ms: int = Time.get_ticks_msec()
-	var state_mgr = _get_game_state()
-	var style: int = GameStateScript.PlayStyle.FALLING if mode == GameStateScript.GameMode.CLASSIC else GameStateScript.PlayStyle.DRAG_AND_DROP
-	if state_mgr and "current_play_style" in state_mgr:
-		style = state_mgr.current_play_style
-	
-	var sess_num: int = state_mgr.session_start_counter if (state_mgr and "session_start_counter" in state_mgr) else 0
-	print("[%d] [LIFECYCLE] GameWorld: _on_game_started STARTED (session #%d, mode=%d, style=%d)" % [start_ms, sess_num, mode, style])
-	
-	_clear_active_mode()
-	is_modern_world = (mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
-	queue_redraw()
-	
-	match style:
-		GameStateScript.PlayStyle.FALLING:
-			active_mode_node = ClassicModeScript.new()
-		GameStateScript.PlayStyle.DRAG_AND_DROP, _:
-			active_mode_node = ModernModeScript.new()
-	
-	if active_mode_node and mode_container:
-		if active_mode_node.has_method("configure_combination"):
-			active_mode_node.configure_combination(mode, style)
-		mode_container.add_child(active_mode_node)
-		if active_mode_node.has_method("initialize_mode"):
-			active_mode_node.initialize_mode()
-		if active_mode_node.has_method("start_mode"):
-			active_mode_node.start_mode()
-	print("[%d] [LIFECYCLE] GameWorld: _on_game_started COMPLETED (took=%dms)" % [Time.get_ticks_msec(), Time.get_ticks_msec() - start_ms])
-
-
-func use_special_item(item_id: String) -> bool:
-	if item_id == "extra_life":
-		var state_mgr = _get_game_state()
-		if not state_mgr or state_mgr.current_state != GameStateScript.State.GAME_OVER:
-			return false
-		if state_mgr.has_method("can_use_extra_life_now") and not state_mgr.can_use_extra_life_now():
-			return false
-	if active_mode_node and active_mode_node.has_method("apply_special_item"):
-		return active_mode_node.apply_special_item(item_id)
-	return false
-
-
-func get_active_mode() -> Node2D:
-	return active_mode_node
-
-
-func _on_state_changed(new_state: int, _prev_state: int) -> void:
-	if new_state == GameStateScript.State.MENU:
-		_clear_active_mode()
-	elif new_state == GameStateScript.State.PAUSED and active_mode_node:
-		if active_mode_node.has_method("pause_mode"):
-			active_mode_node.pause_mode(true)
-	elif new_state == GameStateScript.State.PLAYING and active_mode_node:
-		if active_mode_node.has_method("pause_mode"):
-			active_mode_node.pause_mode(false)
+func _stop_teardown_polling() -> void:
+	if is_inside_tree() and get_tree() and get_tree().process_frame.is_connected(_on_poll_teardown_frame):
+		get_tree().process_frame.disconnect(_on_poll_teardown_frame)
+	_pending_teardown_id = 0
+	_pending_teardown_nodes.clear()
 
 
 func _clear_active_mode() -> void:
@@ -145,41 +60,56 @@ func _clear_active_mode() -> void:
 	var active_teardown_id: int = 0
 	if state_mgr and "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
 		active_teardown_id = int(state_mgr.teardown_session_id)
-	var child_cnt: int = mode_container.get_child_count() if mode_container else 0
-	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode STARTED (teardown_id=%d, children=%d)" % [start_ms, active_teardown_id, child_cnt])
 	
-	var had_nodes_to_free: bool = false
+	_stop_teardown_polling()
+
+	var nodes_to_watch: Array[Node] = []
 	if active_mode_node and is_instance_valid(active_mode_node):
-		had_nodes_to_free = true
+		if not (active_mode_node in nodes_to_watch):
+			nodes_to_watch.append(active_mode_node)
 		if active_mode_node.has_method("end_mode"):
 			active_mode_node.end_mode()
 		if active_mode_node.get_parent():
 			active_mode_node.get_parent().remove_child(active_mode_node)
 		active_mode_node.queue_free()
 		active_mode_node = null
+
 	if mode_container:
 		for child in mode_container.get_children():
 			if is_instance_valid(child):
-				had_nodes_to_free = true
+				if not (child in nodes_to_watch):
+					nodes_to_watch.append(child)
 				if child.has_method("end_mode"):
 					child.end_mode()
 				if child.get_parent():
 					child.get_parent().remove_child(child)
 				child.queue_free()
-	
-	var took_ms: int = Time.get_ticks_msec() - start_ms
-	print("[%d] [LIFECYCLE] GameWorld: _clear_active_mode unparented nodes (took=%dms)" % [Time.get_ticks_msec(), took_ms])
-	
+
 	if active_teardown_id > 0:
-		if had_nodes_to_free and is_inside_tree() and get_tree():
-			if not get_tree().process_frame.is_connected(_on_teardown_frame_completed.bind(active_teardown_id)):
-				get_tree().process_frame.connect(_on_teardown_frame_completed.bind(active_teardown_id), CONNECT_ONE_SHOT)
+		var still_valid: Array[Node] = []
+		for n in nodes_to_watch:
+			if is_instance_valid(n):
+				still_valid.append(n)
+		
+		if not still_valid.is_empty() and is_inside_tree() and get_tree():
+			_pending_teardown_id = active_teardown_id
+			_pending_teardown_nodes = still_valid
+			if not get_tree().process_frame.is_connected(_on_poll_teardown_frame):
+				get_tree().process_frame.connect(_on_poll_teardown_frame)
 		else:
 			_complete_teardown_for_id(active_teardown_id)
 
 
-func _on_teardown_frame_completed(teardown_id: int) -> void:
-	_complete_teardown_for_id(teardown_id)
+func _on_poll_teardown_frame() -> void:
+	var all_freed: bool = true
+	for n in _pending_teardown_nodes:
+		if is_instance_valid(n):
+			all_freed = false
+			break
+	if all_freed:
+		var tid: int = _pending_teardown_id
+		_stop_teardown_polling()
+		_complete_teardown_for_id(tid)
 
 
 func _complete_teardown_for_id(teardown_id: int) -> void:
@@ -193,8 +123,6 @@ func _complete_teardown_for_id(teardown_id: int) -> void:
 			if state_mgr.teardown_session_id == teardown_id:
 				state_mgr.is_teardown_pending = false
 				print("[%d] [LIFECYCLE] GameWorld: Teardown #%d GENUINELY COMPLETED (teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
-			else:
-				print("[%d] [LIFECYCLE] GameWorld: Teardown #%d superseded by newer teardown #%d" % [Time.get_ticks_msec(), teardown_id, state_mgr.teardown_session_id])
 
 
 func _get_game_state() -> Node:

@@ -6955,7 +6955,8 @@ func _ready() -> void:
 
 	# Step 1: Start an active game
 	var s1_ok: bool = game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP, 1)
-	if not s1_ok or game_state.get_energy() != 23 or world120.get_active_mode() == null:
+	var old_mode_node: Node = world120.get_active_mode()
+	if not s1_ok or game_state.get_energy() != 23 or old_mode_node == null or not is_instance_valid(old_mode_node):
 		printerr("[FAIL Test 120.1] Failed to start initial game session: started=", s1_ok, " energy=", game_state.get_energy())
 		get_tree().quit(1)
 		return
@@ -6968,6 +6969,13 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
+	# Stale completion signal with invalid ID must be safely ignored
+	game_state.complete_session_teardown(999999)
+	if not game_state.is_teardown_pending:
+		printerr("[FAIL Test 120.2b] Stale teardown ID must be ignored and not clear is_teardown_pending!")
+		get_tree().quit(1)
+		return
+
 	# Step 3: Immediate new-game request while teardown is pending MUST be rejected by GameState (guard holds)
 	# start_game() must NOT clear is_teardown_pending or consume energy!
 	var immediate_start_rejected: bool = not game_state.start_game(GameStateScript.GameMode.CLASSIC)
@@ -6977,14 +6985,7 @@ func _ready() -> void:
 		return
 
 	# Step 4: Repeated rapid Play input via MainMenu
-	# First tap defers start
 	menu120._on_btn_start_pressed()
-	if not menu120._deferred_start_pending or not game_state.is_teardown_pending:
-		printerr("[FAIL Test 120.4] Rapid Play tap on MainMenu must defer start while teardown is pending!")
-		get_tree().quit(1)
-		return
-
-	# Second and third rapid taps must be safely handled without duplicating callbacks or crashing
 	menu120._on_btn_start_pressed()
 	menu120._on_btn_start_pressed()
 	if not menu120._deferred_start_pending:
@@ -6995,6 +6996,13 @@ func _ready() -> void:
 	# Step 5: Complete teardown frame real sequence via process_frame
 	await get_tree().process_frame
 	await get_tree().process_frame
+
+	# Verify the old_mode_node is ACTUALLY freed (is_instance_valid is false)
+	if is_instance_valid(old_mode_node):
+		printerr("[FAIL Test 120.5] Old gameplay mode node must be genuinely freed (is_instance_valid == false) before new session becomes active!")
+		get_tree().quit(1)
+		return
+
 	if game_state.is_teardown_pending or menu120._deferred_start_pending:
 		printerr("[FAIL Test 120.5] Deferred start must execute automatically when teardown completes! is_teardown_pending=", game_state.is_teardown_pending, " deferred_pending=", menu120._deferred_start_pending)
 		get_tree().quit(1)
@@ -7005,8 +7013,9 @@ func _ready() -> void:
 		printerr("[FAIL Test 120.5] Deferred start must enter PLAYING state and consume 1 energy (23 -> 22)! state=", game_state.current_state, " energy=", game_state.get_energy())
 		get_tree().quit(1)
 		return
-	if world120.get_active_mode() == null:
-		printerr("[FAIL Test 120.5] GameWorld must have an active game mode for the new deferred session!")
+	var new_mode_node: Node = world120.get_active_mode()
+	if new_mode_node == null or not is_instance_valid(new_mode_node) or new_mode_node == old_mode_node:
+		printerr("[FAIL Test 120.5] GameWorld must have a NEW active game mode for the deferred session!")
 		get_tree().quit(1)
 		return
 
