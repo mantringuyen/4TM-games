@@ -286,13 +286,17 @@ func _on_gs_play_style_changed(st) -> void:
 
 
 var _is_starting_game: bool = false
+var _deferred_start_pending: bool = false
 
 
 func _on_gs_state_changed(ns, _ps) -> void:
 	if ns == GameStateScript.State.MENU:
 		_is_starting_game = false
+		_deferred_start_pending = false
 		_sync_selection_from_state()
 		_refresh_all_ui()
+	else:
+		_deferred_start_pending = false
 
 
 func _exit_tree() -> void:
@@ -316,6 +320,8 @@ func _exit_tree() -> void:
 			gs.play_style_changed.disconnect(_on_gs_play_style_changed)
 		if gs.has_signal("state_changed") and gs.state_changed.is_connected(_on_gs_state_changed):
 			gs.state_changed.disconnect(_on_gs_state_changed)
+		if gs.has_signal("session_teardown_completed") and gs.session_teardown_completed.is_connected(_on_session_teardown_completed):
+			gs.session_teardown_completed.disconnect(_on_session_teardown_completed)
 
 
 func _ready() -> void:
@@ -5138,7 +5144,12 @@ func _on_btn_start_pressed() -> void:
 		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (re-entrancy lock active)" % Time.get_ticks_msec())
 		return
 	if state_mgr and "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
-		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (previous session teardown in progress)" % Time.get_ticks_msec())
+		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — DEFERRED (previous session teardown in progress)" % Time.get_ticks_msec())
+		if not _deferred_start_pending:
+			_deferred_start_pending = true
+			if state_mgr.has_signal("session_teardown_completed"):
+				if not state_mgr.session_teardown_completed.is_connected(_on_session_teardown_completed):
+					state_mgr.session_teardown_completed.connect(_on_session_teardown_completed, CONNECT_ONE_SHOT)
 		return
 	_is_starting_game = true
 	_play_sfx("click")
@@ -5161,6 +5172,15 @@ func _on_btn_start_pressed() -> void:
 			print("[%d] [LIFECYCLE] MainMenu: Start game failed — lock reset" % Time.get_ticks_msec())
 	else:
 		_is_starting_game = false
+
+
+func _on_session_teardown_completed(_teardown_id: int) -> void:
+	if _deferred_start_pending:
+		_deferred_start_pending = false
+		var gs = get_node_or_null("/root/GameState")
+		if gs and gs.current_state == GameStateScript.State.MENU:
+			print("[%d] [LIFECYCLE] MainMenu: Executing deferred Start after teardown completed" % Time.get_ticks_msec())
+			_on_btn_start_pressed()
 
 
 func _make_card_style(bg_col: Color, border_col: Color, border_w: int = 2) -> StyleBoxFlat:

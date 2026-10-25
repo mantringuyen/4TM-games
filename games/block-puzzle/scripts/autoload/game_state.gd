@@ -62,6 +62,7 @@ signal special_item_inventory_changed(inventory: Dictionary)
 signal lucky_wheel_spun(result: Dictionary)
 signal energy_changed(current_energy: int, max_energy: int)
 signal rewarded_ad_completed(reward_type: String, amount: int)
+signal session_teardown_completed(teardown_id: int)
 
 const PROGRESSION_SAVE_PATH: String = "user://block_puzzle_4tm_progression.cfg"
 const TOTAL_LEVELS: int = 500
@@ -874,6 +875,8 @@ func reset_progression(save_to_disk: bool = true) -> void:
 	current_mode = GameMode.CLASSIC
 	current_play_style = PlayStyle.FALLING
 	_play_style_explicit = false
+	is_teardown_pending = false
+	teardown_session_id += 1
 	if save_to_disk:
 		save_progression()
 	energy_changed.emit(energy, MAX_ENERGY)
@@ -2843,11 +2846,19 @@ func start_game_combination(mode: GameMode, style: PlayStyle, lvl: int = -1) -> 
 	return start_game(mode, int(style), lvl)
 
 
+func complete_session_teardown(teardown_id: int) -> void:
+	if teardown_session_id == teardown_id or teardown_id <= 0:
+		is_teardown_pending = false
+		print("[%d] [LIFECYCLE] GameState: Teardown #%d completed (is_teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
+		session_teardown_completed.emit(teardown_id)
+	else:
+		print("[%d] [LIFECYCLE] GameState: Teardown #%d ignored (superseded by newer teardown #%d)" % [Time.get_ticks_msec(), teardown_id, teardown_session_id])
+
+
 func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -> bool:
 	if is_teardown_pending:
-		# If teardown flag was left pending or quick start requested, force-clear safely to prevent permanent lock
-		is_teardown_pending = false
-		print("[%d] [LIFECYCLE] GameState: start_game force-clearing stale is_teardown_pending for session #%d" % [Time.get_ticks_msec(), teardown_session_id])
+		print("[%d] [LIFECYCLE] GameState: start_game REJECTED (session teardown #%d still in progress)" % [Time.get_ticks_msec(), teardown_session_id])
+		return false
 	if not consume_energy_for_play(1):
 		return false
 	var target_lvl: int = lvl if lvl >= 1 else selected_map_level
@@ -3048,14 +3059,25 @@ func revive_from_watch_ad() -> void:
 
 func return_to_menu() -> void:
 	var prev_state := current_state
+	if prev_state == State.MENU:
+		return
 	teardown_session_id += 1
+	var tid: int = teardown_session_id
 	is_teardown_pending = true
 	current_state = State.MENU
 	get_tree().paused = false
 	placement_checkpoints.clear()
 	session_stats.clear()
-	print("[%d] [LIFECYCLE] GameState: return_to_menu (State -> MENU, teardown_id=%d, teardown_pending=true)" % [Time.get_ticks_msec(), teardown_session_id])
+	print("[%d] [LIFECYCLE] GameState: return_to_menu (State -> MENU, teardown_id=%d, teardown_pending=true)" % [Time.get_ticks_msec(), tid])
 	state_changed.emit(current_state, prev_state)
+	
+	# If no GameWorld exists in the active scene tree (e.g. standalone test suites or menu-only scenes),
+	# there are zero game mode nodes to free; resolve teardown immediately so start_game is not blocked.
+	var has_game_world: bool = false
+	if is_inside_tree() and get_tree() and get_tree().root:
+		has_game_world = (get_tree().root.find_child("GameWorld", true, false) != null)
+	if not has_game_world and is_teardown_pending:
+		complete_session_teardown(tid)
 
 
 

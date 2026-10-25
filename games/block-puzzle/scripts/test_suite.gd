@@ -20,6 +20,8 @@ const PauseMenuScript = preload("res://scripts/ui/pause_menu.gd")
 const PauseMenuScene = preload("res://scenes/ui/pause_menu.tscn")
 const GameOverModalScript = preload("res://scripts/ui/game_over_modal.gd")
 const GameOverModalScene = preload("res://scenes/ui/game_over_modal.tscn")
+const GameWorldScript = preload("res://scripts/game/game_world.gd")
+const GameWorldScene = preload("res://scenes/game/game_world.tscn")
 const MainScene = preload("res://scenes/main.tscn")
 const MapThemeScript = preload("res://scripts/map_core/map_theme.gd")
 const MapRouteScript = preload("res://scripts/map_core/map_route.gd")
@@ -6930,13 +6932,104 @@ func _ready() -> void:
 		return
 	
 	cd_game.queue_free()
-	print("[TEST 119/119] Classic + Drag & Drop Column Clearing & 3-Cell Touch Offset Snap: PASSED")
+	print("[TEST 119/120] Classic + Drag & Drop Column Clearing & 3-Cell Touch Offset Snap: PASSED")
+
+	# =========================================================================
+	# TEST 120: Rapid Restart Lifecycle Race Condition & Deferred Start Regression
+	#   1. Active game -> return to Home Menu (GameState.return_to_menu)
+	#   2. Verify is_teardown_pending is true and start_game() rejects immediately (guard holds, 0 energy spent)
+	#   3. Repeated rapid Play input via MainMenu sets deferred start flag without duplicate connections
+	#   4. On teardown completion, deferred start triggers cleanly, consumes exactly 1 energy (24 -> 23), and starts new game
+	#   5. Subsequent normal delayed restart executes immediately without delay
+	# =========================================================================
+	print("[TEST 120] Verifying Rapid Restart Lifecycle Race Condition & Deferred Start Regression...")
+	game_state.reset_progression(true)
+	game_state.set_energy(24, false)
+
+	var world120 = GameWorldScene.instantiate()
+	add_child(world120)
+	var menu120 = MainMenuScene.instantiate()
+	add_child(menu120)
+
+	# Step 1: Start an active game
+	var s1_ok: bool = game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP, 1)
+	if not s1_ok or game_state.get_energy() != 23 or world120.get_active_mode() == null:
+		printerr("[FAIL Test 120.1] Failed to start initial game session: started=", s1_ok, " energy=", game_state.get_energy())
+		get_tree().quit(1)
+		return
+
+	# Step 2: Return to Home Menu -> teardown starts
+	game_state.return_to_menu()
+	var tid120: int = game_state.teardown_session_id
+	if not game_state.is_teardown_pending or game_state.current_state != GameStateScript.State.MENU:
+		printerr("[FAIL Test 120.2] is_teardown_pending must be true after return_to_menu! Got: ", game_state.is_teardown_pending)
+		get_tree().quit(1)
+		return
+
+	# Step 3: Immediate new-game request while teardown is pending MUST be rejected by GameState (guard holds)
+	# start_game() must NOT clear is_teardown_pending or consume energy!
+	var immediate_start_rejected: bool = not game_state.start_game(GameStateScript.GameMode.CLASSIC)
+	if not immediate_start_rejected or not game_state.is_teardown_pending or game_state.get_energy() != 23:
+		printerr("[FAIL Test 120.3] Immediate start_game during teardown must be rejected without consuming energy! energy=", game_state.get_energy(), " is_teardown_pending=", game_state.is_teardown_pending)
+		get_tree().quit(1)
+		return
+
+	# Step 4: Repeated rapid Play input via MainMenu
+	# First tap defers start
+	menu120._on_btn_start_pressed()
+	if not menu120._deferred_start_pending or not game_state.is_teardown_pending:
+		printerr("[FAIL Test 120.4] Rapid Play tap on MainMenu must defer start while teardown is pending!")
+		get_tree().quit(1)
+		return
+
+	# Second and third rapid taps must be safely handled without duplicating callbacks or crashing
+	menu120._on_btn_start_pressed()
+	menu120._on_btn_start_pressed()
+	if not menu120._deferred_start_pending:
+		printerr("[FAIL Test 120.4] Repeated rapid taps must preserve deferred start flag!")
+		get_tree().quit(1)
+		return
+
+	# Step 5: Complete teardown frame
+	world120._on_teardown_frame_completed(tid120)
+	if game_state.is_teardown_pending or menu120._deferred_start_pending:
+		printerr("[FAIL Test 120.5] Deferred start must execute automatically when teardown completes! is_teardown_pending=", game_state.is_teardown_pending, " deferred_pending=", menu120._deferred_start_pending)
+		get_tree().quit(1)
+		return
+
+	# Verify the new session started cleanly and consumed exactly 1 Energy (23 -> 22)
+	if game_state.current_state != GameStateScript.State.PLAYING or game_state.get_energy() != 22:
+		printerr("[FAIL Test 120.5] Deferred start must enter PLAYING state and consume 1 energy (23 -> 22)! state=", game_state.current_state, " energy=", game_state.get_energy())
+		get_tree().quit(1)
+		return
+	if world120.get_active_mode() == null:
+		printerr("[FAIL Test 120.5] GameWorld must have an active game mode for the new deferred session!")
+		get_tree().quit(1)
+		return
+
+	# Step 6: Subsequent normal delayed restart
+	game_state.return_to_menu()
+	var tid120_b: int = game_state.teardown_session_id
+	world120._on_teardown_frame_completed(tid120_b)
+	if game_state.is_teardown_pending:
+		printerr("[FAIL Test 120.6] Teardown should be complete before delayed start!")
+		get_tree().quit(1)
+		return
+	menu120._on_btn_start_pressed()
+	if game_state.current_state != GameStateScript.State.PLAYING or game_state.get_energy() != 21:
+		printerr("[FAIL Test 120.6] Subsequent normal start must succeed immediately (22 -> 21 energy)! energy=", game_state.get_energy())
+		get_tree().quit(1)
+		return
+
+	world120.queue_free()
+	menu120.queue_free()
+	print("[TEST 120/120] Rapid Restart Lifecycle Race Condition & Deferred Start Regression: PASSED")
 
 	board.queue_free()
 	if audio_mgr and audio_mgr.has_method("shutdown_audio"):
 		audio_mgr.shutdown_audio()
 	_tests_completed = true
-	print("[TEST] ALL 119/119 AUTOMATED TESTS PASSED PERFECTLY!")
+	print("[TEST] ALL 120/120 AUTOMATED TESTS PASSED PERFECTLY!")
 
 
 func _cleanup_test_runner_nodes() -> void:

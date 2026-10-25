@@ -36,6 +36,11 @@ func _exit_tree() -> void:
 			state_mgr.game_started.disconnect(_on_game_started)
 		if state_mgr.state_changed.is_connected(_on_state_changed):
 			state_mgr.state_changed.disconnect(_on_state_changed)
+		if "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
+			if state_mgr.has_method("complete_session_teardown"):
+				state_mgr.complete_session_teardown(state_mgr.teardown_session_id)
+			else:
+				state_mgr.is_teardown_pending = false
 	_clear_active_mode()
 
 
@@ -181,12 +186,15 @@ func _on_teardown_frame_completed(teardown_id: int) -> void:
 
 func _complete_teardown_for_id(teardown_id: int) -> void:
 	var state_mgr = _get_game_state()
-	if state_mgr and "teardown_session_id" in state_mgr:
-		if state_mgr.teardown_session_id == teardown_id:
-			state_mgr.is_teardown_pending = false
-			print("[%d] [LIFECYCLE] GameWorld: Teardown #%d GENUINELY COMPLETED (teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
-		else:
-			print("[%d] [LIFECYCLE] GameWorld: Teardown #%d superseded by newer teardown #%d" % [Time.get_ticks_msec(), teardown_id, state_mgr.teardown_session_id])
+	if state_mgr:
+		if state_mgr.has_method("complete_session_teardown"):
+			state_mgr.complete_session_teardown(teardown_id)
+		elif "teardown_session_id" in state_mgr:
+			if state_mgr.teardown_session_id == teardown_id:
+				state_mgr.is_teardown_pending = false
+				print("[%d] [LIFECYCLE] GameWorld: Teardown #%d GENUINELY COMPLETED (teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
+			else:
+				print("[%d] [LIFECYCLE] GameWorld: Teardown #%d superseded by newer teardown #%d" % [Time.get_ticks_msec(), teardown_id, state_mgr.teardown_session_id])
 
 
 func _get_game_state() -> Node:
