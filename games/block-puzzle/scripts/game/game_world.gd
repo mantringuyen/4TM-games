@@ -202,7 +202,11 @@ func _clear_active_mode() -> void:
 			_pending_teardown_id = active_teardown_id
 			_pending_teardown_nodes = still_valid
 			_ensure_main_loop_teardown_polling()
+			if state_mgr and state_mgr.has_method("log_diag_milestone"):
+				state_mgr.log_diag_milestone("teardown_started", {"teardown_id": active_teardown_id, "nodes_to_free": still_valid.size()})
 		else:
+			if state_mgr and state_mgr.has_method("log_diag_milestone"):
+				state_mgr.log_diag_milestone("teardown_immediate_complete", {"teardown_id": active_teardown_id})
 			_complete_teardown_for_id(active_teardown_id)
 
 
@@ -218,6 +222,9 @@ func _on_poll_teardown_frame() -> void:
 	if all_freed:
 		var tid: int = _pending_teardown_id
 		_stop_teardown_polling()
+		var state_mgr = _get_game_state()
+		if state_mgr and state_mgr.has_method("log_diag_milestone"):
+			state_mgr.log_diag_milestone("teardown_nodes_freed", {"teardown_id": tid})
 		_complete_teardown_for_id(tid)
 
 

@@ -44,6 +44,7 @@
 		
 		
 		
+		
 		<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#414141">
@@ -51,6 +52,9 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 		<meta name="apple-mobile-web-app-title" content="Block Puzzle — 4TM">
 		<meta name="mobile-web-app-capable" content="yes">
+		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
+		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
 		<link rel="manifest" href="manifest.json">
 		<script>
 		// Reversible dev switch (defaults to canonical black-translucent PWA behavior; enabled only if ?non_fullscreen=1 is explicitly passed)
@@ -203,7 +207,7 @@ html, body {
 			Your browser does not support JavaScript.
 		</noscript>
 
-																																																																						<script>
+																																																																								<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
@@ -256,8 +260,219 @@ html, body {
 				}, delay);
 			});
 		}());
-		// Standards-safe iOS viewport diagnostic telemetry (headless)
+		// Standards-safe iOS viewport diagnostic telemetry, persistence & HUD (?diag=1)
 		(function () {
+			var isDiagActive = false;
+			try {
+				var q = window.location.search || '';
+				isDiagActive = (new URLSearchParams(q).get('diag') === '1') || q.indexOf('diag=1') !== -1;
+			} catch (e) {
+				isDiagActive = false;
+			}
+
+			var diagEvents = [];
+			var diagErrors = [];
+			var prevSessionEvents = [];
+			var prevSessionErrors = [];
+			var prevSessionLastUpdated = 0;
+			var sessionCount = 1;
+			var webglStats = { lossCount: 0, restoreCount: 0, lastLossTime: 0, lastRestoreTime: 0, isLost: false };
+
+			function hasMilestones(evList) {
+				if (!evList || !evList.length) return false;
+				for (var i = 0; i < evList.length; i++) {
+					if (evList[i].type && evList[i].type.indexOf('milestone:') === 0) return true;
+				}
+				return false;
+			}
+
+			function loadDiagHistory() {
+				try {
+					if (window.sessionStorage) {
+						var raw = window.sessionStorage.getItem('__4TM_DIAG_HISTORY__');
+						if (raw) return JSON.parse(raw);
+					}
+				} catch (e) {}
+				return null;
+			}
+
+			try {
+				var hist = loadDiagHistory();
+				if (hist && typeof hist === 'object') {
+					sessionCount = (hist.sessionCount || 1) + 1;
+					var curr = Array.isArray(hist.currentEvents) ? hist.currentEvents : (Array.isArray(hist.events) ? hist.events : []);
+					var currErr = Array.isArray(hist.currentErrors) ? hist.currentErrors : (Array.isArray(hist.errors) ? hist.errors : []);
+					var prev = Array.isArray(hist.prevEvents) ? hist.prevEvents : [];
+					var prevErr = Array.isArray(hist.prevErrors) ? hist.prevErrors : [];
+
+					if (curr.length > 0) {
+						if (!hasMilestones(curr) && currErr.length === 0 && (hasMilestones(prev) || prevErr.length > 0)) {
+							prevSessionEvents = prev;
+							prevSessionErrors = prevErr;
+							prevSessionLastUpdated = hist.prevLastUpdated || 0;
+						} else {
+							prevSessionEvents = curr;
+							prevSessionErrors = currErr;
+							prevSessionLastUpdated = hist.lastUpdated || 0;
+						}
+					} else if (prev.length > 0) {
+						prevSessionEvents = prev;
+						prevSessionErrors = prevErr;
+						prevSessionLastUpdated = hist.prevLastUpdated || 0;
+					}
+				}
+			} catch (e) {}
+
+			function saveDiagHistory() {
+				try {
+					if (window.sessionStorage) {
+						var data = {
+							prevEvents: prevSessionEvents,
+							prevErrors: prevSessionErrors,
+							prevLastUpdated: prevSessionLastUpdated,
+							currentEvents: diagEvents,
+							currentErrors: diagErrors,
+							events: diagEvents,
+							errors: diagErrors,
+							lastUpdated: Date.now(),
+							sessionCount: sessionCount
+						};
+						window.sessionStorage.setItem('__4TM_DIAG_HISTORY__', JSON.stringify(data));
+					}
+				} catch (e) {}
+			}
+
+			function formatTime(ts) {
+				try {
+					var d = new Date(ts);
+					return d.toTimeString().split(' ')[0] + '.' + ('00' + d.getMilliseconds()).slice(-3);
+				} catch (e) {
+					return String(ts);
+				}
+			}
+
+			function recordDiagEvent(type, detail) {
+				try {
+					var entry = { type: type, time: Date.now(), detail: detail || {} };
+					diagEvents.push(entry);
+					if (diagEvents.length > 50) diagEvents.shift();
+					if (window.__4TM_DIAG__) {
+						window.__4TM_DIAG__.events = diagEvents;
+						window.__4TM_DIAG__.lastEvent = entry;
+					}
+					saveDiagHistory();
+					if (isDiagActive && typeof updateDiagUI === 'function') {
+						updateDiagUI();
+					}
+				} catch (e) {}
+			}
+
+			function recordDiagError(type, message, details) {
+				try {
+					var entry = {
+						type: type,
+						message: String(message || 'Unknown error'),
+						time: Date.now(),
+						details: details || {}
+					};
+					diagErrors.push(entry);
+					if (diagErrors.length > 30) diagErrors.shift();
+					var eventEntry = {
+						type: 'error:' + type,
+						time: entry.time,
+						detail: { message: entry.message, details: details || {} }
+					};
+					diagEvents.push(eventEntry);
+					if (diagEvents.length > 50) diagEvents.shift();
+					if (window.__4TM_DIAG__) {
+						window.__4TM_DIAG__.errors = diagErrors;
+						window.__4TM_DIAG__.lastError = entry;
+						window.__4TM_DIAG__.events = diagEvents;
+						window.__4TM_DIAG__.lastEvent = eventEntry;
+					}
+					saveDiagHistory();
+					if (isDiagActive && typeof updateDiagUI === 'function') {
+						updateDiagUI();
+					}
+				} catch (e) {}
+			}
+
+			window.__4TM_RECORD_MILESTONE__ = function (name, details) {
+				recordDiagEvent('milestone:' + name, details);
+			};
+
+			window.__4TM_RECORD_ERROR__ = function (type, message, details) {
+				recordDiagError(type, message, details);
+			};
+
+			recordDiagEvent('init', { referrer: document.referrer || '', userAgent: navigator.userAgent });
+
+			// Intercept console.error to capture runtime / engine / WebGL errors
+			(function () {
+				var origConsoleError = console.error;
+				var inConsoleError = false;
+				console.error = function () {
+					if (!inConsoleError) {
+						inConsoleError = true;
+						try {
+							var args = Array.prototype.slice.call(arguments);
+							var msg = args.map(function (a) {
+								if (a instanceof Error) return a.message + (a.stack ? '\n' + a.stack : '');
+								if (typeof a === 'object') {
+									try { return JSON.stringify(a); } catch (e) { return String(a); }
+								}
+								return String(a);
+							}).join(' ');
+							if (msg.indexOf('[4TM-DIAG]') === -1) {
+								recordDiagError('console_error', msg);
+							}
+						} catch (e) {}
+						inConsoleError = false;
+					}
+					origConsoleError.apply(console, arguments);
+				};
+			})();
+
+			// 1. Record browser page lifecycle events
+			window.addEventListener('pagehide', function (e) {
+				recordDiagEvent('pagehide', { persisted: !!e.persisted });
+			});
+			window.addEventListener('pageshow', function (e) {
+				recordDiagEvent('pageshow', { persisted: !!e.persisted });
+			});
+			window.addEventListener('beforeunload', function () {
+				recordDiagEvent('beforeunload', {});
+			});
+			document.addEventListener('visibilitychange', function () {
+				recordDiagEvent('visibilitychange', { state: document.visibilityState });
+				if (window.__4TM_DIAG__) {
+					window.__4TM_DIAG__.visibilityState = document.visibilityState;
+				}
+			});
+
+			// 2. Monitor WebGL context loss and restoration without forcing page reload
+			function setupCanvasDiag() {
+				var cv = document.getElementById('canvas');
+				if (!cv) return;
+				cv.addEventListener('webglcontextlost', function (e) {
+					webglStats.lossCount++;
+					webglStats.lastLossTime = Date.now();
+					webglStats.isLost = true;
+					recordDiagError('webglcontextlost', 'WebGL context lost (count: ' + webglStats.lossCount + ')', { lossCount: webglStats.lossCount });
+				}, false);
+				cv.addEventListener('webglcontextrestored', function (e) {
+					webglStats.restoreCount++;
+					webglStats.lastRestoreTime = Date.now();
+					webglStats.isLost = false;
+					recordDiagEvent('webglcontextrestored', { restoreCount: webglStats.restoreCount });
+				}, false);
+			}
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', setupCanvasDiag);
+			} else {
+				setupCanvasDiag();
+			}
+
 			function updateDiag() {
 				var probe = document.getElementById('gd-vh-probe');
 				var ins = document.getElementById('gd-ins-probe');
@@ -282,29 +497,306 @@ html, body {
 				var ch = canvas ? canvas.height : 'N/A';
 				var modeStr = isStandalone ? 'PWA-STANDALONE' : (displayModeStandalone ? 'STANDALONE-MEDIA' : 'SAFARI-WEB');
 				window.__4TM_DIAG__ = {
-					build: '2026.10.10-v1',
+					build: '2026.10.26-diag-v1',
 					mode: modeStr,
 					url: window.location.href,
+					isDiagActive: isDiagActive,
+					sessionCount: sessionCount,
 					winH: winH, winW: winW, docH: docH, vvH: vvH, probeH: probeH, scrH: scrH,
 					insetTop: insetT, insetBottom: insetB,
+					visibilityState: document.visibilityState,
 					canvasStyle: { width: csw, height: csh },
-					canvasPixels: { width: cw, height: ch }
+					canvasPixels: { width: cw, height: ch },
+					webgl: webglStats,
+					events: diagEvents,
+					errors: diagErrors,
+					prevSessionEvents: prevSessionEvents,
+					prevSessionErrors: prevSessionErrors,
+					prevSessionLastUpdated: prevSessionLastUpdated
 				};
+				if (isDiagActive && typeof updateDiagUI === 'function') {
+					updateDiagUI();
+				}
 			}
 			window.addEventListener('resize', updateDiag);
 			window.addEventListener('orientationchange', updateDiag);
 			updateDiag();
+
+			function generateReportText() {
+				var lines = [];
+				lines.push('=== 4TM BLOCK PUZZLE DIAGNOSTIC REPORT ===');
+				lines.push('Generated: ' + new Date().toISOString());
+				lines.push('URL: ' + window.location.href);
+				lines.push('Session Count: ' + sessionCount);
+				lines.push('User Agent: ' + navigator.userAgent);
+				var d = window.__4TM_DIAG__ || {};
+				lines.push('Mode: ' + (d.mode || 'N/A'));
+				lines.push('Viewport: win=' + (d.winW || window.innerWidth) + 'x' + (d.winH || window.innerHeight) +
+					' vvH=' + (d.vvH || 0) + ' docH=' + (d.docH || 0) + ' scrH=' + (d.scrH || 0) +
+					' insets(T=' + (d.insetTop || 0) + ', B=' + (d.insetBottom || 0) + ')');
+				lines.push('WebGL: lossCount=' + webglStats.lossCount + ' restoreCount=' + webglStats.restoreCount + ' isLost=' + webglStats.isLost);
+				lines.push('');
+				lines.push('--- PREVIOUS SESSION (BEFORE RELOAD) ---');
+				lines.push('Last Updated: ' + (prevSessionLastUpdated ? new Date(prevSessionLastUpdated).toISOString() : 'N/A'));
+				lines.push('Total Events: ' + prevSessionEvents.length + ' | Total Errors: ' + prevSessionErrors.length);
+				var lastPrevM = null;
+				for (var i = prevSessionEvents.length - 1; i >= 0; i--) {
+					if (prevSessionEvents[i].type && prevSessionEvents[i].type.indexOf('milestone:') === 0) {
+						lastPrevM = prevSessionEvents[i];
+						break;
+					}
+				}
+				lines.push('Last Milestone Before Reload: ' + (lastPrevM ? (formatTime(lastPrevM.time) + ' ' + lastPrevM.type + ' ' + JSON.stringify(lastPrevM.detail || {})) : 'None'));
+				var lastPrevE = prevSessionEvents.length > 0 ? prevSessionEvents[prevSessionEvents.length - 1] : null;
+				lines.push('Last Event Before Reload: ' + (lastPrevE ? (formatTime(lastPrevE.time) + ' ' + lastPrevE.type + ' ' + JSON.stringify(lastPrevE.detail || {})) : 'None'));
+				lines.push('Previous Errors (' + prevSessionErrors.length + '):');
+				if (prevSessionErrors.length === 0) {
+					lines.push('  (none)');
+				} else {
+					prevSessionErrors.forEach(function (e, idx) {
+						lines.push('  [' + (idx + 1) + '] ' + formatTime(e.time) + ' (' + e.type + ') ' + e.message);
+					});
+				}
+				lines.push('Previous Events (' + prevSessionEvents.length + '):');
+				if (prevSessionEvents.length === 0) {
+					lines.push('  (none recorded)');
+				} else {
+					var baseP = prevSessionEvents[0].time;
+					prevSessionEvents.forEach(function (ev) {
+						var diff = ev.time - baseP;
+						lines.push('  [' + formatTime(ev.time) + ' (+' + diff + 'ms)] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : ''));
+					});
+				}
+				lines.push('');
+				lines.push('--- CURRENT SESSION ---');
+				lines.push('Total Events: ' + diagEvents.length + ' | Total Errors: ' + diagErrors.length);
+				var lastCurrM = null;
+				for (var j = diagEvents.length - 1; j >= 0; j--) {
+					if (diagEvents[j].type && diagEvents[j].type.indexOf('milestone:') === 0) {
+						lastCurrM = diagEvents[j];
+						break;
+					}
+				}
+				lines.push('Last Milestone: ' + (lastCurrM ? (formatTime(lastCurrM.time) + ' ' + lastCurrM.type + ' ' + JSON.stringify(lastCurrM.detail || {})) : 'None'));
+				lines.push('Current Errors (' + diagErrors.length + '):');
+				if (diagErrors.length === 0) {
+					lines.push('  (none)');
+				} else {
+					diagErrors.forEach(function (e, idx) {
+						lines.push('  [' + (idx + 1) + '] ' + formatTime(e.time) + ' (' + e.type + ') ' + e.message);
+					});
+				}
+				lines.push('Current Events (' + diagEvents.length + '):');
+				if (diagEvents.length === 0) {
+					lines.push('  (none)');
+				} else {
+					var baseC = diagEvents[0].time;
+					diagEvents.forEach(function (ev) {
+						var diff = ev.time - baseC;
+						lines.push('  [' + formatTime(ev.time) + ' (+' + diff + 'ms)] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : ''));
+					});
+				}
+				lines.push('==========================================');
+				return lines.join('\n');
+			}
+
+			// Diagnostic HUD DOM Setup (ONLY when isDiagActive == true)
+			if (isDiagActive) {
+				var hudContainer = null;
+				var isCollapsed = false;
+
+				function createDiagUI() {
+					if (document.getElementById('diag-hud')) return;
+					hudContainer = document.createElement('div');
+					hudContainer.id = 'diag-hud';
+					hudContainer.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999999;background:rgba(15,23,42,0.96);color:#f1f5f9;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;border-top:2px solid #3b82f6;box-shadow:0 -4px 20px rgba(0,0,0,0.85);display:flex;flex-direction:column;max-height:50vh;pointer-events:auto;-webkit-user-select:text;user-select:text;';
+
+					var header = document.createElement('div');
+					header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#1e293b;border-bottom:1px solid #334155;flex-shrink:0;';
+					header.innerHTML = '<div style="font-weight:bold;font-size:12px;color:#60a5fa;display:flex;align-items:center;gap:6px;"><span>🔍 4TM DIAG (?diag=1)</span><span id="diag-badge" style="font-size:10px;background:#334155;padding:2px 6px;border-radius:10px;color:#94a3b8;">Sess #' + sessionCount + '</span></div>' +
+						'<div style="display:flex;gap:6px;align-items:center;">' +
+						'<button id="diag-btn-copy" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;">Copy Diagnostics</button>' +
+						'<button id="diag-btn-toggle" style="background:#475569;color:#fff;border:none;border-radius:4px;padding:6px 10px;font-size:11px;cursor:pointer;">▼</button>' +
+						'</div>';
+					hudContainer.appendChild(header);
+
+					var body = document.createElement('div');
+					body.id = 'diag-body';
+					body.style.cssText = 'overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px calc(14px + env(safe-area-inset-bottom, 0px)) 10px;flex:1;font-size:11px;line-height:1.4;';
+					body.innerHTML = '<div id="diag-feedback" style="display:none;font-size:11px;color:#4ade80;font-weight:bold;margin-bottom:6px;padding:4px 8px;background:rgba(34,197,94,0.15);border-radius:4px;"></div>' +
+						'<div id="diag-fallback-box" style="display:none;margin-bottom:8px;">' +
+						'<div style="font-size:10px;color:#fbbf24;margin-bottom:2px;">Clipboard restricted. Select and copy report below:</div>' +
+						'<textarea id="diag-fallback-text" readonly style="width:100%;height:90px;background:#0f172a;color:#f8fafc;font-size:10px;border:1px solid #475569;border-radius:4px;padding:4px;box-sizing:border-box;-webkit-user-select:text;user-select:text;"></textarea>' +
+						'</div>' +
+						'<div id="diag-details"></div>';
+					hudContainer.appendChild(body);
+
+					if (document.body) {
+						document.body.appendChild(hudContainer);
+					} else {
+						document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(hudContainer); });
+					}
+
+					document.getElementById('diag-btn-copy').addEventListener('click', function () {
+						var report = generateReportText();
+						var fb = document.getElementById('diag-feedback');
+						var fbBox = document.getElementById('diag-fallback-box');
+						var fbText = document.getElementById('diag-fallback-text');
+
+						function showCopied() {
+							if (fb) {
+								fb.textContent = '✓ Diagnostics report copied to clipboard!';
+								fb.style.color = '#4ade80';
+								fb.style.display = 'block';
+								setTimeout(function () { fb.style.display = 'none'; }, 4000);
+							}
+						}
+						function showFallback() {
+							if (fbBox && fbText) {
+								fbText.value = report;
+								fbBox.style.display = 'block';
+								fbText.focus();
+								fbText.select();
+								if (fb) {
+									fb.textContent = 'Select all and copy text from the box below:';
+									fb.style.color = '#fbbf24';
+									fb.style.display = 'block';
+								}
+							}
+						}
+
+						try {
+							if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+								navigator.clipboard.writeText(report).then(showCopied).catch(showFallback);
+							} else {
+								showFallback();
+							}
+						} catch (e) {
+							showFallback();
+						}
+					});
+
+					document.getElementById('diag-btn-toggle').addEventListener('click', function () {
+						isCollapsed = !isCollapsed;
+						var b = document.getElementById('diag-body');
+						var btn = document.getElementById('diag-btn-toggle');
+						if (b) b.style.display = isCollapsed ? 'none' : 'block';
+						if (btn) btn.textContent = isCollapsed ? '▲' : '▼';
+					});
+
+					updateDiagUI();
+				}
+
+				function updateDiagUI() {
+					var details = document.getElementById('diag-details');
+					if (!details) return;
+
+					var d = window.__4TM_DIAG__ || {};
+					var html = '';
+
+					// System & Viewport row
+					html += '<div style="background:#1e293b;padding:6px;border-radius:4px;margin-bottom:8px;font-size:10px;color:#94a3b8;">';
+					html += '<div><strong>Status:</strong> ' + (d.mode || 'N/A') + ' | <strong>WebGL Loss:</strong> ' + webglStats.lossCount + ' | <strong>Restore:</strong> ' + webglStats.restoreCount + '</div>';
+					html += '<div><strong>Viewport:</strong> win=' + (d.winW || window.innerWidth) + 'x' + (d.winH || window.innerHeight) + ' | vvH=' + (d.vvH || 0) + ' | docH=' + (d.docH || 0) + ' | safeArea(T=' + (d.insetTop || 0) + ',B=' + (d.insetBottom || 0) + ')</div>';
+					html += '</div>';
+
+					// PREVIOUS SESSION
+					html += '<div style="background:#18181b;border:1px solid #7f1d1d;padding:6px;border-radius:4px;margin-bottom:8px;">';
+					html += '<div style="font-weight:bold;color:#f87171;font-size:11px;margin-bottom:4px;">⏮ PREVIOUS SESSION (BEFORE RELOAD)</div>';
+
+					var lastPrevM = null;
+					for (var i = prevSessionEvents.length - 1; i >= 0; i--) {
+						if (prevSessionEvents[i].type && prevSessionEvents[i].type.indexOf('milestone:') === 0) {
+							lastPrevM = prevSessionEvents[i];
+							break;
+						}
+					}
+					var lastPrevE = prevSessionEvents.length > 0 ? prevSessionEvents[prevSessionEvents.length - 1] : null;
+
+					html += '<div style="color:#fbbf24;font-size:10px;margin-bottom:2px;"><strong>Last Milestone:</strong> ' + (lastPrevM ? (formatTime(lastPrevM.time) + ' ' + lastPrevM.type + ' ' + JSON.stringify(lastPrevM.detail || {})) : '<span style="color:#64748b">None</span>') + '</div>';
+					html += '<div style="color:#94a3b8;font-size:10px;margin-bottom:4px;"><strong>Last Event:</strong> ' + (lastPrevE ? (formatTime(lastPrevE.time) + ' ' + lastPrevE.type) : '<span style="color:#64748b">None</span>') + '</div>';
+
+					if (prevSessionErrors.length > 0) {
+						html += '<div style="color:#ef4444;font-size:10px;font-weight:bold;margin-top:4px;">Errors (' + prevSessionErrors.length + '):</div>';
+						prevSessionErrors.forEach(function (er) {
+							html += '<div style="color:#fca5a5;font-size:10px;padding-left:8px;word-break:break-word;">• ' + formatTime(er.time) + ' [' + er.type + '] ' + er.message + '</div>';
+						});
+					}
+
+					html += '<details style="margin-top:4px;"><summary style="font-size:10px;color:#38bdf8;cursor:pointer;">Events List (' + prevSessionEvents.length + ' events)</summary>';
+					html += '<div style="max-height:100px;overflow-y:auto;background:#09090b;padding:4px;border-radius:2px;margin-top:2px;font-size:10px;">';
+					if (prevSessionEvents.length === 0) {
+						html += '<div style="color:#64748b;">(No previous events recorded)</div>';
+					} else {
+						var baseP = prevSessionEvents[0].time;
+						prevSessionEvents.forEach(function (ev) {
+							var diff = ev.time - baseP;
+							var isM = ev.type.indexOf('milestone:') === 0;
+							var isErr = ev.type.indexOf('error:') === 0;
+							var col = isErr ? '#ef4444' : (isM ? '#38bdf8' : '#94a3b8');
+							html += '<div style="color:' + col + ';word-break:break-all;">[' + formatTime(ev.time) + ' +' + diff + 'ms] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : '') + '</div>';
+						});
+					}
+					html += '</div></details>';
+					html += '</div>';
+
+					// CURRENT SESSION
+					html += '<div style="background:#18181b;border:1px solid #1e3a8a;padding:6px;border-radius:4px;">';
+					html += '<div style="font-weight:bold;color:#60a5fa;font-size:11px;margin-bottom:4px;">▶ CURRENT SESSION</div>';
+
+					var lastCurrM = null;
+					for (var j = diagEvents.length - 1; j >= 0; j--) {
+						if (diagEvents[j].type && diagEvents[j].type.indexOf('milestone:') === 0) {
+							lastCurrM = diagEvents[j];
+							break;
+						}
+					}
+					html += '<div style="color:#34d399;font-size:10px;margin-bottom:4px;"><strong>Last Milestone:</strong> ' + (lastCurrM ? (formatTime(lastCurrM.time) + ' ' + lastCurrM.type + ' ' + JSON.stringify(lastCurrM.detail || {})) : '<span style="color:#64748b">None</span>') + '</div>';
+
+					if (diagErrors.length > 0) {
+						html += '<div style="color:#ef4444;font-size:10px;font-weight:bold;margin-top:4px;">Errors (' + diagErrors.length + '):</div>';
+						diagErrors.forEach(function (er) {
+							html += '<div style="color:#fca5a5;font-size:10px;padding-left:8px;word-break:break-word;">• ' + formatTime(er.time) + ' [' + er.type + '] ' + er.message + '</div>';
+						});
+					}
+
+					html += '<details open style="margin-top:4px;"><summary style="font-size:10px;color:#60a5fa;cursor:pointer;">Live Events (' + diagEvents.length + ' events)</summary>';
+					html += '<div style="max-height:120px;overflow-y:auto;background:#09090b;padding:4px;border-radius:2px;margin-top:2px;font-size:10px;">';
+					if (diagEvents.length === 0) {
+						html += '<div style="color:#64748b;">(No events yet)</div>';
+					} else {
+						var baseC = diagEvents[0].time;
+						diagEvents.forEach(function (ev) {
+							var diff = ev.time - baseC;
+							var isM = ev.type.indexOf('milestone:') === 0;
+							var isErr = ev.type.indexOf('error:') === 0;
+							var col = isErr ? '#ef4444' : (isM ? '#34d399' : '#94a3b8');
+							html += '<div style="color:' + col + ';word-break:break-all;">[' + formatTime(ev.time) + ' +' + diff + 'ms] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : '') + '</div>';
+						});
+					}
+					html += '</div></details>';
+					html += '</div>';
+
+					details.innerHTML = html;
+				}
+
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', createDiagUI);
+				} else {
+					createDiagUI();
+				}
+			}
 		}());
 		</script>
-		<script src="index.js?v=20261010-v1"></script>
-		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
+		<script src="index.js?v=20261026-diag-v1"></script>
+		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
 			<img id="status-splash" src="index.png" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
 		</div>
 
 										<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":26358112,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":77487344,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -402,16 +894,24 @@ const engine = new Engine(GODOT_CONFIG);
 		}, 3000);
 
 		window.addEventListener('error', function (event) {
-			console.error('Startup error:', event.error || event.message);
+			var errMsg = (event.error && (event.error.message || event.error.stack)) || event.message || 'Script error';
+			console.error('[4TM-DIAG] Uncaught error:', errMsg);
+			if (typeof window.__4TM_RECORD_ERROR__ === 'function') {
+				window.__4TM_RECORD_ERROR__('uncaught_error', errMsg, { filename: event.filename, lineno: event.lineno, colno: event.colno });
+			}
 			if (initializing) {
 				displayFailureNotice(event.error || event.message || 'Global script error occurred during startup.');
 			}
 		});
 		window.addEventListener('unhandledrejection', function (event) {
-			console.error('Unhandled rejection during startup:', event.reason);
+			var reason = event.reason ? (event.reason.message || event.reason.stack || event.reason) : 'Unhandled rejection';
+			console.error('[4TM-DIAG] Unhandled rejection:', reason);
+			if (typeof window.__4TM_RECORD_ERROR__ === 'function') {
+				window.__4TM_RECORD_ERROR__('unhandled_rejection', reason, {});
+			}
 			if (initializing) {
-				var reason = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';
-				displayFailureNotice('Startup rejection: ' + reason);
+				var rMsg = event.reason ? (event.reason.message || event.reason) : 'Unhandled promise rejection.';
+				displayFailureNotice('Startup rejection: ' + rMsg);
 			}
 		});
 
@@ -439,9 +939,24 @@ const engine = new Engine(GODOT_CONFIG);
 				statusOverlay.remove();
 			}
 			initializing = false;
+			// On Safari web only (non-PWA standalone), switch browser-visible background and theme-color to navy blue #293D8A
+			var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+			var isStandalone = !!(window.navigator && window.navigator.standalone) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+			var isSafari = isIOS || /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+			if (isSafari && !isStandalone) {
+				document.body.style.backgroundColor = '#293D8A';
+				document.documentElement.style.backgroundColor = '#293D8A';
+				var metaTheme = document.querySelector('meta[name="theme-color"]');
+				if (metaTheme) {
+					metaTheme.setAttribute('content', '#293D8A');
+				}
+			}
 		}, function (err) {
 			if (watchdogTimer) clearInterval(watchdogTimer);
 			console.error('Godot startup failure:', err);
+			if (typeof window.__4TM_RECORD_ERROR__ === 'function') {
+				window.__4TM_RECORD_ERROR__('godot_startup_failure', err, {});
+			}
 			displayFailureNotice(err);
 		});
 	}

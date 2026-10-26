@@ -2953,6 +2953,7 @@ func trigger_level_complete(achieved_score: int = score) -> Dictionary:
 		var prev_state := current_state
 		current_state = State.GAME_OVER
 		session_stats = comp.duplicate()
+		log_diag_milestone("level_complete", {"level": active_level, "score": achieved_score})
 		state_changed.emit(current_state, prev_state)
 		game_over_triggered.emit(achieved_score, active_level, session_stats)
 	return comp
@@ -2988,6 +2989,7 @@ func trigger_game_over(stats: Dictionary = {}) -> void:
 	session_stats = merged_stats
 	
 	progression_updated.emit(highest_unlocked_level, total_stars, coins)
+	log_diag_milestone("game_over", {"level": active_level, "score": score})
 	state_changed.emit(current_state, prev_state)
 	game_over_triggered.emit(score, active_level, session_stats)
 

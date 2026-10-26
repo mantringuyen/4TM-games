@@ -5144,9 +5144,13 @@ func _on_btn_start_pressed() -> void:
 		state_mgr.log_diag_milestone("start_btn_pressed", {"mode": selected_mode, "style": selected_play_style})
 	if _is_starting_game:
 		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (re-entrancy lock active)" % Time.get_ticks_msec())
+		if state_mgr and state_mgr.has_method("log_diag_milestone"):
+			state_mgr.log_diag_milestone("start_btn_rejected", {"reason": "reentrancy_lock"})
 		return
 	if state_mgr and "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
 		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — DEFERRED (previous session teardown in progress)" % Time.get_ticks_msec())
+		if state_mgr and state_mgr.has_method("log_diag_milestone"):
+			state_mgr.log_diag_milestone("start_btn_deferred", {"reason": "teardown_pending", "teardown_id": state_mgr.teardown_session_id})
 		if not _deferred_start_pending:
 			_deferred_start_pending = true
 			if state_mgr.has_signal("session_teardown_completed"):
@@ -5159,6 +5163,8 @@ func _on_btn_start_pressed() -> void:
 		if state_mgr.has_method("can_start_play_session") and not state_mgr.can_start_play_session():
 			_is_starting_game = false
 			print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (insufficient energy)" % Time.get_ticks_msec())
+			if state_mgr.has_method("log_diag_milestone"):
+				state_mgr.log_diag_milestone("start_btn_rejected", {"reason": "insufficient_energy", "energy": state_mgr.get_energy()})
 			var msg: String = state_mgr.tr_text("energy_empty_toast") if state_mgr.has_method("tr_text") else "Out of Energy! Watch an ad (+) or wait for hourly refill."
 			_show_reward_toast(msg)
 			_refresh_energy_ui()
@@ -5180,6 +5186,8 @@ func _on_session_teardown_completed(_teardown_id: int) -> void:
 	if _deferred_start_pending:
 		_deferred_start_pending = false
 		var gs = get_node_or_null("/root/GameState")
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("deferred_start_triggering", {"teardown_id": _teardown_id})
 		if gs and gs.current_state == GameStateScript.State.MENU:
 			print("[%d] [LIFECYCLE] MainMenu: Executing deferred Start after teardown completed" % Time.get_ticks_msec())
 			_on_btn_start_pressed()
