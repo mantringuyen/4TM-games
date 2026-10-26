@@ -59,6 +59,7 @@ const COLOR_MAP: Dictionary = {
 var grid_data: Array = []
 var grid_materials: Array = []
 var grid_special_items: Array = []
+var _has_logged_initialized: bool = false
 
 # Ghost Preview State
 var preview_active: bool = false
@@ -259,6 +260,14 @@ func _ready() -> void:
 		if not audio_mgr.voice_callout_triggered.is_connected(_on_board_voice_callout):
 			audio_mgr.voice_callout_triggered.connect(_on_board_voice_callout)
 	queue_redraw()
+	if not _has_logged_initialized:
+		_has_logged_initialized = true
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("board_initialized", {
+				"instance_id": get_instance_id(),
+				"rows": GRID_ROWS,
+				"cols": GRID_COLS
+			})
 
 
 func _process(delta: float) -> void:
@@ -419,9 +428,6 @@ func _init_grid_data() -> void:
 		grid_data.append(row)
 		grid_materials.append(mat_row)
 		grid_special_items.append(sp_row)
-	var gs = _get_game_state()
-	if gs and gs.has_method("log_diag_milestone"):
-		gs.log_diag_milestone("board_initialized", {"rows": GRID_ROWS, "cols": GRID_COLS})
 
 
 # ==============================================================================

@@ -30,6 +30,11 @@ var world_sparkles: Array = [
 
 var _pending_teardown_id: int = 0
 var _pending_teardown_nodes: Array[Node] = []
+var _is_session_active: bool = false
+var _session_id: int = 0
+var _session_frame_count: int = 0
+var _session_elapsed_sec: float = 0.0
+var _session_logged_frame_milestones: Dictionary = {}
 
 
 func _exit_tree() -> void:
@@ -55,6 +60,35 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	anim_time += delta
+	if _is_session_active:
+		_session_frame_count += 1
+		_session_elapsed_sec += delta
+		_check_session_frame_milestones()
+
+
+func _check_session_frame_milestones() -> void:
+	var state_mgr = _get_game_state()
+	if not state_mgr or not state_mgr.has_method("log_diag_milestone"):
+		return
+	
+	var target_frames: Array[int] = [1, 5, 30, 60, 120, 180]
+	if _session_frame_count in target_frames and not _session_logged_frame_milestones.has(_session_frame_count):
+		_session_logged_frame_milestones[_session_frame_count] = true
+		var mem_mb: float = 0.0
+		if OS.has_method("get_static_memory_usage"):
+			mem_mb = round(float(OS.get_static_memory_usage()) / (1024.0 * 1024.0) * 10.0) / 10.0
+		var node_cnt: int = 0
+		if Performance:
+			node_cnt = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+		
+		state_mgr.log_diag_milestone("start_frame_%d" % _session_frame_count, {
+			"session": _session_id,
+			"frame": _session_frame_count,
+			"elapsed_ms": int(_session_elapsed_sec * 1000.0),
+			"fps": Engine.get_frames_per_second(),
+			"nodes": node_cnt,
+			"mem_mb": mem_mb
+		})
 
 
 func _draw() -> void:
@@ -95,6 +129,9 @@ func _on_game_started(mode: int) -> void:
 	is_modern_world = (mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
 	queue_redraw()
 	
+	if state_mgr and state_mgr.has_method("log_diag_milestone"):
+		state_mgr.log_diag_milestone("mode_instantiating", {"session": sess_num, "mode": mode, "style": style})
+	
 	match style:
 		GameStateScript.PlayStyle.FALLING:
 			active_mode_node = ClassicModeScript.new()
@@ -110,7 +147,19 @@ func _on_game_started(mode: int) -> void:
 		if active_mode_node.has_method("start_mode"):
 			active_mode_node.start_mode()
 		if state_mgr and state_mgr.has_method("log_diag_milestone"):
-			state_mgr.log_diag_milestone("mode_created", {"mode": mode, "style": style, "node": active_mode_node.get_class()})
+			state_mgr.log_diag_milestone("mode_created", {
+				"session": sess_num,
+				"mode": mode,
+				"style": style,
+				"node": active_mode_node.get_class(),
+				"instance_id": active_mode_node.get_instance_id()
+			})
+	
+	_session_id = sess_num
+	_session_frame_count = 0
+	_session_elapsed_sec = 0.0
+	_session_logged_frame_milestones.clear()
+	_is_session_active = true
 	print("[%d] [LIFECYCLE] GameWorld: _on_game_started COMPLETED (took=%dms)" % [Time.get_ticks_msec(), Time.get_ticks_msec() - start_ms])
 
 
@@ -131,6 +180,8 @@ func get_active_mode() -> Node2D:
 
 
 func _on_state_changed(new_state: int, _prev_state: int) -> void:
+	if new_state != GameStateScript.State.PLAYING:
+		_is_session_active = false
 	if new_state == GameStateScript.State.MENU:
 		_clear_active_mode()
 	elif new_state == GameStateScript.State.PAUSED and active_mode_node:
@@ -166,6 +217,8 @@ func _clear_active_mode() -> void:
 	if state_mgr and "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
 		active_teardown_id = int(state_mgr.teardown_session_id)
 	
+	_is_session_active = false
+	_session_logged_frame_milestones.clear()
 	_stop_teardown_polling()
 
 	var nodes_to_watch: Array[Node] = []
