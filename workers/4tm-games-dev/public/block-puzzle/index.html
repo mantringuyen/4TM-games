@@ -48,6 +48,9 @@
 		
 		
 		
+		
+		
+		
 		<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#414141">
@@ -59,6 +62,15 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
 		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
 		<link rel="manifest" href="manifest.json">
+		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
+		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
+		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
+		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
+		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
+		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
 		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
 		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
 		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
@@ -219,7 +231,7 @@ html, body {
 			Your browser does not support JavaScript.
 		</noscript>
 
-																																																																														<script>
+																																																																																				<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
@@ -294,6 +306,28 @@ html, body {
 			var lastRecordedMilestoneTime = 0;
 			var hbCount = 0;
 			var prevHeartbeat = null;
+			var rafCount = 0;
+			var rafLastTime = 0;
+			var rafFps = 0;
+			var rafPeriodStart = Date.now();
+			var rafFramesInPeriod = 0;
+			function rafTrack() {
+				rafCount++;
+				rafLastTime = Date.now();
+				rafFramesInPeriod++;
+				var elapsed = rafLastTime - rafPeriodStart;
+				if (elapsed >= 1000) {
+					rafFps = Math.round((rafFramesInPeriod * 1000) / elapsed);
+					rafFramesInPeriod = 0;
+					rafPeriodStart = rafLastTime;
+				}
+				if (typeof window.requestAnimationFrame === 'function') {
+					window.requestAnimationFrame(rafTrack);
+				}
+			}
+			if (typeof window.requestAnimationFrame === 'function') {
+				window.requestAnimationFrame(rafTrack);
+			}
 
 			function hasMilestones(evList) {
 				if (!evList || !evList.length) return false;
@@ -321,6 +355,9 @@ html, body {
 			try {
 				var hist = loadDiagHistory();
 				if (hist && typeof hist === 'object') {
+					if (hist.prevHeartbeat && (!prevHeartbeat || !prevHeartbeat.time)) {
+						prevHeartbeat = hist.prevHeartbeat;
+					}
 					sessionCount = (hist.sessionCount || 1) + 1;
 					var curr = Array.isArray(hist.currentEvents) ? hist.currentEvents : (Array.isArray(hist.events) ? hist.events : []);
 					var currErr = Array.isArray(hist.currentErrors) ? hist.currentErrors : (Array.isArray(hist.errors) ? hist.errors : []);
@@ -343,6 +380,10 @@ html, body {
 						prevSessionLastUpdated = hist.prevLastUpdated || 0;
 					}
 				}
+				if (prevHeartbeat) {
+					if (window.sessionStorage) window.sessionStorage.setItem('__4TM_PREV_HEARTBEAT__', JSON.stringify(prevHeartbeat));
+					if (window.localStorage) window.localStorage.setItem('__4TM_PREV_HEARTBEAT__', JSON.stringify(prevHeartbeat));
+				}
 			} catch (e) {}
 
 			function saveDiagHistory() {
@@ -351,6 +392,7 @@ html, body {
 							prevEvents: prevSessionEvents,
 							prevErrors: prevSessionErrors,
 							prevLastUpdated: prevSessionLastUpdated,
+							prevHeartbeat: prevHeartbeat,
 							currentEvents: diagEvents,
 							currentErrors: diagErrors,
 							events: diagEvents,
@@ -372,7 +414,11 @@ html, body {
 						sessionCount: sessionCount,
 						lastMilestone: lastRecordedMilestoneName,
 						lastMilestoneTime: lastRecordedMilestoneTime,
-						visibility: document.visibilityState
+						visibility: document.visibilityState,
+						rafCount: rafCount,
+						lastRafTime: rafLastTime,
+						rafFps: rafFps,
+						rafActive: (rafLastTime > 0 && (now - rafLastTime < 1000))
 					};
 					if (window.sessionStorage) window.sessionStorage.setItem('__4TM_HEARTBEAT__', JSON.stringify(hbObj));
 					if (window.localStorage) window.localStorage.setItem('__4TM_HEARTBEAT__', JSON.stringify(hbObj));
@@ -388,9 +434,36 @@ html, body {
 				}
 			}
 
+			function formatDetailStr(detail) {
+				if (!detail || Object.keys(detail).length === 0) return '';
+				try {
+					var copy = JSON.parse(JSON.stringify(detail));
+					if (copy.mem_mb === 0 || copy.mem_mb === 'unsupported_on_web') {
+						copy.mem_mb = 'N/A (unsupported on web)';
+					}
+					return ' ' + JSON.stringify(copy);
+				} catch (e) {
+					return ' ' + JSON.stringify(detail);
+				}
+			}
+
 			function getTerminationAnalysis() {
 				if (!prevSessionEvents || prevSessionEvents.length === 0) {
-					return { type: 'NO_PREVIOUS_SESSION', hadUnload: false, lastHeartbeatTime: 0, deltaToInitMs: 0, alivePostMilestoneMs: 0, lastMilestone: null, heartbeatCount: 0 };
+					return {
+						type: 'NO_PREVIOUS_SESSION',
+						description: 'No previous session recorded in storage',
+						hadUnload: false,
+						lastHeartbeatTime: 0,
+						deltaToInitMs: 0,
+						alivePostMilestoneMs: 0,
+						lastMilestone: null,
+						heartbeatCount: 0,
+						rafCount: 0,
+						lastRafTime: 0,
+						rafFps: 0,
+						rafActive: false,
+						rafAlivePostMilestoneMs: 0
+					};
 				}
 				var hadUnload = false;
 				for (var i = 0; i < prevSessionEvents.length; i++) {
@@ -410,30 +483,46 @@ html, body {
 				var lastHbTime = (prevHeartbeat && prevHeartbeat.time) ? prevHeartbeat.time : (prevSessionLastUpdated || 0);
 				var hbDeltaToInit = currentSessionInitTime - lastHbTime;
 				var alivePostMilestone = (lastPrevM && lastHbTime >= lastPrevM.time) ? (lastHbTime - lastPrevM.time) : 0;
+				var prevRafCount = (prevHeartbeat && prevHeartbeat.rafCount) || 0;
+				var prevLastRafTime = (prevHeartbeat && prevHeartbeat.lastRafTime) || 0;
+				var prevRafFps = (prevHeartbeat && prevHeartbeat.rafFps) || 0;
+				var prevRafActive = !!(prevHeartbeat && prevHeartbeat.rafActive);
+				var rafAlivePostMilestone = (lastPrevM && prevLastRafTime >= lastPrevM.time) ? (prevLastRafTime - lastPrevM.time) : 0;
+
 				var termType = 'NORMAL_UNLOAD';
+				var termDesc = 'Clean page unload event captured';
 				if (!hadUnload) {
 					if (prevSessionErrors && prevSessionErrors.length > 0) {
-						termType = 'ERROR_BEFORE_TERMINATION';
+						termType = 'ERROR_BEFORE_RELOAD';
+						termDesc = 'Errors captured before page reload';
 					} else if (webglStats && webglStats.lossCount > 0) {
 						termType = 'WEBGL_CONTEXT_LOSS';
+						termDesc = 'WebGL context lost before page reload';
 					} else {
-						termType = 'SILENT_PROCESS_TERMINATION';
+						termType = 'NO_CLEAN_UNLOAD_RECORDED';
+						termDesc = 'No clean unload or captured error recorded';
 					}
 				}
 				return {
 					type: termType,
+					description: termDesc,
 					hadUnload: hadUnload,
 					lastHeartbeatTime: lastHbTime,
 					deltaToInitMs: hbDeltaToInit,
 					alivePostMilestoneMs: alivePostMilestone,
 					lastMilestone: lastPrevM,
-					heartbeatCount: prevHeartbeat ? prevHeartbeat.count : 0
+					heartbeatCount: prevHeartbeat ? prevHeartbeat.count : 0,
+					rafCount: prevRafCount,
+					lastRafTime: prevLastRafTime,
+					rafFps: prevRafFps,
+					rafActive: prevRafActive,
+					rafAlivePostMilestoneMs: rafAlivePostMilestone
 				};
 			}
 
 			function recordDiagEvent(type, detail) {
 				try {
-					var entry = { type: type, time: Date.now(), detail: detail || {} };
+					var entry = { type: type, time: Date.now(), detail: detail || {}, raf: rafCount, fps: rafFps };
 					if (type.indexOf('milestone:') === 0) {
 						lastRecordedMilestoneName = type;
 						lastRecordedMilestoneTime = entry.time;
@@ -450,7 +539,6 @@ html, body {
 					}
 				} catch (e) {}
 			}
-
 			function recordDiagError(type, message, details) {
 				try {
 					var entry = {
@@ -633,14 +721,30 @@ html, body {
 				var term = getTerminationAnalysis();
 				lines.push('');
 				lines.push('--- PREVIOUS SESSION TERMINATION ANALYSIS ---');
-				lines.push('Termination Status: ' + term.type);
-				lines.push('Clean Page Unload Fired: ' + (term.hadUnload ? 'YES (clean unload recorded)' : 'NO (terminated silently without lifecycle unmount)'));
+				lines.push('Termination Status: ' + term.type + ' (' + term.description + ')');
+				lines.push('Observed Facts:');
+				lines.push('  • Clean Page Unload Fired: ' + (term.hadUnload ? 'YES' : 'NO (terminated or reloaded without pagehide/beforeunload)'));
+				lines.push('  • Captured Errors: ' + prevSessionErrors.length + ' JS errors, ' + webglStats.lossCount + ' WebGL losses');
 				if (term.lastHeartbeatTime > 0) {
-					lines.push('Last Alive Heartbeat: ' + formatTime(term.lastHeartbeatTime) + ' (~' + term.deltaToInitMs + 'ms before next session init)');
+					lines.push('  • Last Alive Heartbeat: ' + formatTime(term.lastHeartbeatTime) + ' (~' + term.deltaToInitMs + 'ms before next session init)');
 					if (term.lastMilestone && term.alivePostMilestoneMs > 0) {
-						lines.push('Alive Duration After ' + term.lastMilestone.type + ': +' + term.alivePostMilestoneMs + 'ms');
+						lines.push('  • Alive Duration After ' + term.lastMilestone.type + ': +' + term.alivePostMilestoneMs + 'ms');
 					}
 				}
+				if (term.rafCount > 0) {
+					lines.push('  • Browser Animation Loop (rAF): ' + term.rafCount + ' frames (FPS: ~' + term.rafFps + ', last rAF: ' + formatTime(term.lastRafTime) + ')');
+					if (term.lastMilestone && term.rafAlivePostMilestoneMs > 0) {
+						lines.push('  • Browser rAF Active Post-Milestone: +' + term.rafAlivePostMilestoneMs + 'ms after ' + term.lastMilestone.type);
+					}
+				}
+				lines.push('Diagnostic Hypotheses & Context:');
+				if (term.type === 'NO_CLEAN_UNLOAD_RECORDED') {
+					lines.push('  • No clean unload or runtime error was captured. Lack of unload does NOT prove a process crash or WebKit Jetsam OOM kill.');
+					lines.push('  • Mobile Safari frequently reloads or replaces pages without firing pagehide (e.g. system discard, user refresh, or engine stall).');
+				} else if (term.type === 'NORMAL_UNLOAD') {
+					lines.push('  • Normal page lifecycle unload was recorded.');
+				}
+				lines.push('  • Note: mem_mb=0/unsupported on Web export is an engine stub; it does not indicate low memory pressure.');
 				lines.push('');
 				lines.push('--- PREVIOUS SESSION (BEFORE RELOAD) ---');
 				lines.push('Last Updated: ' + (prevSessionLastUpdated ? new Date(prevSessionLastUpdated).toISOString() : 'N/A'));
@@ -652,9 +756,9 @@ html, body {
 						break;
 					}
 				}
-				lines.push('Last Milestone Before Reload: ' + (lastPrevM ? (formatTime(lastPrevM.time) + ' ' + lastPrevM.type + ' ' + JSON.stringify(lastPrevM.detail || {})) : 'None'));
+				lines.push('Last Milestone Before Reload: ' + (lastPrevM ? (formatTime(lastPrevM.time) + ' ' + lastPrevM.type + formatDetailStr(lastPrevM.detail)) : 'None'));
 				var lastPrevE = prevSessionEvents.length > 0 ? prevSessionEvents[prevSessionEvents.length - 1] : null;
-				lines.push('Last Event Before Reload: ' + (lastPrevE ? (formatTime(lastPrevE.time) + ' ' + lastPrevE.type + ' ' + JSON.stringify(lastPrevE.detail || {})) : 'None'));
+				lines.push('Last Event Before Reload: ' + (lastPrevE ? (formatTime(lastPrevE.time) + ' ' + lastPrevE.type + formatDetailStr(lastPrevE.detail)) : 'None'));
 				lines.push('Previous Errors (' + prevSessionErrors.length + '):');
 				if (prevSessionErrors.length === 0) {
 					lines.push('  (none)');
@@ -670,7 +774,7 @@ html, body {
 					var baseP = prevSessionEvents[0].time;
 					prevSessionEvents.forEach(function (ev) {
 						var diff = ev.time - baseP;
-						lines.push('  [' + formatTime(ev.time) + ' (+' + diff + 'ms)] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : ''));
+						lines.push('  [' + formatTime(ev.time) + ' (+' + diff + 'ms)] ' + ev.type + formatDetailStr(ev.detail));
 					});
 				}
 				lines.push('');
@@ -683,7 +787,7 @@ html, body {
 						break;
 					}
 				}
-				lines.push('Last Milestone: ' + (lastCurrM ? (formatTime(lastCurrM.time) + ' ' + lastCurrM.type + ' ' + JSON.stringify(lastCurrM.detail || {})) : 'None'));
+				lines.push('Last Milestone: ' + (lastCurrM ? (formatTime(lastCurrM.time) + ' ' + lastCurrM.type + formatDetailStr(lastCurrM.detail)) : 'None'));
 				lines.push('Current Errors (' + diagErrors.length + '):');
 				if (diagErrors.length === 0) {
 					lines.push('  (none)');
@@ -699,7 +803,7 @@ html, body {
 					var baseC = diagEvents[0].time;
 					diagEvents.forEach(function (ev) {
 						var diff = ev.time - baseC;
-						lines.push('  [' + formatTime(ev.time) + ' (+' + diff + 'ms)] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : ''));
+						lines.push('  [' + formatTime(ev.time) + ' (+' + diff + 'ms)] ' + ev.type + formatDetailStr(ev.detail));
 					});
 				}
 				lines.push('==========================================');
@@ -807,18 +911,20 @@ html, body {
 					html += '</div>';
 
 					// PREVIOUS SESSION
-					html += '<div style="background:#18181b;border:1px solid #7f1d1d;padding:6px;border-radius:4px;margin-bottom:8px;">';
+					var term = getTerminationAnalysis();
+					var prevBorderCol = (term.type === 'ERROR_BEFORE_RELOAD' || term.type === 'WEBGL_CONTEXT_LOSS') ? '#7f1d1d' : ((term.type === 'NO_CLEAN_UNLOAD_RECORDED') ? '#b45309' : '#334155');
+					html += '<div style="background:#18181b;border:1px solid ' + prevBorderCol + ';padding:6px;border-radius:4px;margin-bottom:8px;">';
 					html += '<div style="font-weight:bold;color:#f87171;font-size:11px;margin-bottom:4px;">⏮ PREVIOUS SESSION (BEFORE RELOAD)</div>';
 
-					var term = getTerminationAnalysis();
-					if (term.type === 'SILENT_PROCESS_TERMINATION') {
-						html += '<div style="background:#450a0a;border:1px solid #ef4444;color:#fca5a5;padding:6px;border-radius:4px;margin-bottom:6px;font-size:10px;">' +
-							'<strong>⚡ TERMINATION: SILENT_PROCESS_TERMINATION</strong><br>' +
-							'Clean unload was NOT fired. Session was alive at ' + formatTime(term.lastHeartbeatTime) + ' (+' + term.alivePostMilestoneMs + 'ms after last milestone, ~' + term.deltaToInitMs + 'ms before reload). Characteristic of WebKit Jetsam OOM kill or process crash.' +
+					if (term.type === 'NO_CLEAN_UNLOAD_RECORDED') {
+						html += '<div style="background:#1c1917;border:1px solid #d97706;color:#fde68a;padding:6px;border-radius:4px;margin-bottom:6px;font-size:10px;">' +
+							'<div style="font-weight:bold;color:#f59e0b;margin-bottom:2px;">ℹ STATUS: No clean unload or captured error recorded</div>' +
+							'<div><strong>Observed facts:</strong> No pagehide/beforeunload event fired. Session alive at ' + formatTime(term.lastHeartbeatTime) + ' (+' + term.alivePostMilestoneMs + 'ms after last milestone, ~' + term.deltaToInitMs + 'ms before next init). Browser rAF loop: ' + (term.rafCount > 0 ? (term.rafCount + ' frames, ~' + term.rafFps + ' FPS, active +' + term.rafAlivePostMilestoneMs + 'ms post-milestone') : 'N/A') + '. 0 JS errors, 0 WebGL context losses.</div>' +
+							'<div style="color:#94a3b8;margin-top:2px;font-style:italic;">Hypotheses: WebKit process swap, reload, or discard without pagehide. Not confirmed as crash or OOM.</div>' +
 							'</div>';
 					} else if (term.type !== 'NO_PREVIOUS_SESSION') {
 						html += '<div style="background:#064e3b;border:1px solid #10b981;color:#6ee7b7;padding:4px 6px;border-radius:4px;margin-bottom:6px;font-size:10px;">' +
-							'<strong>Unload Status:</strong> ' + term.type + ' (Clean unload fired: ' + (term.hadUnload ? 'Yes' : 'No') + ')' +
+							'<strong>Status:</strong> ' + term.description + ' (Clean unload fired: ' + (term.hadUnload ? 'Yes' : 'No') + ')' +
 							'</div>';
 					}
 
@@ -831,7 +937,7 @@ html, body {
 					}
 					var lastPrevE = prevSessionEvents.length > 0 ? prevSessionEvents[prevSessionEvents.length - 1] : null;
 
-					html += '<div style="color:#fbbf24;font-size:10px;margin-bottom:2px;"><strong>Last Milestone:</strong> ' + (lastPrevM ? (formatTime(lastPrevM.time) + ' ' + lastPrevM.type + ' ' + JSON.stringify(lastPrevM.detail || {})) : '<span style="color:#64748b">None</span>') + '</div>';
+					html += '<div style="color:#fbbf24;font-size:10px;margin-bottom:2px;"><strong>Last Milestone:</strong> ' + (lastPrevM ? (formatTime(lastPrevM.time) + ' ' + lastPrevM.type + formatDetailStr(lastPrevM.detail)) : '<span style="color:#64748b">None</span>') + '</div>';
 					html += '<div style="color:#94a3b8;font-size:10px;margin-bottom:4px;"><strong>Last Event:</strong> ' + (lastPrevE ? (formatTime(lastPrevE.time) + ' ' + lastPrevE.type) : '<span style="color:#64748b">None</span>') + '</div>';
 
 					if (prevSessionErrors.length > 0) {
@@ -852,7 +958,7 @@ html, body {
 							var isM = ev.type.indexOf('milestone:') === 0;
 							var isErr = ev.type.indexOf('error:') === 0;
 							var col = isErr ? '#ef4444' : (isM ? '#38bdf8' : '#94a3b8');
-							html += '<div style="color:' + col + ';word-break:break-all;">[' + formatTime(ev.time) + ' +' + diff + 'ms] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : '') + '</div>';
+							html += '<div style="color:' + col + ';word-break:break-all;">[' + formatTime(ev.time) + ' +' + diff + 'ms] ' + ev.type + formatDetailStr(ev.detail) + '</div>';
 						});
 					}
 					html += '</div></details>';
@@ -869,7 +975,7 @@ html, body {
 							break;
 						}
 					}
-					html += '<div style="color:#34d399;font-size:10px;margin-bottom:4px;"><strong>Last Milestone:</strong> ' + (lastCurrM ? (formatTime(lastCurrM.time) + ' ' + lastCurrM.type + ' ' + JSON.stringify(lastCurrM.detail || {})) : '<span style="color:#64748b">None</span>') + '</div>';
+					html += '<div style="color:#34d399;font-size:10px;margin-bottom:4px;"><strong>Last Milestone:</strong> ' + (lastCurrM ? (formatTime(lastCurrM.time) + ' ' + lastCurrM.type + formatDetailStr(lastCurrM.detail)) : '<span style="color:#64748b">None</span>') + '</div>';
 
 					if (diagErrors.length > 0) {
 						html += '<div style="color:#ef4444;font-size:10px;font-weight:bold;margin-top:4px;">Errors (' + diagErrors.length + '):</div>';
@@ -889,7 +995,7 @@ html, body {
 							var isM = ev.type.indexOf('milestone:') === 0;
 							var isErr = ev.type.indexOf('error:') === 0;
 							var col = isErr ? '#ef4444' : (isM ? '#34d399' : '#94a3b8');
-							html += '<div style="color:' + col + ';word-break:break-all;">[' + formatTime(ev.time) + ' +' + diff + 'ms] ' + ev.type + (ev.detail && Object.keys(ev.detail).length > 0 ? (' ' + JSON.stringify(ev.detail)) : '') + '</div>';
+							html += '<div style="color:' + col + ';word-break:break-all;">[' + formatTime(ev.time) + ' +' + diff + 'ms] ' + ev.type + formatDetailStr(ev.detail) + '</div>';
 						});
 					}
 					html += '</div></details>';
@@ -907,14 +1013,15 @@ html, body {
 		}());
 		</script>
 		<script src="index.js?v=20261026-diag-v1"></script>
-		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
+
+		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
 			<img id="status-splash" src="index.png" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
 		</div>
 
 										<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":77488032,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":77490064,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

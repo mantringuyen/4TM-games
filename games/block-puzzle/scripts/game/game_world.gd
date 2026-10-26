@@ -35,6 +35,7 @@ var _session_id: int = 0
 var _session_frame_count: int = 0
 var _session_elapsed_sec: float = 0.0
 var _session_logged_frame_milestones: Dictionary = {}
+var _session_first_process_logged: bool = false
 
 
 func _exit_tree() -> void:
@@ -61,6 +62,14 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	anim_time += delta
 	if _is_session_active:
+		if not _session_first_process_logged:
+			_session_first_process_logged = true
+			var state_mgr = _get_game_state()
+			if state_mgr and state_mgr.has_method("log_diag_milestone"):
+				state_mgr.log_diag_milestone("session_first_process", {
+					"session": _session_id,
+					"delta_ms": int(delta * 1000.0)
+				})
 		_session_frame_count += 1
 		_session_elapsed_sec += delta
 		_check_session_frame_milestones()
@@ -71,12 +80,12 @@ func _check_session_frame_milestones() -> void:
 	if not state_mgr or not state_mgr.has_method("log_diag_milestone"):
 		return
 	
-	var target_frames: Array[int] = [1, 5, 30, 60, 120, 180]
+	var target_frames: Array[int] = [1, 2, 3, 5, 10, 30, 60, 120, 180]
 	if _session_frame_count in target_frames and not _session_logged_frame_milestones.has(_session_frame_count):
 		_session_logged_frame_milestones[_session_frame_count] = true
-		var mem_mb: float = 0.0
-		if OS.has_method("get_static_memory_usage"):
-			mem_mb = round(float(OS.get_static_memory_usage()) / (1024.0 * 1024.0) * 10.0) / 10.0
+		var mem_val: Variant = "unsupported_on_web"
+		if not OS.has_feature("web") and OS.has_method("get_static_memory_usage"):
+			mem_val = round(float(OS.get_static_memory_usage()) / (1024.0 * 1024.0) * 10.0) / 10.0
 		var node_cnt: int = 0
 		if Performance:
 			node_cnt = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
@@ -87,7 +96,7 @@ func _check_session_frame_milestones() -> void:
 			"elapsed_ms": int(_session_elapsed_sec * 1000.0),
 			"fps": Engine.get_frames_per_second(),
 			"nodes": node_cnt,
-			"mem_mb": mem_mb
+			"mem_mb": mem_val
 		})
 
 
@@ -142,10 +151,16 @@ func _on_game_started(mode: int) -> void:
 		if active_mode_node.has_method("configure_combination"):
 			active_mode_node.configure_combination(mode, style)
 		mode_container.add_child(active_mode_node)
+		if state_mgr and state_mgr.has_method("log_diag_milestone"):
+			state_mgr.log_diag_milestone("mode_node_added", {"session": sess_num})
 		if active_mode_node.has_method("initialize_mode"):
 			active_mode_node.initialize_mode()
+		if state_mgr and state_mgr.has_method("log_diag_milestone"):
+			state_mgr.log_diag_milestone("mode_initialized", {"session": sess_num})
 		if active_mode_node.has_method("start_mode"):
 			active_mode_node.start_mode()
+		if state_mgr and state_mgr.has_method("log_diag_milestone"):
+			state_mgr.log_diag_milestone("mode_started", {"session": sess_num})
 		if state_mgr and state_mgr.has_method("log_diag_milestone"):
 			state_mgr.log_diag_milestone("mode_created", {
 				"session": sess_num,
@@ -159,8 +174,12 @@ func _on_game_started(mode: int) -> void:
 	_session_frame_count = 0
 	_session_elapsed_sec = 0.0
 	_session_logged_frame_milestones.clear()
+	_session_first_process_logged = false
 	_is_session_active = true
-	print("[%d] [LIFECYCLE] GameWorld: _on_game_started COMPLETED (took=%dms)" % [Time.get_ticks_msec(), Time.get_ticks_msec() - start_ms])
+	var took_ms: int = Time.get_ticks_msec() - start_ms
+	print("[%d] [LIFECYCLE] GameWorld: _on_game_started COMPLETED (took=%dms)" % [Time.get_ticks_msec(), took_ms])
+	if state_mgr and state_mgr.has_method("log_diag_milestone"):
+		state_mgr.log_diag_milestone("session_started", {"session": sess_num, "duration_ms": took_ms})
 
 
 func use_special_item(item_id: String) -> bool:
