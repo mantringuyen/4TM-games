@@ -2841,6 +2841,11 @@ func start_next_level() -> bool:
 	return start_level(target_next, current_mode, int(current_play_style))
 
 
+func log_diag_milestone(milestone_name: String, details: Dictionary = {}) -> void:
+	if (OS.get_name().strip_edges().to_lower() == "web" or OS.has_feature("web")) and ClassDB.class_exists("JavaScriptBridge"):
+		JavaScriptBridge.eval("if(window.__4TM_RECORD_MILESTONE__){window.__4TM_RECORD_MILESTONE__(%s, %s);}" % [JSON.stringify(milestone_name), JSON.stringify(details)], true)
+
+
 func start_game_combination(mode: GameMode, style: PlayStyle, lvl: int = -1) -> bool:
 	_play_style_explicit = true
 	return start_game(mode, int(style), lvl)
@@ -2854,14 +2859,17 @@ func complete_session_teardown(teardown_id: int) -> void:
 		return
 	is_teardown_pending = false
 	print("[%d] [LIFECYCLE] GameState: Teardown #%d GENUINELY COMPLETED (is_teardown_pending=false)" % [Time.get_ticks_msec(), teardown_id])
+	log_diag_milestone("teardown_completed", {"teardown_id": teardown_id})
 	session_teardown_completed.emit(teardown_id)
 
 
 func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -> bool:
 	if is_teardown_pending:
 		print("[%d] [LIFECYCLE] GameState: start_game REJECTED (session teardown #%d still in progress)" % [Time.get_ticks_msec(), teardown_session_id])
+		log_diag_milestone("start_game_rejected", {"reason": "teardown_pending", "teardown_id": teardown_session_id})
 		return false
 	if not consume_energy_for_play(1):
+		log_diag_milestone("start_game_rejected", {"reason": "no_energy", "energy": energy})
 		return false
 	var target_lvl: int = lvl if lvl >= 1 else selected_map_level
 	target_lvl = clampi(target_lvl, 1, TOTAL_LEVELS)
@@ -2909,6 +2917,9 @@ func start_game(mode: GameMode = current_mode, style: int = -1, lvl: int = -1) -
 	
 	session_start_counter += 1
 	print("[%d] [LIFECYCLE] GameState: start_game (session #%d, mode=%d, style=%d, level=%d)" % [Time.get_ticks_msec(), session_start_counter, current_mode, current_play_style, target_lvl])
+	log_diag_milestone("start_game_accepted", {"session_id": session_start_counter, "mode": int(current_mode), "style": int(current_play_style), "level": target_lvl})
+	log_diag_milestone("state_changed", {"new_state": int(current_state), "previous_state": int(prev_state)})
+	log_diag_milestone("game_started", {"mode": int(current_mode)})
 	mode_changed.emit(current_mode)
 	play_style_changed.emit(current_play_style)
 	state_changed.emit(current_state, prev_state)
@@ -3071,6 +3082,8 @@ func return_to_menu() -> void:
 	placement_checkpoints.clear()
 	session_stats.clear()
 	print("[%d] [LIFECYCLE] GameState: return_to_menu (State -> MENU, teardown_id=%d, teardown_pending=true)" % [Time.get_ticks_msec(), tid])
+	log_diag_milestone("return_to_menu", {"teardown_id": tid, "previous_state": int(prev_state)})
+	log_diag_milestone("state_changed", {"new_state": int(current_state), "previous_state": int(prev_state)})
 	state_changed.emit(current_state, prev_state)
 	
 	# If no GameWorld exists in the active scene tree (e.g. standalone test suites or menu-only scenes),

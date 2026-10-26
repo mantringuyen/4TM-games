@@ -419,6 +419,9 @@ func _init_grid_data() -> void:
 		grid_data.append(row)
 		grid_materials.append(mat_row)
 		grid_special_items.append(sp_row)
+	var gs = _get_game_state()
+	if gs and gs.has_method("log_diag_milestone"):
+		gs.log_diag_milestone("board_initialized", {"rows": GRID_ROWS, "cols": GRID_COLS})
 
 
 # ==============================================================================

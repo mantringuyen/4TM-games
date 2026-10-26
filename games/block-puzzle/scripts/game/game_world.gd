@@ -109,6 +109,8 @@ func _on_game_started(mode: int) -> void:
 			active_mode_node.initialize_mode()
 		if active_mode_node.has_method("start_mode"):
 			active_mode_node.start_mode()
+		if state_mgr and state_mgr.has_method("log_diag_milestone"):
+			state_mgr.log_diag_milestone("mode_created", {"mode": mode, "style": style, "node": active_mode_node.get_class()})
 	print("[%d] [LIFECYCLE] GameWorld: _on_game_started COMPLETED (took=%dms)" % [Time.get_ticks_msec(), Time.get_ticks_msec() - start_ms])
 
 

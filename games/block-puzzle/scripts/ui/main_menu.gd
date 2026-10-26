@@ -5140,6 +5140,8 @@ func _animate_button_tap(btn: Button) -> void:
 
 func _on_btn_start_pressed() -> void:
 	var state_mgr = get_node_or_null("/root/GameState")
+	if state_mgr and state_mgr.has_method("log_diag_milestone"):
+		state_mgr.log_diag_milestone("start_btn_pressed", {"mode": selected_mode, "style": selected_play_style})
 	if _is_starting_game:
 		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (re-entrancy lock active)" % Time.get_ticks_msec())
 		return
