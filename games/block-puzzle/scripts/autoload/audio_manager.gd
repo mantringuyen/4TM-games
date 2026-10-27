@@ -221,6 +221,7 @@ const BGM_TRACK_METADATA: Dictionary = {
 var _music_enabled: bool = true
 var _bgm_saved_pause_position: float = 0.0
 var _bgm_load_generation: int = 0
+var diag_skip_bgm_override: bool = false
 
 var music_enabled: bool:
 	get:
@@ -534,6 +535,10 @@ func is_music_playing() -> bool:
 func _apply_music_state() -> void:
 	if not bgm_player:
 		return
+	if is_diag_bgm_skipped():
+		if bgm_player.playing:
+			bgm_player.stop()
+		return
 	if bgm_stream and bgm_player.stream != bgm_stream:
 		bgm_player.stream = bgm_stream
 		_bgm_saved_pause_position = 0.0
@@ -560,6 +565,8 @@ func pause_bgm() -> void:
 
 
 func resume_bgm() -> void:
+	if is_diag_bgm_skipped():
+		return
 	if bgm_player and _music_enabled:
 		if bgm_player.stream_paused:
 			bgm_player.stream_paused = false
@@ -795,6 +802,17 @@ func trigger_achievement_callout(lines_cleared: int, _combo_count: int = 1, row_
 	return chosen_key
 
 
+func is_diag_bgm_skipped() -> bool:
+	if diag_skip_bgm_override:
+		return true
+	if not (OS.get_name().strip_edges().to_lower() == "web" or OS.has_feature("web")):
+		return false
+	if not ClassDB.class_exists("JavaScriptBridge"):
+		return false
+	var res: Variant = JavaScriptBridge.eval("(function(){try{return !!(window.__4TM_DIAG_SKIP_BGM__&&window.__4TM_DIAG_SKIP_BGM__());}catch(e){return false;}})()", true)
+	return bool(res)
+
+
 func select_bgm_track(track_index: int) -> String:
 	var total_tracks: int = BGM_TRACK_IDS.size()
 	if total_tracks == 0:
@@ -802,26 +820,51 @@ func select_bgm_track(track_index: int) -> String:
 	var idx: int = posmod(track_index, total_tracks)
 	var target_track_id: String = BGM_TRACK_IDS[idx]
 	
-	# If already playing this track and stream is valid, continue playback
-	if target_track_id == current_bgm_track_id and bgm_stream != null and bgm_player != null and bgm_player.stream == bgm_stream:
-		if _music_enabled and not bgm_player.playing and not bgm_player.stream_paused:
-			bgm_player.play()
-		return current_bgm_track_id
-
 	current_bgm_track_index = idx
 	current_bgm_track_id = target_track_id
 	_bgm_saved_pause_position = 0.0
 	_bgm_load_generation += 1
 	var gen := _bgm_load_generation
 
+	var bgm_skipped: bool = is_diag_bgm_skipped()
+
 	var gs = get_node_or_null("/root/GameState")
 	if gs and gs.has_method("log_diag_milestone"):
-		gs.log_diag_milestone("bgm_selected", {
+		gs.log_diag_milestone("bgm_test_mode", {
+			"test_mode": "bgm_skipped" if bgm_skipped else "bgm_enabled",
 			"track_id": target_track_id,
 			"track_index": idx,
 			"gen": gen,
 			"music_enabled": _music_enabled
 		})
+		gs.log_diag_milestone("bgm_selected", {
+			"track_id": target_track_id,
+			"track_index": idx,
+			"gen": gen,
+			"music_enabled": _music_enabled,
+			"test_mode": "bgm_skipped" if bgm_skipped else "bgm_enabled"
+		})
+
+	if bgm_skipped:
+		if bgm_player:
+			bgm_player.stop()
+			bgm_player.stream = null
+		bgm_stream = null
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_skipped_diagnostic_switch", {
+				"track_id": target_track_id,
+				"track_index": idx,
+				"gen": gen,
+				"reason": "diag_skip_bgm_active"
+			})
+		print("[%d] [AUDIO] AudioManager: BGM SKIPPED via diagnostic test switch for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
+		return current_bgm_track_id
+
+	# If already playing this track and stream is valid, continue playback
+	if target_track_id == current_bgm_track_id and bgm_stream != null and bgm_player != null and bgm_player.stream == bgm_stream:
+		if _music_enabled and not bgm_player.playing and not bgm_player.stream_paused:
+			bgm_player.play()
+		return current_bgm_track_id
 
 	# Defer heavy BGM loading past initial gameplay startup frames (1..5) to avoid main-thread pressure during scene setup
 	if _music_enabled:
@@ -836,6 +879,16 @@ func select_bgm_track(track_index: int) -> String:
 
 
 func _schedule_bgm_deferred_load(target_track_id: String, gen: int) -> void:
+	if is_diag_bgm_skipped():
+		var gs_cancel = get_node_or_null("/root/GameState")
+		if gs_cancel and gs_cancel.has_method("log_diag_milestone"):
+			gs_cancel.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "diag_skip_bgm_active",
+				"track_id": target_track_id,
+				"gen": gen
+			})
+		return
+
 	var schedule_ticks: int = Time.get_ticks_msec()
 	var gs = get_node_or_null("/root/GameState")
 	if gs and gs.has_method("log_diag_milestone"):
@@ -855,6 +908,15 @@ func _schedule_bgm_deferred_load(target_track_id: String, gen: int) -> void:
 			break
 		await get_tree().process_frame
 
+	if is_diag_bgm_skipped():
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "diag_skip_bgm_active",
+				"track_id": target_track_id,
+				"gen": gen
+			})
+		return
+
 	if gen != _bgm_load_generation:
 		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED during frame deferral for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
 		if gs and gs.has_method("log_diag_milestone"):
@@ -871,6 +933,16 @@ func _schedule_bgm_deferred_load(target_track_id: String, gen: int) -> void:
 
 
 func _load_and_play_bgm_deferred(target_track_id: String, gen: int, schedule_ticks: int = -1) -> void:
+	if is_diag_bgm_skipped():
+		var gs_cancel = get_node_or_null("/root/GameState")
+		if gs_cancel and gs_cancel.has_method("log_diag_milestone"):
+			gs_cancel.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "diag_skip_bgm_active",
+				"track_id": target_track_id,
+				"gen": gen
+			})
+		return
+
 	var load_entry_ticks: int = Time.get_ticks_msec()
 	var sched_t: int = schedule_ticks if schedule_ticks > 0 else load_entry_ticks
 	var gs = get_node_or_null("/root/GameState")
@@ -932,6 +1004,15 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int, schedule_tic
 	var methods_attempted: Array = details.get("methods_attempted", [])
 	var successful_method: String = String(details.get("successful_method", "none"))
 
+	if is_diag_bgm_skipped():
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "diag_skip_bgm_active",
+				"track_id": target_track_id,
+				"gen": gen
+			})
+		return
+
 	if gen != _bgm_load_generation:
 		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED after load for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
 		if gs and gs.has_method("log_diag_milestone"):
@@ -984,6 +1065,15 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int, schedule_tic
 
 
 func ensure_bgm_loaded() -> AudioStream:
+	if is_diag_bgm_skipped():
+		var gs_skip = get_node_or_null("/root/GameState")
+		if gs_skip and gs_skip.has_method("log_diag_milestone"):
+			gs_skip.log_diag_milestone("bgm_ensure_loaded_skipped", {
+				"reason": "diag_skip_bgm_active",
+				"track_id": current_bgm_track_id
+			})
+		return null
+
 	_bgm_load_generation += 1
 	var gen := _bgm_load_generation
 	var gs = get_node_or_null("/root/GameState")

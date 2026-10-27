@@ -54,6 +54,8 @@
 		
 		
 		
+		
+		
 		<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#414141">
@@ -65,6 +67,12 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
 		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
 		<link rel="manifest" href="manifest.json">
+		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
+		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
+		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
+		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
 		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
 		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
 		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
@@ -243,7 +251,7 @@ html, body {
 			Your browser does not support JavaScript.
 		</noscript>
 
-																																																																																										<script>
+																																																																																														<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
@@ -309,8 +317,49 @@ html, body {
 			if (!isDiagActive) {
 				window.__4TM_RECORD_MILESTONE__ = function () {};
 				window.__4TM_RECORD_ERROR__ = function () {};
+				window.__4TM_DIAG_SKIP_BGM__ = function () { return false; };
+				window.__4TM_DIAG_SET_SKIP_BGM__ = function () {};
+				window.__4TM_CLEAR_MILESTONES__ = function () {};
 				return;
 			}
+
+			var diagSkipBgm = false;
+			try {
+				var qp = new URLSearchParams(window.location.search || '');
+				var noBgmParam = qp.get('nobgm') === '1' || qp.get('skip_bgm') === '1' || qp.get('bgm') === '0';
+				if (noBgmParam) {
+					diagSkipBgm = true;
+					if (window.sessionStorage) window.sessionStorage.setItem('__4TM_DIAG_SKIP_BGM__', '1');
+				} else if (qp.get('nobgm') === '0' || qp.get('skip_bgm') === '0' || qp.get('bgm') === '1') {
+					diagSkipBgm = false;
+					if (window.sessionStorage) window.sessionStorage.setItem('__4TM_DIAG_SKIP_BGM__', '0');
+				} else if (window.sessionStorage && window.sessionStorage.getItem('__4TM_DIAG_SKIP_BGM__') !== null) {
+					diagSkipBgm = window.sessionStorage.getItem('__4TM_DIAG_SKIP_BGM__') === '1';
+				}
+			} catch (e) {}
+
+			window.__4TM_DIAG_SKIP_BGM__ = function () {
+				return isDiagActive && (diagSkipBgm === true);
+			};
+
+			window.__4TM_DIAG_SET_SKIP_BGM__ = function (val) {
+				diagSkipBgm = !!val;
+				try {
+					if (window.sessionStorage) window.sessionStorage.setItem('__4TM_DIAG_SKIP_BGM__', diagSkipBgm ? '1' : '0');
+					if (window.localStorage) window.localStorage.setItem('__4TM_DIAG_SKIP_BGM__', diagSkipBgm ? '1' : '0');
+				} catch (e) {}
+				recordDiagEvent('diag_bgm_switch_changed', { skip_bgm: diagSkipBgm, test_mode: diagSkipBgm ? 'bgm_skipped' : 'bgm_enabled' });
+				if (typeof updateDiagUI === 'function') updateDiagUI();
+			};
+
+			window.__4TM_CLEAR_MILESTONES__ = function () {
+				diagEvents = [];
+				lastRecordedMilestoneName = '';
+				lastRecordedMilestoneTime = 0;
+				recordDiagEvent('milestones_cleared', { test_mode: diagSkipBgm ? 'bgm_skipped' : 'bgm_enabled' });
+				saveDiagHistory();
+				if (typeof updateDiagUI === 'function') updateDiagUI();
+			};
 
 			var diagEvents = [];
 			var diagErrors = [];
@@ -730,6 +779,7 @@ html, body {
 				lines.push('URL: ' + window.location.href);
 				lines.push('Session Count: ' + sessionCount);
 				lines.push('User Agent: ' + navigator.userAgent);
+				lines.push('BGM Test Mode: ' + (diagSkipBgm ? 'SKIPPED (TEST SWITCH ACTIVE)' : 'ENABLED (NORMAL PLAYBACK)'));
 				var d = window.__4TM_DIAG__ || {};
 				lines.push('Mode: ' + (d.mode || 'N/A'));
 				lines.push('Viewport: win=' + (d.winW || window.innerWidth) + 'x' + (d.winH || window.innerHeight) +
@@ -843,6 +893,8 @@ html, body {
 					header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#1e293b;border-bottom:1px solid #334155;flex-shrink:0;';
 					header.innerHTML = '<div style="font-weight:bold;font-size:12px;color:#60a5fa;display:flex;align-items:center;gap:6px;"><span>🔍 4TM DIAG (?diag=1)</span><span id="diag-badge" style="font-size:10px;background:#334155;padding:2px 6px;border-radius:10px;color:#94a3b8;">Sess #' + sessionCount + '</span></div>' +
 						'<div style="display:flex;gap:6px;align-items:center;">' +
+						'<button id="diag-btn-bgm" style="background:' + (diagSkipBgm ? '#dc2626' : '#16a34a') + ';color:#fff;border:none;border-radius:4px;padding:6px 10px;font-size:11px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;">' + (diagSkipBgm ? 'BGM: SKIPPED (TEST)' : 'BGM: ENABLED') + '</button>' +
+						'<button id="diag-btn-clear" style="background:#475569;color:#fff;border:none;border-radius:4px;padding:6px 10px;font-size:11px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Clear</button>' +
 						'<button id="diag-btn-copy" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;">Copy Diagnostics</button>' +
 						'<button id="diag-btn-toggle" style="background:#475569;color:#fff;border:none;border-radius:4px;padding:6px 10px;font-size:11px;cursor:pointer;">▼</button>' +
 						'</div>';
@@ -863,6 +915,34 @@ html, body {
 						document.body.appendChild(hudContainer);
 					} else {
 						document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(hudContainer); });
+					}
+
+					var bgmBtnEl = document.getElementById('diag-btn-bgm');
+					if (bgmBtnEl) {
+						bgmBtnEl.addEventListener('click', function () {
+							window.__4TM_DIAG_SET_SKIP_BGM__(!diagSkipBgm);
+							var fb = document.getElementById('diag-feedback');
+							if (fb) {
+								fb.textContent = diagSkipBgm ? '✓ BGM skipped for next Start test!' : '✓ BGM enabled for next Start test!';
+								fb.style.color = diagSkipBgm ? '#f87171' : '#4ade80';
+								fb.style.display = 'block';
+								setTimeout(function () { fb.style.display = 'none'; }, 3000);
+							}
+						});
+					}
+
+					var clearBtnEl = document.getElementById('diag-btn-clear');
+					if (clearBtnEl) {
+						clearBtnEl.addEventListener('click', function () {
+							window.__4TM_CLEAR_MILESTONES__();
+							var fb = document.getElementById('diag-feedback');
+							if (fb) {
+								fb.textContent = '✓ Current session milestones cleared!';
+								fb.style.color = '#38bdf8';
+								fb.style.display = 'block';
+								setTimeout(function () { fb.style.display = 'none'; }, 3000);
+							}
+						});
 					}
 
 					document.getElementById('diag-btn-copy').addEventListener('click', function () {
@@ -919,12 +999,23 @@ html, body {
 					var details = document.getElementById('diag-details');
 					if (!details) return;
 
+					var bgmBtn = document.getElementById('diag-btn-bgm');
+					if (bgmBtn) {
+						if (diagSkipBgm) {
+							bgmBtn.textContent = 'BGM: SKIPPED (TEST)';
+							bgmBtn.style.background = '#dc2626';
+						} else {
+							bgmBtn.textContent = 'BGM: ENABLED';
+							bgmBtn.style.background = '#16a34a';
+						}
+					}
+
 					var d = window.__4TM_DIAG__ || {};
 					var html = '';
 
 					// System & Viewport row
 					html += '<div style="background:#1e293b;padding:6px;border-radius:4px;margin-bottom:8px;font-size:10px;color:#94a3b8;">';
-					html += '<div><strong>Status:</strong> ' + (d.mode || 'N/A') + ' | <strong>WebGL Loss:</strong> ' + webglStats.lossCount + ' | <strong>Restore:</strong> ' + webglStats.restoreCount + '</div>';
+					html += '<div><strong>Status:</strong> ' + (d.mode || 'N/A') + ' | <strong>BGM:</strong> <span style="font-weight:bold;color:' + (diagSkipBgm ? '#f87171' : '#4ade80') + ';">' + (diagSkipBgm ? 'SKIPPED (TEST)' : 'ENABLED') + '</span> | <strong>WebGL Loss:</strong> ' + webglStats.lossCount + '</div>';
 					html += '<div><strong>Viewport:</strong> win=' + (d.winW || window.innerWidth) + 'x' + (d.winH || window.innerHeight) + ' | vvH=' + (d.vvH || 0) + ' | docH=' + (d.docH || 0) + ' | safeArea(T=' + (d.insetTop || 0) + ',B=' + (d.insetBottom || 0) + ')</div>';
 					html += '</div>';
 
@@ -1032,14 +1123,14 @@ html, body {
 		</script>
 		<script src="index.js?v=20261026-diag-v1"></script>
 
-		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
+		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
 			<img id="status-splash" src="index.png" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
 		</div>
 
 										<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":77493072,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":77493840,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
