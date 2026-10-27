@@ -56,6 +56,7 @@
 		
 		
 		
+		
 		<meta name="description" content="Official 4TM 2D block puzzle game (Xếp Gạch — 4TM) supporting Classic and Modern Drag-and-Drop modes.">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
 		<meta name="theme-color" content="#414141">
@@ -67,6 +68,9 @@
 		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
 		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
 		<link rel="manifest" href="manifest.json">
+		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
+		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
 		<link rel="icon" type="image/svg+xml" href="block-puzzle-favicon.svg">
 		<link rel="icon" type="image/png" sizes="32x32" href="index.icon.png">
 		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
@@ -251,7 +255,7 @@ html, body {
 			Your browser does not support JavaScript.
 		</noscript>
 
-																																																																																														<script>
+																																																																																																<script>
 		// Standards-safe iOS viewport height normalization and settled resize trigger
 		(function () {
 			var probe = document.createElement('div');
@@ -881,28 +885,28 @@ html, body {
 			// Diagnostic HUD DOM Setup (ONLY when isDiagActive == true)
 			if (isDiagActive) {
 				var hudContainer = null;
-				var isCollapsed = false;
+				var isCollapsed = true;
 
 				function createDiagUI() {
 					if (document.getElementById('diag-hud')) return;
 					hudContainer = document.createElement('div');
 					hudContainer.id = 'diag-hud';
-					hudContainer.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999999;background:rgba(15,23,42,0.96);color:#f1f5f9;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;border-top:2px solid #3b82f6;box-shadow:0 -4px 20px rgba(0,0,0,0.85);display:flex;flex-direction:column;max-height:50vh;pointer-events:auto;-webkit-user-select:text;user-select:text;';
+					hudContainer.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999999;pointer-events:none;-webkit-user-select:text;user-select:text;display:flex;flex-direction:column;max-height:50vh;';
 
 					var header = document.createElement('div');
-					header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#1e293b;border-bottom:1px solid #334155;flex-shrink:0;';
-					header.innerHTML = '<div style="font-weight:bold;font-size:12px;color:#60a5fa;display:flex;align-items:center;gap:6px;"><span>🔍 4TM DIAG (?diag=1)</span><span id="diag-badge" style="font-size:10px;background:#334155;padding:2px 6px;border-radius:10px;color:#94a3b8;">Sess #' + sessionCount + '</span></div>' +
-						'<div style="display:flex;gap:6px;align-items:center;">' +
-						'<button id="diag-btn-bgm" style="background:' + (diagSkipBgm ? '#dc2626' : '#16a34a') + ';color:#fff;border:none;border-radius:4px;padding:6px 10px;font-size:11px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;">' + (diagSkipBgm ? 'BGM: SKIPPED (TEST)' : 'BGM: ENABLED') + '</button>' +
-						'<button id="diag-btn-clear" style="background:#475569;color:#fff;border:none;border-radius:4px;padding:6px 10px;font-size:11px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Clear</button>' +
-						'<button id="diag-btn-copy" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;">Copy Diagnostics</button>' +
-						'<button id="diag-btn-toggle" style="background:#475569;color:#fff;border:none;border-radius:4px;padding:6px 10px;font-size:11px;cursor:pointer;">▼</button>' +
+					header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;padding:4px 8px calc(4px + env(safe-area-inset-bottom, 0px)) 8px;background:#1e293b;border-top:2px solid #3b82f6;flex-shrink:0;pointer-events:auto;box-shadow:0 -2px 10px rgba(0,0,0,0.5);';
+					header.innerHTML = '<div style="font-weight:bold;font-size:11px;color:#60a5fa;display:flex;align-items:center;gap:4px;"><span>🔍 Diag</span><span id="diag-badge" style="font-size:9px;background:#334155;padding:1px 5px;border-radius:8px;color:#94a3b8;">#' + sessionCount + '</span></div>' +
+						'<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">' +
+						'<button id="diag-btn-bgm" style="background:' + (diagSkipBgm ? '#dc2626' : '#16a34a') + ';color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;">' + (diagSkipBgm ? 'BGM: OFF' : 'BGM: ON') + '</button>' +
+						'<button id="diag-btn-clear" style="background:#475569;color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;">Clear</button>' +
+						'<button id="diag-btn-copy" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:bold;cursor:pointer;-webkit-tap-highlight-color:transparent;">Copy</button>' +
+						'<button id="diag-btn-toggle" style="background:#334155;color:#93c5fd;border:1px solid #475569;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:bold;cursor:pointer;">▲ Diag</button>' +
 						'</div>';
 					hudContainer.appendChild(header);
 
 					var body = document.createElement('div');
 					body.id = 'diag-body';
-					body.style.cssText = 'overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px calc(14px + env(safe-area-inset-bottom, 0px)) 10px;flex:1;font-size:11px;line-height:1.4;';
+					body.style.cssText = 'display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px calc(14px + env(safe-area-inset-bottom, 0px)) 10px;flex:1;font-size:11px;line-height:1.4;background:rgba(15,23,42,0.98);pointer-events:auto;border-top:1px solid #334155;box-shadow:0 -4px 20px rgba(0,0,0,0.85);';
 					body.innerHTML = '<div id="diag-feedback" style="display:none;font-size:11px;color:#4ade80;font-weight:bold;margin-bottom:6px;padding:4px 8px;background:rgba(34,197,94,0.15);border-radius:4px;"></div>' +
 						'<div id="diag-fallback-box" style="display:none;margin-bottom:8px;">' +
 						'<div style="font-size:10px;color:#fbbf24;margin-bottom:2px;">Clipboard restricted. Select and copy report below:</div>' +
@@ -989,7 +993,10 @@ html, body {
 						var b = document.getElementById('diag-body');
 						var btn = document.getElementById('diag-btn-toggle');
 						if (b) b.style.display = isCollapsed ? 'none' : 'block';
-						if (btn) btn.textContent = isCollapsed ? '▲' : '▼';
+						if (btn) btn.textContent = isCollapsed ? '▲ Diag' : '▼ Diag';
+						if (hudContainer) {
+							hudContainer.style.background = isCollapsed ? 'transparent' : 'rgba(15,23,42,0.98)';
+						}
 					});
 
 					updateDiagUI();
@@ -1002,10 +1009,10 @@ html, body {
 					var bgmBtn = document.getElementById('diag-btn-bgm');
 					if (bgmBtn) {
 						if (diagSkipBgm) {
-							bgmBtn.textContent = 'BGM: SKIPPED (TEST)';
+							bgmBtn.textContent = 'BGM: OFF';
 							bgmBtn.style.background = '#dc2626';
 						} else {
-							bgmBtn.textContent = 'BGM: ENABLED';
+							bgmBtn.textContent = 'BGM: ON';
 							bgmBtn.style.background = '#16a34a';
 						}
 					}
@@ -1123,14 +1130,14 @@ html, body {
 		</script>
 		<script src="index.js?v=20261026-diag-v1"></script>
 
-		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
+		<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>
 			<img id="status-splash" src="index.png" alt="">
 			<progress id="status-progress"></progress>
 			<div id="status-notice"></div>
 		</div>
 
 										<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":77493840,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":77495376,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

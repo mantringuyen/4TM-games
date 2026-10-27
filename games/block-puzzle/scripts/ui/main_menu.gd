@@ -286,13 +286,23 @@ func _on_gs_play_style_changed(st) -> void:
 
 
 var _is_starting_game: bool = false
+var _last_start_press_msec: int = 0
 var _deferred_start_pending: bool = false
 
 
 func _on_gs_state_changed(ns, _ps) -> void:
 	if ns == GameStateScript.State.MENU:
 		_is_starting_game = false
+		_last_start_press_msec = 0
 		_deferred_start_pending = false
+		# Ensure overlay modals never block input on the main menu
+		if modal_how_to_play: modal_how_to_play.visible = false
+		if modal_settings: modal_settings.visible = false
+		if modal_account: modal_account.visible = false
+		if modal_level_map: modal_level_map.visible = false
+		if _energy_ad_overlay: _energy_ad_overlay.visible = false
+		if life_ad_modal: life_ad_modal.visible = false
+		if modal_delete_confirm: modal_delete_confirm.visible = false
 		_sync_selection_from_state()
 		_refresh_all_ui()
 	else:
@@ -2265,6 +2275,8 @@ func _refresh_all_ui() -> void:
 		return
 	_sync_selection_from_state()
 	_apply_language_texts()
+	_refresh_energy_ui()
+	update_life_display()
 	_refresh_progression_ui()
 	_update_mode_selection_ui()
 	_update_settings_buttons()
@@ -5139,16 +5151,20 @@ func _animate_button_tap(btn: Button) -> void:
 
 
 func _on_btn_start_pressed() -> void:
+	var now_msec: int = Time.get_ticks_msec()
 	var state_mgr = get_node_or_null("/root/GameState")
 	if state_mgr and state_mgr.has_method("log_diag_milestone"):
 		state_mgr.log_diag_milestone("start_btn_pressed", {"mode": selected_mode, "style": selected_play_style})
-	if _is_starting_game:
-		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (re-entrancy lock active)" % Time.get_ticks_msec())
+	if _is_starting_game and (now_msec - _last_start_press_msec < 500):
+		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — REJECTED (re-entrancy lock active)" % now_msec)
 		if state_mgr and state_mgr.has_method("log_diag_milestone"):
 			state_mgr.log_diag_milestone("start_btn_rejected", {"reason": "reentrancy_lock"})
 		return
+	_last_start_press_msec = now_msec
+	if btn_start:
+		_animate_button_tap(btn_start)
 	if state_mgr and "is_teardown_pending" in state_mgr and state_mgr.is_teardown_pending:
-		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — DEFERRED (previous session teardown in progress)" % Time.get_ticks_msec())
+		print("[%d] [LIFECYCLE] MainMenu: Start button pressed — DEFERRED (previous session teardown in progress)" % now_msec)
 		if state_mgr and state_mgr.has_method("log_diag_milestone"):
 			state_mgr.log_diag_milestone("start_btn_deferred", {"reason": "teardown_pending", "teardown_id": state_mgr.teardown_session_id})
 		if not _deferred_start_pending:
@@ -5156,6 +5172,15 @@ func _on_btn_start_pressed() -> void:
 			if state_mgr.has_signal("session_teardown_completed"):
 				if not state_mgr.session_teardown_completed.is_connected(_on_session_teardown_completed):
 					state_mgr.session_teardown_completed.connect(_on_session_teardown_completed, CONNECT_ONE_SHOT)
+			var tid: int = int(state_mgr.teardown_session_id) if "teardown_session_id" in state_mgr else 0
+			if is_inside_tree() and get_tree():
+				get_tree().create_timer(0.25).timeout.connect(func():
+					if _deferred_start_pending:
+						print("[%d] [LIFECYCLE] MainMenu: Teardown watchdog expired (250ms), forcing teardown completion" % Time.get_ticks_msec())
+						if state_mgr and "is_teardown_pending" in state_mgr:
+							state_mgr.is_teardown_pending = false
+						_on_session_teardown_completed(tid)
+				)
 		return
 	_is_starting_game = true
 	_play_sfx("click")
@@ -5185,6 +5210,7 @@ func _on_btn_start_pressed() -> void:
 func _on_session_teardown_completed(_teardown_id: int) -> void:
 	if _deferred_start_pending:
 		_deferred_start_pending = false
+		_is_starting_game = false
 		var gs = get_node_or_null("/root/GameState")
 		if gs and gs.has_method("log_diag_milestone"):
 			gs.log_diag_milestone("deferred_start_triggering", {"teardown_id": _teardown_id})

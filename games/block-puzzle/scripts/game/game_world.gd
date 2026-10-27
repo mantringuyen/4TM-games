@@ -30,6 +30,7 @@ var world_sparkles: Array = [
 
 var _pending_teardown_id: int = 0
 var _pending_teardown_nodes: Array[Node] = []
+var _teardown_poll_count: int = 0
 var _is_session_active: bool = false
 var _session_id: int = 0
 var _session_frame_count: int = 0
@@ -227,6 +228,7 @@ func _stop_teardown_polling() -> void:
 		main_loop.process_frame.disconnect(_on_poll_teardown_frame)
 	_pending_teardown_id = 0
 	_pending_teardown_nodes.clear()
+	_teardown_poll_count = 0
 
 
 func _clear_active_mode() -> void:
@@ -273,6 +275,7 @@ func _clear_active_mode() -> void:
 		if not still_valid.is_empty():
 			_pending_teardown_id = active_teardown_id
 			_pending_teardown_nodes = still_valid
+			_teardown_poll_count = 0
 			_ensure_main_loop_teardown_polling()
 			if state_mgr and state_mgr.has_method("log_diag_milestone"):
 				state_mgr.log_diag_milestone("teardown_started", {"teardown_id": active_teardown_id, "nodes_to_free": still_valid.size()})
@@ -286,17 +289,19 @@ func _on_poll_teardown_frame() -> void:
 	if _pending_teardown_id <= 0:
 		_stop_teardown_polling()
 		return
+	_teardown_poll_count += 1
 	var all_freed: bool = true
 	for n in _pending_teardown_nodes:
 		if is_instance_valid(n):
 			all_freed = false
 			break
-	if all_freed:
+	if all_freed or _teardown_poll_count >= 8:
 		var tid: int = _pending_teardown_id
+		var forced: bool = not all_freed
 		_stop_teardown_polling()
 		var state_mgr = _get_game_state()
 		if state_mgr and state_mgr.has_method("log_diag_milestone"):
-			state_mgr.log_diag_milestone("teardown_nodes_freed", {"teardown_id": tid})
+			state_mgr.log_diag_milestone("teardown_nodes_freed", {"teardown_id": tid, "forced": forced, "frames": _teardown_poll_count})
 		_complete_teardown_for_id(tid)
 
 
