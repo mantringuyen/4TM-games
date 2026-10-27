@@ -322,6 +322,12 @@ func _on_game_state_changed(new_state: int, _prev_state: int) -> void:
 	if new_state == 0: # GameStateScript.State.MENU
 		_bgm_load_generation += 1
 		print("[%d] [AUDIO] AudioManager: GameState transitioned to MENU (load gen -> %d)" % [Time.get_ticks_msec(), _bgm_load_generation])
+		var gs = get_node_or_null("/root/GameState")
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_gen_invalidated", {
+				"reason": "return_to_menu",
+				"new_gen": _bgm_load_generation
+			})
 
 
 func _process(delta: float) -> void:
@@ -808,6 +814,15 @@ func select_bgm_track(track_index: int) -> String:
 	_bgm_load_generation += 1
 	var gen := _bgm_load_generation
 
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_method("log_diag_milestone"):
+		gs.log_diag_milestone("bgm_selected", {
+			"track_id": target_track_id,
+			"track_index": idx,
+			"gen": gen,
+			"music_enabled": _music_enabled
+		})
+
 	# Defer heavy audio loading and stream initialization from the Start critical path to avoid mobile WebKit OOM / main-thread stall
 	if _music_enabled:
 		call_deferred("_load_and_play_bgm_deferred", target_track_id, gen)
@@ -821,13 +836,43 @@ func select_bgm_track(track_index: int) -> String:
 
 
 func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
+	var start_ticks: int = Time.get_ticks_msec()
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_method("log_diag_milestone"):
+		gs.log_diag_milestone("bgm_deferred_load_start", {
+			"track_id": target_track_id,
+			"gen": gen,
+			"current_gen": _bgm_load_generation,
+			"music_enabled": _music_enabled
+		})
+
 	if gen != _bgm_load_generation:
 		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "generation_mismatch_before_load",
+				"track_id": target_track_id,
+				"gen": gen,
+				"current_gen": _bgm_load_generation
+			})
 		return
 	if not _music_enabled:
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "music_disabled",
+				"track_id": target_track_id,
+				"gen": gen
+			})
 		return
 	if current_bgm_track_id != target_track_id:
 		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED for '%s' (track mismatch)" % [Time.get_ticks_msec(), target_track_id])
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "track_mismatch",
+				"target_track_id": target_track_id,
+				"current_track_id": current_bgm_track_id,
+				"gen": gen
+			})
 		return
 
 	print("[%d] [AUDIO] AudioManager: BGM deferred load STARTED for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
@@ -841,25 +886,80 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 		bgm_tracks.resize(total_tracks)
 
 	var idx: int = BGM_TRACK_IDS.find(target_track_id)
+	var cache_hit: bool = bgm_stream_cache.has(target_track_id) and bgm_stream_cache[target_track_id] != null
+	var file_path: String = String(BGM_FILE_PATHS.get(target_track_id, ""))
+	var loading_method: String = "cache" if cache_hit else "unknown"
+	if not cache_hit and file_path != "":
+		if ResourceLoader.exists(file_path):
+			loading_method = "ResourceLoader"
+		elif FileAccess.file_exists(file_path):
+			loading_method = "FileAccess"
+		else:
+			loading_method = "synth_fallback"
+
+	var load_start_t: int = Time.get_ticks_msec()
 	var new_stream: AudioStream = _load_bgm_stream_for_track(target_track_id)
+	var load_elapsed_ms: int = Time.get_ticks_msec() - load_start_t
+
 	if gen != _bgm_load_generation:
 		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED after load for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "generation_mismatch_after_load",
+				"track_id": target_track_id,
+				"gen": gen,
+				"current_gen": _bgm_load_generation,
+				"load_elapsed_ms": load_elapsed_ms
+			})
 		return
 	bgm_stream = new_stream
 	if idx >= 0:
 		bgm_tracks[idx] = new_stream
 
+	var play_started: bool = false
 	if bgm_player and new_stream != null and _music_enabled:
 		bgm_player.stream = new_stream
 		bgm_player.stream_paused = false
 		bgm_player.play(_bgm_saved_pause_position)
-	print("[%d] [AUDIO] AudioManager: BGM deferred load COMPLETED for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
-	bgm_stream_loaded.emit(target_track_id, new_stream)
+		play_started = bgm_player.playing
 
+	var total_elapsed_ms: int = Time.get_ticks_msec() - start_ticks
+	print("[%d] [AUDIO] AudioManager: BGM deferred load COMPLETED for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
+	
+	if gs and gs.has_method("log_diag_milestone"):
+		if play_started or new_stream != null:
+			gs.log_diag_milestone("bgm_deferred_load_end", {
+				"track_id": target_track_id,
+				"gen": gen,
+				"elapsed_ms": total_elapsed_ms,
+				"load_duration_ms": load_elapsed_ms,
+				"cache_hit": cache_hit,
+				"loading_method": loading_method,
+				"playback_started": play_started
+			})
+		else:
+			gs.log_diag_milestone("bgm_playback_failed", {
+				"track_id": target_track_id,
+				"gen": gen,
+				"elapsed_ms": total_elapsed_ms,
+				"cache_hit": cache_hit,
+				"loading_method": loading_method,
+				"stream_null": (new_stream == null)
+			})
+
+	bgm_stream_loaded.emit(target_track_id, new_stream)
 
 
 func ensure_bgm_loaded() -> AudioStream:
 	_bgm_load_generation += 1
+	var gen := _bgm_load_generation
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_method("log_diag_milestone"):
+		gs.log_diag_milestone("bgm_ensure_loaded", {
+			"track_id": current_bgm_track_id,
+			"gen": gen,
+			"already_loaded": (bgm_stream != null)
+		})
 	if bgm_stream != null:
 		if bgm_player and bgm_player.stream != bgm_stream and _music_enabled:
 			bgm_player.stream = bgm_stream
