@@ -823,9 +823,9 @@ func select_bgm_track(track_index: int) -> String:
 			"music_enabled": _music_enabled
 		})
 
-	# Defer heavy audio loading and stream initialization from the Start critical path to avoid mobile WebKit OOM / main-thread stall
+	# Defer heavy BGM loading past initial gameplay startup frames (1..5) to avoid main-thread pressure during scene setup
 	if _music_enabled:
-		call_deferred("_load_and_play_bgm_deferred", target_track_id, gen)
+		_schedule_bgm_deferred_load(target_track_id, gen)
 	else:
 		if bgm_player:
 			bgm_player.stop()
@@ -835,15 +835,52 @@ func select_bgm_track(track_index: int) -> String:
 	return current_bgm_track_id
 
 
-func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
-	var start_ticks: int = Time.get_ticks_msec()
+func _schedule_bgm_deferred_load(target_track_id: String, gen: int) -> void:
+	var schedule_ticks: int = Time.get_ticks_msec()
 	var gs = get_node_or_null("/root/GameState")
 	if gs and gs.has_method("log_diag_milestone"):
-		gs.log_diag_milestone("bgm_deferred_load_start", {
+		gs.log_diag_milestone("bgm_deferred_load_scheduled", {
+			"track_id": target_track_id,
+			"gen": gen,
+			"scheduled_frames": 5
+		})
+
+	if not is_inside_tree() or get_tree() == null:
+		_load_and_play_bgm_deferred(target_track_id, gen, schedule_ticks)
+		return
+
+	# Safely yield 5 process frames so initial game world and board setup complete before loading stream
+	for f_i in range(5):
+		if not is_inside_tree() or get_tree() == null:
+			break
+		await get_tree().process_frame
+
+	if gen != _bgm_load_generation:
+		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED during frame deferral for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
+		if gs and gs.has_method("log_diag_milestone"):
+			gs.log_diag_milestone("bgm_load_cancelled", {
+				"reason": "generation_mismatch_during_frame_deferral",
+				"track_id": target_track_id,
+				"gen": gen,
+				"current_gen": _bgm_load_generation,
+				"elapsed_since_schedule_ms": Time.get_ticks_msec() - schedule_ticks
+			})
+		return
+
+	_load_and_play_bgm_deferred(target_track_id, gen, schedule_ticks)
+
+
+func _load_and_play_bgm_deferred(target_track_id: String, gen: int, schedule_ticks: int = -1) -> void:
+	var load_entry_ticks: int = Time.get_ticks_msec()
+	var sched_t: int = schedule_ticks if schedule_ticks > 0 else load_entry_ticks
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_method("log_diag_milestone"):
+		gs.log_diag_milestone("bgm_deferred_load_entry", {
 			"track_id": target_track_id,
 			"gen": gen,
 			"current_gen": _bgm_load_generation,
-			"music_enabled": _music_enabled
+			"music_enabled": _music_enabled,
+			"elapsed_since_schedule_ms": load_entry_ticks - sched_t
 		})
 
 	if gen != _bgm_load_generation:
@@ -886,20 +923,14 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 		bgm_tracks.resize(total_tracks)
 
 	var idx: int = BGM_TRACK_IDS.find(target_track_id)
-	var cache_hit: bool = bgm_stream_cache.has(target_track_id) and bgm_stream_cache[target_track_id] != null
-	var file_path: String = String(BGM_FILE_PATHS.get(target_track_id, ""))
-	var loading_method: String = "cache" if cache_hit else "unknown"
-	if not cache_hit and file_path != "":
-		if ResourceLoader.exists(file_path):
-			loading_method = "ResourceLoader"
-		elif FileAccess.file_exists(file_path):
-			loading_method = "FileAccess"
-		else:
-			loading_method = "synth_fallback"
 
 	var load_start_t: int = Time.get_ticks_msec()
-	var new_stream: AudioStream = _load_bgm_stream_for_track(target_track_id)
+	var details: Dictionary = _load_bgm_stream_with_details(target_track_id)
 	var load_elapsed_ms: int = Time.get_ticks_msec() - load_start_t
+	var new_stream: AudioStream = details.get("stream", null) as AudioStream
+	var cache_hit: bool = bool(details.get("cache_hit", false))
+	var methods_attempted: Array = details.get("methods_attempted", [])
+	var successful_method: String = String(details.get("successful_method", "none"))
 
 	if gen != _bgm_load_generation:
 		print("[%d] [AUDIO] AudioManager: BGM load CANCELLED after load for '%s' (gen %d != current %d)" % [Time.get_ticks_msec(), target_track_id, gen, _bgm_load_generation])
@@ -923,7 +954,7 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 		bgm_player.play(_bgm_saved_pause_position)
 		play_started = bgm_player.playing
 
-	var total_elapsed_ms: int = Time.get_ticks_msec() - start_ticks
+	var total_elapsed_ms: int = Time.get_ticks_msec() - sched_t
 	print("[%d] [AUDIO] AudioManager: BGM deferred load COMPLETED for '%s' (gen=%d)" % [Time.get_ticks_msec(), target_track_id, gen])
 	
 	if gs and gs.has_method("log_diag_milestone"):
@@ -931,19 +962,21 @@ func _load_and_play_bgm_deferred(target_track_id: String, gen: int) -> void:
 			gs.log_diag_milestone("bgm_deferred_load_end", {
 				"track_id": target_track_id,
 				"gen": gen,
-				"elapsed_ms": total_elapsed_ms,
+				"total_elapsed_ms": total_elapsed_ms,
 				"load_duration_ms": load_elapsed_ms,
 				"cache_hit": cache_hit,
-				"loading_method": loading_method,
+				"methods_attempted": methods_attempted,
+				"successful_method": successful_method,
 				"playback_started": play_started
 			})
 		else:
 			gs.log_diag_milestone("bgm_playback_failed", {
 				"track_id": target_track_id,
 				"gen": gen,
-				"elapsed_ms": total_elapsed_ms,
+				"total_elapsed_ms": total_elapsed_ms,
 				"cache_hit": cache_hit,
-				"loading_method": loading_method,
+				"methods_attempted": methods_attempted,
+				"successful_method": successful_method,
 				"stream_null": (new_stream == null)
 			})
 
@@ -1066,33 +1099,52 @@ func get_callout_sfx_metrics(callout_key: String) -> Dictionary:
 # WARM ACOUSTIC BGM, SFX & ORIGINAL 4TM PUZZLE REWARD CALLOUT SYNTHESIS
 # ==============================================================================
 
-func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
+func _load_bgm_stream_with_details(track_id: String) -> Dictionary:
+	var methods_attempted: Array = []
+	var successful_method: String = "none"
+	
 	if bgm_stream_cache.has(track_id) and bgm_stream_cache[track_id] != null:
-		return bgm_stream_cache[track_id]
+		methods_attempted.append("cache_hit")
+		return {
+			"stream": bgm_stream_cache[track_id],
+			"cache_hit": true,
+			"methods_attempted": methods_attempted,
+			"successful_method": "cache_hit"
+		}
 
+	methods_attempted.append("cache_miss")
 	var file_path: String = String(BGM_FILE_PATHS.get(track_id, ""))
 	var trk_stream: AudioStream = null
 
-	# Load audio asset (OGG Vorbis) via resource loader or file buffer
 	if file_path != "":
 		if ResourceLoader.exists(file_path):
+			methods_attempted.append("ResourceLoader")
 			var loaded_res = load(file_path)
 			if loaded_res is AudioStream:
 				trk_stream = loaded_res
+				successful_method = "ResourceLoader"
 		if trk_stream == null and FileAccess.file_exists(file_path):
+			methods_attempted.append("FileAccess_load_from_file")
 			trk_stream = AudioStreamOggVorbis.load_from_file(file_path)
+			if trk_stream != null:
+				successful_method = "FileAccess_load_from_file"
 		if trk_stream == null and FileAccess.file_exists(file_path):
+			methods_attempted.append("FileAccess_load_from_buffer")
 			var raw_bytes = FileAccess.get_file_as_bytes(file_path)
 			if not raw_bytes.is_empty():
 				trk_stream = AudioStreamOggVorbis.load_from_buffer(raw_bytes)
+				if trk_stream != null:
+					successful_method = "FileAccess_load_from_buffer"
 
 	if trk_stream is AudioStreamOggVorbis:
-		# Non-looping so the finished signal fires upon completion and seamlessly triggers the next randomized track
 		trk_stream.loop = false
 
 	if trk_stream == null:
+		methods_attempted.append("synth_fallback")
 		var t_i := BGM_TRACK_IDS.find(track_id)
 		trk_stream = _generate_bgm_track(maxi(0, t_i))
+		if trk_stream != null:
+			successful_method = "synth_fallback"
 
 	if trk_stream != null:
 		if bgm_cache_order.has(track_id):
@@ -1108,7 +1160,17 @@ func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
 				bgm_tracks[o_idx] = null
 			print("[%d] [AUDIO] Evicted oldest BGM stream '%s' from cache (cache_size=%d)" % [Time.get_ticks_msec(), oldest_id, bgm_stream_cache.size()])
 
-	return trk_stream
+	return {
+		"stream": trk_stream,
+		"cache_hit": false,
+		"methods_attempted": methods_attempted,
+		"successful_method": successful_method
+	}
+
+
+func _load_bgm_stream_for_track(track_id: String) -> AudioStream:
+	var res: Dictionary = _load_bgm_stream_with_details(track_id)
+	return res.get("stream", null) as AudioStream
 
 
 func _pregenerate_all_audio() -> void:
