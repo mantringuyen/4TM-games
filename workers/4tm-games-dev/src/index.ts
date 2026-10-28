@@ -67,12 +67,11 @@ export default {
     // Support pre-compressed WebAssembly (.wasm.gz)
     // Pre-compressed to comply with Cloudflare's 25 MiB static asset limit.
     const cleanPathname = url.pathname.split('?')[0];
-    if ((response.status === 404 || response.status === 405) && (cleanPathname.endsWith('.wasm') || cleanPathname.endsWith('.wasm.gz'))) {
-      const gzPath = cleanPathname.endsWith('.gz') ? cleanPathname : `${cleanPathname}.gz`;
+    if ((response.status === 404 || response.status === 405) && cleanPathname.endsWith('.wasm')) {
       const gzUrl = new URL(request.url);
-      gzUrl.pathname = gzPath;
+      gzUrl.pathname = `${cleanPathname}.gz`;
 
-      // Fetch pre-compressed .wasm.gz from Static Assets without Accept-Encoding header to avoid edge double-transformation
+      // Fetch pre-compressed .wasm.gz from Static Assets with Accept-Encoding: identity to avoid double-compression
       const gzRequest = new Request(gzUrl.toString(), {
         method: request.method,
         headers: new Headers(request.headers),
@@ -81,45 +80,35 @@ export default {
 
       const gzResponse = await env.ASSETS.fetch(gzRequest);
       if (gzResponse.status === 200 && gzResponse.body) {
-        const clientAcceptsGzip = (request.headers.get('accept-encoding') || '').includes('gzip');
-
-        if (clientAcceptsGzip) {
-          // Serve compressed WASM directly with valid Content-Encoding: gzip
-          const headers = new Headers(gzResponse.headers);
-          headers.set('Content-Type', 'application/wasm');
-          headers.set('Content-Encoding', 'gzip');
-          headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-          headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
-          headers.set('Cache-Control', 'public, max-age=300');
-          const cl = gzResponse.headers.get('content-length');
-          if (cl) {
-            headers.set('Content-Length', cl);
-          }
-          return new Response(gzResponse.body, {
-            status: 200,
-            statusText: 'OK',
-            headers,
-          });
-        } else {
-          // Decompress stream at edge for legacy clients that do not announce gzip support
-          const decompressedStream = gzResponse.body.pipeThrough(new DecompressionStream('gzip'));
-          const headers = new Headers(gzResponse.headers);
-          headers.set('Content-Type', 'application/wasm');
-          headers.delete('Content-Encoding');
-          headers.delete('Content-Length'); // Omit Content-Length so browser streams decompressed bytes via chunked transfer
-          headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-          headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
-          headers.set('Cache-Control', 'public, max-age=300');
-          return new Response(decompressedStream, {
-            status: 200,
-            statusText: 'OK',
-            headers,
-          });
-        }
+        // Always decompress at the Worker before returning the response
+        const decompressedStream = gzResponse.body.pipeThrough(new DecompressionStream('gzip'));
+        const headers = new Headers(gzResponse.headers);
+        headers.set('Content-Type', 'application/wasm');
+        headers.delete('Content-Encoding');
+        headers.delete('Content-Length'); // Omit Content-Length so browser streams uncompressed bytes via chunked transfer
+        headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+        headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+        headers.set('Cache-Control', 'public, max-age=300');
+        return new Response(decompressedStream, {
+          status: 200,
+          statusText: 'OK',
+          headers,
+        });
       }
 
       // Explicit WASM 404 error — MUST NEVER return HTML
       return new Response('404: WebAssembly module asset not found on 4tm-games-dev', {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cross-Origin-Opener-Policy': 'same-origin',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
+        },
+      });
+    }
+
+    if ((response.status === 404 || response.status === 405) && cleanPathname.endsWith('.wasm.gz')) {
+      return new Response('404: WebAssembly compressed asset not found on 4tm-games-dev', {
         status: 404,
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
