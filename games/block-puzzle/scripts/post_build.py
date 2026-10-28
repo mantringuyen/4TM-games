@@ -40,27 +40,25 @@ def main():
         # so Godot engine defaults to canonical relative 'index.pck' (/block-puzzle/index.pck via Worker)
         content = re.sub(r'"mainPack":"[^"]*",?', '', content)
         
-        # If index.pck exists locally or in build/web before staging removal, synchronize exact fileSizes tracking
+        # Synchronize exact fileSizes tracking from local build artifacts
         actual_pck_size = None
-        if os.path.exists(pck_path):
-            actual_pck_size = os.path.getsize(pck_path)
-        elif os.path.exists("build/web/index.pck"):
-            actual_pck_size = os.path.getsize("build/web/index.pck")
-        elif os.path.exists("../../build/web/index.pck"):
-            actual_pck_size = os.path.getsize("../../build/web/index.pck")
-        else:
-            # Fallback to querying R2 or using known canonical Dev build package size if running standalone post-build
-            try:
-                import urllib.request
-                req = urllib.request.Request("https://games-dev-data.4tm.io.vn/block-puzzle/index.pck", method="HEAD", headers={"User-Agent": "Mozilla/5.0"})
-                res = urllib.request.urlopen(req, timeout=3)
-                if res.status == 200 and res.headers.get("Content-Length"):
-                    actual_pck_size = int(res.headers.get("Content-Length"))
-            except Exception:
-                actual_pck_size = 25633392
+        for p in [pck_path, "build/web/index.pck", "../../build/web/index.pck", "games/block-puzzle/index.pck", "../games/block-puzzle/index.pck"]:
+            if os.path.exists(p):
+                actual_pck_size = os.path.getsize(p)
+                break
+
+        actual_wasm_size = None
+        wasm_path = os.path.join(target_dir, "index.wasm")
+        for p in [wasm_path, "build/web/index.wasm", "../../build/web/index.wasm", "games/block-puzzle/index.wasm", "../games/block-puzzle/index.wasm"]:
+            if os.path.exists(p):
+                actual_wasm_size = os.path.getsize(p)
+                break
 
         if actual_pck_size:
             content = re.sub(r'"index\.pck":\s*\d+', f'"index.pck":{actual_pck_size}', content)
+
+        if actual_wasm_size:
+            content = re.sub(r'"index\.wasm":\s*\d+', f'"index.wasm":{actual_wasm_size}', content)
 
         # 2. Ensure iOS viewport, safe-area, theme-color and PWA meta tags
         content = re.sub(r'<meta\s+name=["\'](theme-color|description|apple-mobile-web-app-[^"\']+|mobile-web-app-capable)["\'][^>]*>\s*', '', content)

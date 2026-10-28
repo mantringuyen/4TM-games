@@ -39,6 +39,16 @@ function matchesEtag(clientEtag: string | null, serverEtag: string | null): bool
   return clientEtag.split(',').some((tag) => clean(tag) === cleanServer);
 }
 
+function isStaticAssetRequest(pathname: string): boolean {
+  const cleanPath = pathname.split('?')[0].split('#')[0].toLowerCase();
+  const staticExtensions = [
+    '.wasm', '.wasm.gz', '.pck', '.js', '.json',
+    '.png', '.svg', '.ico', '.css', '.map',
+    '.jpg', '.jpeg', '.webp', '.icon.png'
+  ];
+  return staticExtensions.some((ext) => cleanPath.endsWith(ext)) || cleanPath.includes('.');
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -51,38 +61,77 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
 
-    // 2. Fetch the requested asset from Cloudflare Workers Static Assets
+    // 2. Fetch requested asset from Cloudflare Workers Static Assets
     let response = await env.ASSETS.fetch(request);
 
-    // Support pre-compressed WebAssembly (.wasm.gz) to stay well under Cloudflare's 25 MiB asset limit.
-    // Decompress the stream at the edge so the client receives native uncompressed WASM bytecode with full length tracking.
-    if (response.status === 404 && url.pathname.endsWith('.wasm')) {
+    // Support pre-compressed WebAssembly (.wasm.gz)
+    // Pre-compressed to comply with Cloudflare's 25 MiB static asset limit.
+    const cleanPathname = url.pathname.split('?')[0];
+    if ((response.status === 404 || response.status === 405) && (cleanPathname.endsWith('.wasm') || cleanPathname.endsWith('.wasm.gz'))) {
+      const gzPath = cleanPathname.endsWith('.gz') ? cleanPathname : `${cleanPathname}.gz`;
       const gzUrl = new URL(request.url);
-      gzUrl.pathname = `${gzUrl.pathname}.gz`;
-      const gzResponse = await env.ASSETS.fetch(new Request(gzUrl.toString(), request));
+      gzUrl.pathname = gzPath;
+
+      // Fetch pre-compressed .wasm.gz from Static Assets without Accept-Encoding header to avoid edge double-transformation
+      const gzRequest = new Request(gzUrl.toString(), {
+        method: request.method,
+        headers: new Headers(request.headers),
+      });
+      gzRequest.headers.set('Accept-Encoding', 'identity');
+
+      const gzResponse = await env.ASSETS.fetch(gzRequest);
       if (gzResponse.status === 200 && gzResponse.body) {
-        const decompressedStream = gzResponse.body.pipeThrough(new DecompressionStream('gzip'));
-        const headers = new Headers(gzResponse.headers);
-        headers.set('Content-Type', 'application/wasm');
-        headers.set('Content-Length', '35376909');
-        headers.delete('Content-Encoding');
-        headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-        headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
-        headers.set('Cache-Control', 'public, max-age=300');
-        return new Response(decompressedStream, {
-          status: 200,
-          statusText: 'OK',
-          headers,
-        });
+        const clientAcceptsGzip = (request.headers.get('accept-encoding') || '').includes('gzip');
+
+        if (clientAcceptsGzip) {
+          // Serve compressed WASM directly with valid Content-Encoding: gzip
+          const headers = new Headers(gzResponse.headers);
+          headers.set('Content-Type', 'application/wasm');
+          headers.set('Content-Encoding', 'gzip');
+          headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+          headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+          headers.set('Cache-Control', 'public, max-age=300');
+          const cl = gzResponse.headers.get('content-length');
+          if (cl) {
+            headers.set('Content-Length', cl);
+          }
+          return new Response(gzResponse.body, {
+            status: 200,
+            statusText: 'OK',
+            headers,
+          });
+        } else {
+          // Decompress stream at edge for legacy clients that do not announce gzip support
+          const decompressedStream = gzResponse.body.pipeThrough(new DecompressionStream('gzip'));
+          const headers = new Headers(gzResponse.headers);
+          headers.set('Content-Type', 'application/wasm');
+          headers.delete('Content-Encoding');
+          headers.delete('Content-Length'); // Omit Content-Length so browser streams decompressed bytes via chunked transfer
+          headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+          headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+          headers.set('Cache-Control', 'public, max-age=300');
+          return new Response(decompressedStream, {
+            status: 200,
+            statusText: 'OK',
+            headers,
+          });
+        }
       }
+
+      // Explicit WASM 404 error — MUST NEVER return HTML
+      return new Response('404: WebAssembly module asset not found on 4tm-games-dev', {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cross-Origin-Opener-Policy': 'same-origin',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
+        },
+      });
     }
 
     // Support streaming Godot package (.pck) assets stored in R2
-    // Ensures .pck requests never fall back to index.html and have exact content-type & isolation headers.
-    // Uses targeted revalidation (no-cache, must-revalidate with ETag) so iPhones immediately receive
-    // the newest build upon deployment, while 304 Not Modified prevents redundant 25MB transfers when unchanged.
-    if (response.status === 404 && url.pathname.endsWith('.pck')) {
-      const pckPath = url.pathname.replace(/^\/+/, '');
+    if (response.status === 404 && cleanPathname.endsWith('.pck')) {
+      const pckPath = cleanPathname.replace(/^\/+/, '');
       const clientIfNoneMatch = request.headers.get('if-none-match');
       const clientIfModifiedSince = request.headers.get('if-modified-since');
 
@@ -106,7 +155,6 @@ export default {
             headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
             headers.set('Cache-Control', 'no-cache, must-revalidate');
 
-            // Handle conditional request (304 Not Modified)
             if (clientIfNoneMatch && etag && matchesEtag(clientIfNoneMatch, etag)) {
               return new Response(null, {
                 status: 304,
@@ -125,7 +173,7 @@ export default {
         }
       }
 
-      // 2. Fallback: proxy from the deployed R2 custom domain (Dev: games-dev-data.4tm.io.vn)
+      // 2. Fallback: proxy from deployed R2 custom domain (Dev: games-dev-data.4tm.io.vn)
       try {
         const assetBase = (env.ASSET_BASE_URL || 'https://games-dev-data.4tm.io.vn').replace(/\/+$/, '');
         const candidateUrls = [
@@ -181,9 +229,8 @@ export default {
     }
 
     // 3. Fallback for browser refresh / client-side sub-routes:
-    // If a request under /<game>/subpath 404s, attempt serving /<game>/index.html
     // CRITICAL: Exclude static file extensions (.pck, .wasm, .js, etc.) so asset misses NEVER serve HTML!
-    if (response.status === 404 && !url.pathname.includes('.')) {
+    if (response.status === 404 && !isStaticAssetRequest(url.pathname)) {
       const match = url.pathname.match(/^(\/[a-zA-Z0-9_-]+)\/.+/);
       if (match) {
         const gameRoot = match[1];
@@ -196,12 +243,14 @@ export default {
       }
     }
 
-    // 4. Return custom 404 if asset is still missing
+    // 4. Return custom text 404 if static asset or file is missing
     if (response.status === 404) {
-      return new Response('404: Game asset not found on 4tm-games-dev', {
+      return new Response(`404: Asset ${url.pathname} not found on 4tm-games-dev`, {
         status: 404,
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
+          'Cross-Origin-Opener-Policy': 'same-origin',
+          'Cross-Origin-Embedder-Policy': 'require-corp',
         },
       });
     }
@@ -209,29 +258,23 @@ export default {
     // 5. Ensure proper MIME types and security/isolation headers
     const headers = new Headers(response.headers);
 
-    // Enforce correct Content-Type for Godot Web assets
     for (const [ext, mime] of Object.entries(MIME_MAP)) {
-      if (url.pathname.endsWith(ext)) {
+      if (cleanPathname.endsWith(ext)) {
         headers.set('Content-Type', mime);
         break;
       }
     }
 
-    // Standard cross-origin headers for WebAssembly & audio worklets
     headers.set('Cross-Origin-Opener-Policy', 'same-origin');
     headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
 
-    // Caching policy:
-    if (url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.js')) {
-      // Entry points and scripts: prevent stale caching during rapid dev iteration
+    if (cleanPathname.endsWith('.html') || cleanPathname.endsWith('/') || cleanPathname.endsWith('.js')) {
       headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       headers.set('Pragma', 'no-cache');
       headers.set('Expires', '0');
-    } else if (url.pathname.endsWith('.pck')) {
-      // Game package: targeted revalidation ensures iPhones always receive latest build
+    } else if (cleanPathname.endsWith('.pck')) {
       headers.set('Cache-Control', 'no-cache, must-revalidate');
-    } else if (url.pathname.endsWith('.wasm')) {
-      // Large binary assets: 5-minute cache for fast dev iteration
+    } else if (cleanPathname.endsWith('.wasm')) {
       headers.set('Cache-Control', 'public, max-age=300');
     }
 
@@ -242,3 +285,4 @@ export default {
     });
   },
 };
+
