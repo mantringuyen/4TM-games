@@ -431,6 +431,7 @@ func _ready() -> void:
 	
 	var mpa = layout_classic.mode_piece_area
 	if not mpa or mpa.has_current_preview_ui() or not mpa.has_next_preview_ui():
+		layout_classic.queue_free()
 		printerr("[FAIL Test 23] Falling UI must have ONLY Next preview and NO Current preview!")
 		get_tree().quit(1)
 		return
@@ -442,6 +443,7 @@ func _ready() -> void:
 	var ctrl_y = layout_classic.touch_controls.position.y
 	
 	if not (area_y + area_h <= board_y and board_y + board_h <= ctrl_y):
+		layout_classic.queue_free()
 		printerr("[FAIL Test 23] Falling vertical layout order invalid! Area Y=", area_y, " Board Y=", board_y, " Ctrl Y=", ctrl_y)
 		get_tree().quit(1)
 		return

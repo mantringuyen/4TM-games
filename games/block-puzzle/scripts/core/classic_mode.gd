@@ -665,6 +665,10 @@ func _update_previews() -> void:
 func _setup_board_and_piece_area() -> void:
 	if not mode_piece_area:
 		mode_piece_area = MODE_PIECE_AREA_SCENE.instantiate()
+		if not mode_piece_area.get_script():
+			var mpa_script = load("res://scripts/game/mode_piece_area.gd")
+			if mpa_script:
+				mode_piece_area.set_script(mpa_script)
 		add_child(mode_piece_area)
 	
 	if not board:

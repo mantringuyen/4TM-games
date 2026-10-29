@@ -28,6 +28,16 @@ class PiecePreviewDrawer extends Control:
 		shape_name = data.get("name", "")
 		queue_redraw()
 
+	func _get_game_state() -> Node:
+		var tree: SceneTree = get_tree() if is_inside_tree() else null
+		if not tree:
+			var main_loop = Engine.get_main_loop()
+			if main_loop is SceneTree:
+				tree = main_loop as SceneTree
+		if tree and tree.root:
+			return tree.root.get_node_or_null("GameState")
+		return null
+
 	func _draw() -> void:
 		if shape_cells.is_empty():
 			return
@@ -158,11 +168,11 @@ func set_falling_active(active: bool) -> void:
 
 
 func has_current_preview_ui() -> bool:
-	return get_node_or_null("ClassicPieceArea/Center/NextBox/CurrentPreviewPanel") != null or get_node_or_null("ClassicPieceArea/Center/NextBox/LblCurrent") != null
+	return get_node_or_null("ClassicPieceArea/Center/NextBox/CurrentPreviewPanel") != null or get_node_or_null("ClassicPieceArea/Center/NextBox/LblCurrent") != null or get_node_or_null("ClassicPieceArea/HBox/CurrentBox") != null
 
 
 func has_next_preview_ui() -> bool:
-	return get_node_or_null("ClassicPieceArea/Center/NextBox/PreviewPanel") != null
+	return get_node_or_null("ClassicPieceArea/Center/NextBox/PreviewPanel") != null or get_node_or_null("ClassicPieceArea/HBox/NextBox/PreviewPanel") != null
 
 
 func update_responsive_size(area_size: Vector2) -> void:
@@ -228,10 +238,10 @@ func _update_preview_panel(panel: Control, shape_data: Dictionary) -> void:
 	drawer.setup_shape(shape_data)
 
 
-func _get_game_state() -> Node:
+static func get_game_state_safe(node: Node = null) -> Node:
 	var tree: SceneTree = null
-	if is_inside_tree():
-		tree = get_tree()
+	if node and node.is_inside_tree():
+		tree = node.get_tree()
 	if not tree:
 		var main_loop = Engine.get_main_loop()
 		if main_loop is SceneTree:
@@ -239,3 +249,7 @@ func _get_game_state() -> Node:
 	if tree and tree.root:
 		return tree.root.get_node_or_null("GameState")
 	return null
+
+
+func _get_game_state() -> Node:
+	return get_game_state_safe(self)
