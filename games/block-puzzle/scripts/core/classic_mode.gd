@@ -836,8 +836,8 @@ func _resize_touch_control_rows(ctrl_w: float, ctrl_h: float, is_compact: bool) 
 		btn_drop.position = Vector2((ctrl_w - qd_w) * 0.5, 0.0)
 	var f_sz: int = 16 if is_compact else 19
 	var qd_f_sz: int = 18 if is_compact else 22
-	var icon_sz := Vector2(22, 22) if is_compact else Vector2(26, 26)
-	var qd_icon_sz := Vector2(26, 26) if is_compact else Vector2(30, 30)
+	var icon_sz := Vector2(40, 40) if is_compact else Vector2(46, 46)
+	var qd_icon_sz := Vector2(28, 28) if is_compact else Vector2(32, 32)
 	for b in [btn_left, btn_rotate, btn_right]:
 		if b:
 			b.add_theme_font_size_override("font_size", f_sz)
@@ -872,7 +872,7 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	vbox.add_theme_constant_override("separation", int(QUICK_DROP_SEPARATION_REGULAR))
 	touch_controls.add_child(vbox)
 	
-	# Group 1: LEFT / ROTATE / RIGHT (Distinct high-contrast palette)
+	# Group 1: LEFT / ROTATE / RIGHT (Coordinated Palette)
 	var row1 = HBoxContainer.new()
 	row1.name = "MoveRotateGroup"
 	row1.custom_minimum_size = Vector2(0, 56)
@@ -880,37 +880,37 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	row1.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row1)
 	
-	btn_left = _create_control_button("   LEFT", Color(0.10, 0.24, 0.58, 0.98), Color(0.35, 0.78, 1.0, 1.0))
+	btn_left = _create_control_button("", Color(0.08, 0.48, 0.82, 0.98), Color(0.42, 0.86, 1.0, 1.0))
 	btn_left.name = "BtnLeft"
-	UIIconScript.attach_to_button(btn_left, "left", Vector2(24, 24), "left", Color(0.90, 0.96, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_left, "left", Vector2(44, 44), "center", Color(0.90, 0.98, 1.0, 1.0))
 	btn_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_left.pressed.connect(move_left)
 	row1.add_child(btn_left)
 	
-	btn_rotate = _create_control_button("   ROTATE", Color(0.38, 0.14, 0.62, 0.98), Color(0.82, 0.58, 1.0, 1.0))
+	btn_rotate = _create_control_button("", Color(0.44, 0.16, 0.68, 0.98), Color(0.82, 0.58, 1.0, 1.0))
 	btn_rotate.name = "BtnRotate"
-	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(24, 24), "left", Color(0.96, 0.92, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(44, 44), "center", Color(0.96, 0.90, 1.0, 1.0))
 	btn_rotate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_rotate.pressed.connect(rotate_piece)
 	row1.add_child(btn_rotate)
 	
-	btn_right = _create_control_button("RIGHT   ", Color(0.10, 0.24, 0.58, 0.98), Color(0.35, 0.78, 1.0, 1.0))
+	btn_right = _create_control_button("", Color(0.08, 0.48, 0.82, 0.98), Color(0.42, 0.86, 1.0, 1.0))
 	btn_right.name = "BtnRight"
-	UIIconScript.attach_to_button(btn_right, "right", Vector2(24, 24), "right", Color(0.90, 0.96, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_right, "right", Vector2(44, 44), "center", Color(0.90, 0.98, 1.0, 1.0))
 	btn_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_right.pressed.connect(move_right)
 	row1.add_child(btn_right)
 	
-	# Group 2: Centered & Visually Separated QUICK DROP (Soft Drop completely removed, downward drop icon)
+	# Group 2: Centered & Visually Separated QUICK DROP
 	var row2 = HBoxContainer.new()
 	row2.name = "QuickDropRow"
 	row2.custom_minimum_size = Vector2(0, 58)
 	row2.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row2)
 	
-	btn_drop = _create_control_button("   QUICK DROP", Color(0.04, 0.44, 0.34, 0.98), Color(0.22, 0.96, 0.70, 1.0))
+	btn_drop = _create_control_button("    QUICK DROP", Color(0.88, 0.42, 0.08, 0.98), Color(1.0, 0.78, 0.32, 1.0))
 	btn_drop.name = "BtnQuickDrop"
-	UIIconScript.attach_to_button(btn_drop, "quick_drop", Vector2(28, 28), "left", Color(0.92, 1.0, 0.96, 1.0))
+	UIIconScript.attach_to_button(btn_drop, "quick_drop", Vector2(32, 32), "left", Color(1.0, 0.96, 0.88, 1.0))
 	btn_drop.custom_minimum_size = Vector2(round(width * 0.88), 58)
 	btn_drop.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_drop.pressed.connect(quick_drop)
@@ -925,10 +925,10 @@ func _refresh_control_labels() -> void:
 	var gs = _get_game_state()
 	if not gs or not gs.has_method("tr_text"):
 		return
-	if btn_left: btn_left.text = "   " + gs.tr_text("ctrl_left")
-	if btn_rotate: btn_rotate.text = "   " + gs.tr_text("ctrl_turn")
-	if btn_right: btn_right.text = gs.tr_text("ctrl_right") + "   "
-	if btn_drop: btn_drop.text = "   " + gs.tr_text("ctrl_hard_drop")
+	if btn_left: btn_left.text = ""
+	if btn_rotate: btn_rotate.text = ""
+	if btn_right: btn_right.text = ""
+	if btn_drop: btn_drop.text = "    " + gs.tr_text("ctrl_hard_drop")
 
 
 func _create_control_button(text: String, bg_col: Color, border_col: Color) -> Button:
