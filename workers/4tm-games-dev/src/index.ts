@@ -49,6 +49,52 @@ function isStaticAssetRequest(pathname: string): boolean {
   return staticExtensions.some((ext) => cleanPath.endsWith(ext)) || cleanPath.includes('.');
 }
 
+function supportsGzip(acceptEncoding: string | null): boolean {
+  if (!acceptEncoding) return false;
+  const tokens = acceptEncoding.split(',');
+  let gzipQ = -1;
+  let wildcardQ = -1;
+
+  for (const token of tokens) {
+    const [rawEncoding, ...rawParams] = token.trim().split(';');
+    const encoding = rawEncoding.trim().toLowerCase();
+    let q = 1.0;
+
+    for (const param of rawParams) {
+      const [k, v] = param.trim().split('=');
+      if (k && k.trim().toLowerCase() === 'q') {
+        const parsed = parseFloat(v);
+        if (!isNaN(parsed)) {
+          q = parsed;
+        }
+      }
+    }
+
+    if (encoding === 'gzip') {
+      gzipQ = q;
+    } else if (encoding === '*') {
+      wildcardQ = q;
+    }
+  }
+
+  if (gzipQ !== -1) {
+    return gzipQ > 0;
+  }
+  if (wildcardQ !== -1) {
+    return wildcardQ > 0;
+  }
+  return false;
+}
+
+function isSafariOrIOS(userAgent: string | null): boolean {
+  if (!userAgent) return false;
+  // Match iOS devices (iPhone, iPad, iPod)
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return true;
+  // Match Safari (WebKit engine without Chromium or other forks)
+  if (/Safari/i.test(userAgent) && !/Chrome|Chromium|CriOS|Edg|OPR/i.test(userAgent)) return true;
+  return false;
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -81,9 +127,12 @@ export default {
       try {
         const gzResponse = await env.ASSETS.fetch(gzRequest);
         if (gzResponse.status === 200 && (request.method === 'HEAD' || gzResponse.body)) {
-          const clientAcceptsGzip = /\bgzip\b/i.test(request.headers.get('accept-encoding') || '');
-          const headers = new Headers(gzResponse.headers);
+          const userAgent = request.headers.get('user-agent') || '';
+          const clientAcceptsGzip = supportsGzip(request.headers.get('accept-encoding'));
+          // Safari/iOS WebAssembly.instantiateStreaming requires uncompressed bytecode
+          const shouldDecompress = !clientAcceptsGzip || isSafariOrIOS(userAgent);
 
+          const headers = new Headers(gzResponse.headers);
           headers.set('Content-Type', 'application/wasm');
           headers.set('Cross-Origin-Opener-Policy', 'same-origin');
           headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
@@ -92,8 +141,8 @@ export default {
           headers.set('Cache-Control', 'public, max-age=300');
           headers.set('Vary', 'Accept-Encoding');
 
-          if (clientAcceptsGzip) {
-            // Stream pre-compressed .wasm.gz response directly when client supports gzip
+          if (!shouldDecompress) {
+            // Stream pre-compressed .wasm.gz response directly for gzip-capable non-Safari clients
             headers.set('Content-Encoding', 'gzip');
             const cl = gzResponse.headers.get('content-length');
             if (cl) {
@@ -105,7 +154,7 @@ export default {
               headers,
             });
           } else {
-            // Stream-decompress at the Worker when client does not support gzip
+            // Stream-decompress at Worker for Safari/iOS and clients that do not support gzip (e.g. gzip;q=0)
             headers.delete('Content-Encoding');
             headers.delete('Content-Length');
             const decompressedStream = gzResponse.body
