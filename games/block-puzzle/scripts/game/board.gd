@@ -1207,47 +1207,47 @@ func _draw() -> void:
 		lvl_accent = l_theme.get("grid_tint", lvl_accent)
 
 	var outer_cabinet = StyleBoxFlat.new()
-	outer_cabinet.bg_color = Color(0.04, 0.08, 0.18, BOARD_CABINET_ALPHA)
-	outer_cabinet.border_width_left = 2
-	outer_cabinet.border_width_top = 2
-	outer_cabinet.border_width_right = 2
-	outer_cabinet.border_width_bottom = 3
-	outer_cabinet.border_color = Color(lvl_accent.r, lvl_accent.g, lvl_accent.b, 0.68)
-	outer_cabinet.corner_radius_top_left = 18
-	outer_cabinet.corner_radius_top_right = 18
-	outer_cabinet.corner_radius_bottom_right = 18
-	outer_cabinet.corner_radius_bottom_left = 18
-	outer_cabinet.shadow_color = Color(0.02, 0.04, 0.14, 0.18)
-	outer_cabinet.shadow_size = 6
-	outer_cabinet.shadow_offset = Vector2(0, 2)
-	draw_style_box(outer_cabinet, bg_rect.grow(1.5))
+	outer_cabinet.bg_color = Color(0.04, 0.09, 0.26, maxf(0.92, BOARD_CABINET_ALPHA))
+	outer_cabinet.border_width_left = 3
+	outer_cabinet.border_width_top = 3
+	outer_cabinet.border_width_right = 3
+	outer_cabinet.border_width_bottom = 6
+	outer_cabinet.border_color = Color(0.12, 0.38, 0.88, 0.90)
+	outer_cabinet.corner_radius_top_left = 22
+	outer_cabinet.corner_radius_top_right = 22
+	outer_cabinet.corner_radius_bottom_right = 22
+	outer_cabinet.corner_radius_bottom_left = 22
+	outer_cabinet.shadow_color = Color(0.01, 0.02, 0.10, 0.55)
+	outer_cabinet.shadow_size = 14
+	outer_cabinet.shadow_offset = Vector2(0, 5)
+	draw_style_box(outer_cabinet, bg_rect.grow(2.0))
 
-	# Outer dark glass contour rim so cabinet edge is sharp against bright skies
+	# Outer dark contour rim so cabinet edge is sharp
 	var outer_contour = StyleBoxFlat.new()
 	outer_contour.bg_color = Color(0.0, 0.0, 0.0, 0.0)
 	outer_contour.border_width_left = 1
 	outer_contour.border_width_top = 1
 	outer_contour.border_width_right = 1
 	outer_contour.border_width_bottom = 1
-	outer_contour.border_color = Color(0.02, 0.05, 0.14, EMPTY_CELL_BORDER_ALPHA)
-	outer_contour.corner_radius_top_left = 19
-	outer_contour.corner_radius_top_right = 19
-	outer_contour.corner_radius_bottom_right = 19
-	outer_contour.corner_radius_bottom_left = 19
-	draw_style_box(outer_contour, bg_rect.grow(2.5))
+	outer_contour.border_color = Color(0.01, 0.04, 0.12, 0.60)
+	outer_contour.corner_radius_top_left = 23
+	outer_contour.corner_radius_top_right = 23
+	outer_contour.corner_radius_bottom_right = 23
+	outer_contour.corner_radius_bottom_left = 23
+	draw_style_box(outer_contour, bg_rect.grow(3.0))
 	
-	# Translucent luminous glass boundary
+	# Deep navy board well
 	var inner_well = StyleBoxFlat.new()
-	inner_well.bg_color = Color(0.02, 0.05, 0.14, BOARD_SURFACE_ALPHA)
-	inner_well.border_width_left = 1
-	inner_well.border_width_top = 1
-	inner_well.border_width_right = 1
-	inner_well.border_width_bottom = 1
-	inner_well.border_color = Color(0.94, 0.98, 1.0, EMPTY_CELL_BORDER_ALPHA)
-	inner_well.corner_radius_top_left = 15
-	inner_well.corner_radius_top_right = 15
-	inner_well.corner_radius_bottom_right = 15
-	inner_well.corner_radius_bottom_left = 15
+	inner_well.bg_color = Color(0.03, 0.07, 0.20, maxf(0.90, BOARD_SURFACE_ALPHA))
+	inner_well.border_width_left = 2
+	inner_well.border_width_top = 2
+	inner_well.border_width_right = 2
+	inner_well.border_width_bottom = 2
+	inner_well.border_color = Color(0.08, 0.22, 0.58, 0.75)
+	inner_well.corner_radius_top_left = 18
+	inner_well.corner_radius_top_right = 18
+	inner_well.corner_radius_bottom_right = 18
+	inner_well.corner_radius_bottom_left = 18
 	draw_style_box(inner_well, bg_rect)
 	
 	var cell_rad = int(clamp(CELL_SIZE * 0.18, 4.0, 9.0))

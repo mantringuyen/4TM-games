@@ -884,24 +884,24 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	row1.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row1)
 	
-	# LEFT: Vivid green background with large bold white arrow
-	btn_left = _create_control_button("", Color(0.16, 0.74, 0.32, 1.0), Color(0.58, 0.96, 0.68, 1.0))
+	# LEFT: Vivid candy green background with large bold white arrow (matches reference image)
+	btn_left = _create_control_button("", Color(0.30, 0.82, 0.14, 1.0), Color(0.68, 0.98, 0.52, 1.0), 8)
 	btn_left.name = "BtnLeft"
 	UIIconScript.attach_to_button(btn_left, "left", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_left.pressed.connect(move_left)
 	row1.add_child(btn_left)
 	
-	# ROTATE: Purple background with large clearly visible white rotation icon
-	btn_rotate = _create_control_button("", Color(0.52, 0.18, 0.78, 1.0), Color(0.86, 0.62, 1.0, 1.0))
+	# ROTATE: Vivid candy purple background with large clearly visible white rotation icon (matches reference image)
+	btn_rotate = _create_control_button("", Color(0.60, 0.20, 0.92, 1.0), Color(0.88, 0.68, 1.0, 1.0), 8)
 	btn_rotate.name = "BtnRotate"
 	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_rotate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_rotate.pressed.connect(rotate_piece)
 	row1.add_child(btn_rotate)
 	
-	# RIGHT: Vivid green background with large bold white arrow (same color as LEFT)
-	btn_right = _create_control_button("", Color(0.16, 0.74, 0.32, 1.0), Color(0.58, 0.96, 0.68, 1.0))
+	# RIGHT: Vivid candy green background with large bold white arrow (same color as LEFT)
+	btn_right = _create_control_button("", Color(0.30, 0.82, 0.14, 1.0), Color(0.68, 0.98, 0.52, 1.0), 8)
 	btn_right.name = "BtnRight"
 	UIIconScript.attach_to_button(btn_right, "right", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -909,14 +909,14 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	row1.add_child(btn_right)
 	
 	# Group 2: Centered & Visually Separated QUICK DROP
-	# Vivid blue background, large white downward icon, and large bold white QUICK DROP text
+	# Vivid bright candy blue background, large white downward icon, and large bold white QUICK DROP text
 	var row2 = HBoxContainer.new()
 	row2.name = "QuickDropRow"
 	row2.custom_minimum_size = Vector2(0, 58)
 	row2.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row2)
 	
-	btn_drop = _create_control_button("    QUICK DROP", Color(0.10, 0.48, 0.92, 1.0), Color(0.58, 0.86, 1.0, 1.0))
+	btn_drop = _create_control_button("    QUICK DROP", Color(0.10, 0.60, 0.98, 1.0), Color(0.62, 0.88, 1.0, 1.0), 8)
 	btn_drop.name = "BtnQuickDrop"
 	btn_drop.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
 	btn_drop.add_theme_color_override("font_shadow_color", Color(0.02, 0.10, 0.30, 0.88))
@@ -941,7 +941,7 @@ func _refresh_control_labels() -> void:
 	if btn_drop: btn_drop.text = "    " + gs.tr_text("ctrl_hard_drop")
 
 
-func _create_control_button(text: String, bg_col: Color, border_col: Color, extrusion: int = 6) -> Button:
+func _create_control_button(text: String, bg_col: Color, border_col: Color, extrusion: int = 8) -> Button:
 	var btn = Button.new()
 	btn.text = text
 	btn.add_theme_font_override("font", GameTypographyScript.get_hud_number_font(0.20, 1))
@@ -958,13 +958,13 @@ func _create_control_button(text: String, bg_col: Color, border_col: Color, extr
 	style.border_width_right = 2
 	style.border_width_bottom = extrusion
 	style.border_color = border_col
-	style.corner_radius_top_left = 20
-	style.corner_radius_top_right = 20
-	style.corner_radius_bottom_right = 20
-	style.corner_radius_bottom_left = 20
-	style.shadow_color = Color(0.02, 0.04, 0.14, 0.52)
-	style.shadow_size = 8
-	style.shadow_offset = Vector2(0, 3)
+	style.corner_radius_top_left = 24
+	style.corner_radius_top_right = 24
+	style.corner_radius_bottom_right = 24
+	style.corner_radius_bottom_left = 24
+	style.shadow_color = Color(0.01, 0.03, 0.14, 0.58)
+	style.shadow_size = 10
+	style.shadow_offset = Vector2(0, 4)
 	
 	var style_pressed = style.duplicate()
 	style_pressed.bg_color = bg_col.lightened(0.12)

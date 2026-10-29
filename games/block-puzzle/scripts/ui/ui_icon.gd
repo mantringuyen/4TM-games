@@ -482,7 +482,7 @@ static func attach_to_button(btn: Button, p_type: String, icon_sz: Vector2 = Vec
 	return existing
 
 
-static func attach_gloss_overlay(btn: Button, corner_r: int = 20) -> Control:
+static func attach_gloss_overlay(btn: Button, corner_r: int = 24) -> Control:
 	if not btn:
 		return null
 	var existing: Control = btn.get_node_or_null("ButtonGloss") as Control
@@ -497,13 +497,24 @@ static func attach_gloss_overlay(btn: Button, corner_r: int = 20) -> Control:
 		if btn:
 			var sz: Vector2 = btn.size
 			if sz.x > 8.0 and sz.y > 8.0:
-				var gh: float = maxf(8.0, (sz.y - 6.0) * 0.42)
-				var gr := Rect2(Vector2(4.0, 2.5), Vector2(sz.x - 8.0, gh))
+				# 1. Subtle top pill highlight across top half
+				var gh: float = maxf(8.0, (sz.y - 8.0) * 0.40)
+				var gr := Rect2(Vector2(4.0, 3.0), Vector2(sz.x - 8.0, gh))
 				var sb := StyleBoxFlat.new()
-				sb.bg_color = Color(1.0, 1.0, 1.0, 0.22)
+				sb.bg_color = Color(1.0, 1.0, 1.0, 0.18)
 				sb.corner_radius_top_left = max(2, corner_r - 3)
 				sb.corner_radius_top_right = max(2, corner_r - 3)
 				gloss.draw_style_box(sb, gr)
+				
+				# 2. Distinct curved candy specular shine oval at top-left corner (matches 3D reference target)
+				var shine_c := Vector2(clampf(sz.x * 0.22, 10.0, 24.0), clampf(sz.y * 0.24, 8.0, 18.0))
+				var shine_rx: float = clampf(sz.x * 0.16, 5.0, 18.0)
+				var shine_ry: float = clampf(sz.y * 0.10, 3.5, 9.5)
+				var shine_pts := PackedVector2Array()
+				for i in range(16):
+					var ang: float = float(i) * (TAU / 16.0)
+					shine_pts.append(shine_c + Vector2(cos(ang) * shine_rx, sin(ang) * shine_ry))
+				gloss.draw_colored_polygon(shine_pts, Color(1.0, 1.0, 1.0, 0.62))
 	)
 	if not btn.resized.is_connected(gloss.queue_redraw):
 		btn.resized.connect(gloss.queue_redraw)
@@ -896,77 +907,119 @@ func _draw() -> void:
 			var arc_r: float = r * 0.66
 			var arr_sh_col := Color(0.02, 0.02, 0.08, 0.40)
 			# Drop shadow
-			draw_arc(c + Vector2(0, 2.0), arc_r, -PI * 0.75, PI * 0.68, 24, arr_sh_col, arc_w, true)
-			# Main arc
-			draw_arc(c, arc_r, -PI * 0.75, PI * 0.68, 24, primary_color, arc_w, true)
-			var tip: Vector2 = c + Vector2(cos(-PI * 0.75), sin(-PI * 0.75)) * arc_r
-			var head_sz: float = maxf(7.0, r * 0.42)
-			var arr_t := PackedVector2Array([
-				tip + Vector2(-head_sz * 0.6, -head_sz * 0.7),
-				tip + Vector2(head_sz * 0.9, -head_sz * 0.2),
-				tip + Vector2(-head_sz * 0.2, head_sz * 0.8)
+		"restart", "turn":
+			var sh_col := Color(0.0, 0.0, 0.0, 0.38)
+			var sh_off := Vector2(0, 2.5)
+			var arc_w: float = maxf(4.2, r * 0.32)
+			var arc_r: float = r * 0.65
+			var head_sz: float = maxf(8.0, r * 0.44)
+			
+			# Upper clockwise arrow (right to left)
+			var a1_start: float = -PI * 0.05
+			var a1_end: float = -PI * 0.88
+			draw_arc(c + sh_off, arc_r, a1_end, a1_start, 14, sh_col, arc_w, true)
+			draw_arc(c, arc_r, a1_end, a1_start, 14, primary_color, arc_w, true)
+			
+			var tip1: Vector2 = c + Vector2(cos(a1_end), sin(a1_end)) * arc_r
+			var head1 := PackedVector2Array([
+				tip1 + Vector2(head_sz * 0.65, -head_sz * 0.35),
+				tip1 + Vector2(-head_sz * 0.45, -head_sz * 0.45),
+				tip1 + Vector2(head_sz * 0.05, head_sz * 0.65)
 			])
-			var arr_t_sh := PackedVector2Array([
-				tip + Vector2(-head_sz * 0.6, -head_sz * 0.7) + Vector2(0, 2.0),
-				tip + Vector2(head_sz * 0.9, -head_sz * 0.2) + Vector2(0, 2.0),
-				tip + Vector2(-head_sz * 0.2, head_sz * 0.8) + Vector2(0, 2.0)
+			var head1_sh := PackedVector2Array([head1[0] + sh_off, head1[1] + sh_off, head1[2] + sh_off])
+			draw_colored_polygon(head1_sh, sh_col)
+			draw_colored_polygon(head1, primary_color)
+			
+			# Lower clockwise arrow (left to right)
+			var a2_start: float = PI * 0.95
+			var a2_end: float = PI * 0.12
+			draw_arc(c + sh_off, arc_r, a2_end, a2_start, 14, sh_col, arc_w, true)
+			draw_arc(c, arc_r, a2_end, a2_start, 14, primary_color, arc_w, true)
+			
+			var tip2: Vector2 = c + Vector2(cos(a2_end), sin(a2_end)) * arc_r
+			var head2 := PackedVector2Array([
+				tip2 + Vector2(-head_sz * 0.65, head_sz * 0.35),
+				tip2 + Vector2(head_sz * 0.45, head_sz * 0.45),
+				tip2 + Vector2(-head_sz * 0.05, -head_sz * 0.65)
 			])
-			draw_colored_polygon(arr_t_sh, arr_sh_col)
-			draw_colored_polygon(arr_t, primary_color)
+			var head2_sh := PackedVector2Array([head2[0] + sh_off, head2[1] + sh_off, head2[2] + sh_off])
+			draw_colored_polygon(head2_sh, sh_col)
+			draw_colored_polygon(head2, primary_color)
 		"home":
 			var roof := PackedVector2Array([c + Vector2(-r * 0.78, 0.0), c + Vector2(0.0, -r * 0.78), c + Vector2(r * 0.78, 0.0)])
 			draw_colored_polygon(roof, primary_color)
 			draw_rect(Rect2(c + Vector2(-r * 0.52, 0.0), Vector2(r * 1.04, r * 0.72)), primary_color, true)
 		"left":
-			var l_pts := PackedVector2Array([
-				c + Vector2(r * 0.50, -r * 0.72),
-				c + Vector2(-r * 0.60, 0.0),
-				c + Vector2(r * 0.50, r * 0.72)
+			var sh_col := Color(0.0, 0.0, 0.0, 0.38)
+			var sh_off := Vector2(0, 2.5)
+			var stem_rc := Rect2(c + Vector2(-r * 0.06, -r * 0.22), Vector2(r * 0.56, r * 0.44))
+			var tri_pts := PackedVector2Array([
+				c + Vector2(-r * 0.04, -r * 0.65),
+				c + Vector2(-r * 0.65, 0.0),
+				c + Vector2(-r * 0.04, r * 0.65)
 			])
-			var l_sh := PackedVector2Array([
-				c + Vector2(r * 0.50, -r * 0.72) + Vector2(0, 2.0),
-				c + Vector2(-r * 0.60, 0.0) + Vector2(0, 2.0),
-				c + Vector2(r * 0.50, r * 0.72) + Vector2(0, 2.0)
-			])
-			draw_colored_polygon(l_sh, Color(0.02, 0.06, 0.02, 0.40))
-			draw_colored_polygon(l_pts, primary_color)
+			# Drop shadow
+			draw_rect(Rect2(stem_rc.position + sh_off, stem_rc.size), sh_col, true)
+			var tri_sh := PackedVector2Array([tri_pts[0] + sh_off, tri_pts[1] + sh_off, tri_pts[2] + sh_off])
+			draw_colored_polygon(tri_sh, sh_col)
+			# Solid white body
+			draw_rect(stem_rc, primary_color, true)
+			draw_colored_polygon(tri_pts, primary_color)
 		"right":
-			var r_pts := PackedVector2Array([
-				c + Vector2(-r * 0.50, -r * 0.72),
-				c + Vector2(r * 0.60, 0.0),
-				c + Vector2(-r * 0.50, r * 0.72)
+			var sh_col := Color(0.0, 0.0, 0.0, 0.38)
+			var sh_off := Vector2(0, 2.5)
+			var stem_rc := Rect2(c + Vector2(-r * 0.50, -r * 0.22), Vector2(r * 0.56, r * 0.44))
+			var tri_pts := PackedVector2Array([
+				c + Vector2(r * 0.04, -r * 0.65),
+				c + Vector2(r * 0.65, 0.0),
+				c + Vector2(r * 0.04, r * 0.65)
 			])
-			var r_sh := PackedVector2Array([
-				c + Vector2(-r * 0.50, -r * 0.72) + Vector2(0, 2.0),
-				c + Vector2(r * 0.60, 0.0) + Vector2(0, 2.0),
-				c + Vector2(-r * 0.50, r * 0.72) + Vector2(0, 2.0)
-			])
-			draw_colored_polygon(r_sh, Color(0.02, 0.06, 0.02, 0.40))
-			draw_colored_polygon(r_pts, primary_color)
+			# Drop shadow
+			draw_rect(Rect2(stem_rc.position + sh_off, stem_rc.size), sh_col, true)
+			var tri_sh := PackedVector2Array([tri_pts[0] + sh_off, tri_pts[1] + sh_off, tri_pts[2] + sh_off])
+			draw_colored_polygon(tri_sh, sh_col)
+			# Solid white body
+			draw_rect(stem_rc, primary_color, true)
+			draw_colored_polygon(tri_pts, primary_color)
 		"down":
 			var d_pts := PackedVector2Array([c + Vector2(-r * 0.68, -r * 0.42), c + Vector2(r * 0.68, -r * 0.42), c + Vector2(0.0, r * 0.62)])
 			draw_colored_polygon(d_pts, primary_color)
 		"quick_drop", "downward_drop", "drop":
+			var sh_col := Color(0.0, 0.0, 0.0, 0.38)
+			var sh_off := Vector2(0, 2.5)
 			var shaft_w: float = maxf(4.0, r * 0.34)
-			var bar_h: float = maxf(3.0, r * 0.22)
-			var bar_w: float = r * 1.36
-			var arr_pts := PackedVector2Array([
-				c + Vector2(-r * 0.68, -r * 0.12),
-				c + Vector2(r * 0.68, -r * 0.12),
-				c + Vector2(0.0, r * 0.56)
+			var shaft_h: float = r * 0.48
+			var shaft_rc := Rect2(c + Vector2(-shaft_w * 0.5, -r * 0.74), Vector2(shaft_w, shaft_h))
+			
+			var arr_head := PackedVector2Array([
+				c + Vector2(-r * 0.64, -r * 0.24),
+				c + Vector2(r * 0.64, -r * 0.24),
+				c + Vector2(0.0, r * 0.38)
 			])
-			var qd_sh_col := Color(0.02, 0.06, 0.16, 0.42)
-			draw_rect(Rect2(c + Vector2(-shaft_w * 0.5, -r * 0.78 + 2.0), Vector2(shaft_w, r * 0.72)), qd_sh_col, true)
-			var arr_sh := PackedVector2Array([
-				c + Vector2(-r * 0.68, -r * 0.12 + 2.0),
-				c + Vector2(r * 0.68, -r * 0.12 + 2.0),
-				c + Vector2(0.0, r * 0.56 + 2.0)
-			])
-			draw_colored_polygon(arr_sh, qd_sh_col)
-			draw_rect(Rect2(c + Vector2(-bar_w * 0.5, r * 0.70 + 2.0), Vector2(bar_w, bar_h)), qd_sh_col, true)
-			draw_rect(Rect2(c + Vector2(-shaft_w * 0.5, -r * 0.78), Vector2(shaft_w, r * 0.72)), primary_color, true)
-			draw_colored_polygon(arr_pts, primary_color)
-			draw_rect(Rect2(c + Vector2(-bar_w * 0.5, r * 0.70), Vector2(bar_w, bar_h)), primary_color, true)
+			
+			var tray_w: float = r * 1.34
+			var tray_h: float = maxf(3.0, r * 0.22)
+			var tray_y: float = c.y + r * 0.54
+			var tray_floor := Rect2(Vector2(c.x - tray_w * 0.5, tray_y), Vector2(tray_w, tray_h))
+			var ear_w: float = maxf(2.5, r * 0.20)
+			var ear_h: float = r * 0.32
+			var ear_l := Rect2(Vector2(c.x - tray_w * 0.5, tray_y - ear_h + tray_h), Vector2(ear_w, ear_h))
+			var ear_r := Rect2(Vector2(c.x + tray_w * 0.5 - ear_w, tray_y - ear_h + tray_h), Vector2(ear_w, ear_h))
+			
+			# Drop shadow
+			draw_rect(Rect2(shaft_rc.position + sh_off, shaft_rc.size), sh_col, true)
+			var head_sh := PackedVector2Array([arr_head[0] + sh_off, arr_head[1] + sh_off, arr_head[2] + sh_off])
+			draw_colored_polygon(head_sh, sh_col)
+			draw_rect(Rect2(tray_floor.position + sh_off, tray_floor.size), sh_col, true)
+			draw_rect(Rect2(ear_l.position + sh_off, ear_l.size), sh_col, true)
+			draw_rect(Rect2(ear_r.position + sh_off, ear_r.size), sh_col, true)
+			
+			# Solid white body
+			draw_rect(shaft_rc, primary_color, true)
+			draw_colored_polygon(arr_head, primary_color)
+			draw_rect(tray_floor, primary_color, true)
+			draw_rect(ear_l, primary_color, true)
+			draw_rect(ear_r, primary_color, true)
 		"bolt", "energy", "lightning":
 			var b_pts := PackedVector2Array([
 				c + Vector2(r * 0.15, -r * 0.82),
