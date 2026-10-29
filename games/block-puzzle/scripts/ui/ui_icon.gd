@@ -506,7 +506,7 @@ static func attach_gloss_overlay(btn: Button, corner_r: int = 24) -> Control:
 				sb.corner_radius_top_right = max(2, corner_r - 3)
 				gloss.draw_style_box(sb, gr)
 				
-				# 2. Distinct curved candy specular shine oval at top-left corner (matches 3D reference target)
+				# 2. Distinct curved glossy specular shine oval at top-left corner (matches 3D reference target)
 				var shine_c := Vector2(clampf(sz.x * 0.22, 10.0, 24.0), clampf(sz.y * 0.24, 8.0, 18.0))
 				var shine_rx: float = clampf(sz.x * 0.16, 5.0, 18.0)
 				var shine_ry: float = clampf(sz.y * 0.10, 3.5, 9.5)

@@ -319,9 +319,13 @@ func _complete_teardown_for_id(teardown_id: int) -> void:
 
 
 func _get_game_state() -> Node:
+	var tree: SceneTree = null
 	if is_inside_tree():
-		return get_node_or_null("/root/GameState")
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		return main_loop.root.get_node_or_null("GameState")
+		tree = get_tree()
+	if not tree:
+		var main_loop = Engine.get_main_loop()
+		if main_loop is SceneTree:
+			tree = main_loop as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("GameState")
 	return null

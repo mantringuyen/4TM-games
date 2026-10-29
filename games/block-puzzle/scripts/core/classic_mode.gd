@@ -884,7 +884,7 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	row1.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row1)
 	
-	# LEFT: Vivid candy green background with large bold white arrow (matches reference image)
+	# LEFT: Vivid emerald green background with large bold white arrow (matches reference image)
 	btn_left = _create_control_button("", Color(0.30, 0.82, 0.14, 1.0), Color(0.68, 0.98, 0.52, 1.0), 8)
 	btn_left.name = "BtnLeft"
 	UIIconScript.attach_to_button(btn_left, "left", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
@@ -892,7 +892,7 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	btn_left.pressed.connect(move_left)
 	row1.add_child(btn_left)
 	
-	# ROTATE: Vivid candy purple background with large clearly visible white rotation icon (matches reference image)
+	# ROTATE: Vivid royal purple background with large clearly visible white rotation icon (matches reference image)
 	btn_rotate = _create_control_button("", Color(0.60, 0.20, 0.92, 1.0), Color(0.88, 0.68, 1.0, 1.0), 8)
 	btn_rotate.name = "BtnRotate"
 	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
@@ -900,7 +900,7 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	btn_rotate.pressed.connect(rotate_piece)
 	row1.add_child(btn_rotate)
 	
-	# RIGHT: Vivid candy green background with large bold white arrow (same color as LEFT)
+	# RIGHT: Vivid emerald green background with large bold white arrow (same color as LEFT)
 	btn_right = _create_control_button("", Color(0.30, 0.82, 0.14, 1.0), Color(0.68, 0.98, 0.52, 1.0), 8)
 	btn_right.name = "BtnRight"
 	UIIconScript.attach_to_button(btn_right, "right", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
@@ -909,7 +909,7 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	row1.add_child(btn_right)
 	
 	# Group 2: Centered & Visually Separated QUICK DROP
-	# Vivid bright candy blue background, large white downward icon, and large bold white QUICK DROP text
+	# Vivid bright azure blue background, large white downward icon, and large bold white QUICK DROP text
 	var row2 = HBoxContainer.new()
 	row2.name = "QuickDropRow"
 	row2.custom_minimum_size = Vector2(0, 58)
@@ -996,29 +996,45 @@ func get_touch_controls() -> Control:
 
 
 func _get_game_state() -> Node:
+	var tree: SceneTree = null
 	if is_inside_tree():
-		return get_node_or_null("/root/GameState")
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		return main_loop.root.get_node_or_null("GameState")
+		tree = get_tree()
+	if not tree:
+		var main_loop = Engine.get_main_loop()
+		if main_loop is SceneTree:
+			tree = main_loop as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("GameState")
 	return null
 
 
 func _get_audio_manager() -> Node:
+	var tree: SceneTree = null
 	if is_inside_tree():
-		return get_node_or_null("/root/AudioManager")
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		return main_loop.root.get_node_or_null("AudioManager")
+		tree = get_tree()
+	if not tree:
+		var main_loop = Engine.get_main_loop()
+		if main_loop is SceneTree:
+			tree = main_loop as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("AudioManager")
 	return null
 
 
 func _cleanup_listeners() -> void:
 	var gs = _get_game_state()
-	if gs and gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_language_changed):
-		gs.language_changed.disconnect(_on_language_changed)
-	if is_inside_tree() and get_viewport() and get_viewport().size_changed.is_connected(_update_layout):
-		get_viewport().size_changed.disconnect(_update_layout)
+	if gs:
+		if gs.has_signal("language_changed") and gs.language_changed.is_connected(_on_language_changed):
+			gs.language_changed.disconnect(_on_language_changed)
+		if gs.has_signal("control_mode_changed") and gs.control_mode_changed.is_connected(_on_control_mode_changed):
+			gs.control_mode_changed.disconnect(_on_control_mode_changed)
+	var vp: Viewport = get_viewport() if is_inside_tree() else null
+	if not vp:
+		var ml = Engine.get_main_loop()
+		if ml is SceneTree and (ml as SceneTree).root:
+			vp = (ml as SceneTree).root
+	if vp and vp.size_changed.is_connected(_update_layout):
+		vp.size_changed.disconnect(_update_layout)
 
 
 func _on_mode_ended() -> void:

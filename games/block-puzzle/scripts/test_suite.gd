@@ -7046,7 +7046,10 @@ func _ready() -> void:
 
 
 func _cleanup_test_runner_nodes() -> void:
-	var am := get_node_or_null("/root/AudioManager")
+	var am: Node = null
+	var tree: SceneTree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree and tree.root:
+		am = tree.root.get_node_or_null("AudioManager")
 	if am and am.has_method("shutdown_audio"):
 		am.shutdown_audio()
 	for ch in get_children():

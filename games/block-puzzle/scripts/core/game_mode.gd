@@ -66,11 +66,15 @@ func reset_mode() -> void:
 
 
 func _get_input_manager() -> Node:
+	var tree: SceneTree = null
 	if is_inside_tree():
-		return get_node_or_null("/root/InputManager")
-	var main_loop := Engine.get_main_loop() as SceneTree
-	if main_loop and main_loop.root:
-		return main_loop.root.get_node_or_null("InputManager")
+		tree = get_tree()
+	if not tree:
+		var main_loop = Engine.get_main_loop()
+		if main_loop is SceneTree:
+			tree = main_loop as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("InputManager")
 	return null
 
 

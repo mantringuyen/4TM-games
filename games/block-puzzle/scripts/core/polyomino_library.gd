@@ -10,13 +10,13 @@ extends RefCounted
 # Primary visual identity: Red, Orange, Yellow, Green, Cyan, Blue, Purple, Magenta/Pink
 const COLOR_CYAN: Color = Color(0.0, 0.82, 0.95, 1.0)           # 1: Electric Cyan
 const COLOR_BLUE: Color = Color(0.09, 0.60, 0.96, 1.0)          # 2: Vivid Azure Blue
-const COLOR_GREEN: Color = Color(0.30, 0.84, 0.14, 1.0)         # 3: Candy Lime Green
+const COLOR_GREEN: Color = Color(0.30, 0.84, 0.14, 1.0)         # 3: Vivid Lime Green
 const COLOR_EMERALD: Color = COLOR_GREEN
 const COLOR_YELLOW: Color = Color(0.98, 0.72, 0.02, 1.0)        # 4: Sunny Golden Yellow
 const COLOR_AMBER: Color = COLOR_YELLOW
 const COLOR_ORANGE: Color = Color(0.97, 0.60, 0.04, 1.0)        # 5: Tangerine Orange
 const COLOR_PURPLE: Color = Color(0.64, 0.23, 0.95, 1.0)        # 6: Royal Magenta/Purple
-const COLOR_RED: Color = Color(0.94, 0.20, 0.24, 1.0)           # 7: Candy Warm Red
+const COLOR_RED: Color = Color(0.94, 0.20, 0.24, 1.0)           # 7: Vivid Warm Red
 const COLOR_ROSE: Color = COLOR_RED
 const COLOR_MAGENTA_PINK: Color = Color(0.96, 0.20, 0.48, 1.0)  # 8: Hot Pink
 const COLOR_PINK: Color = COLOR_MAGENTA_PINK
