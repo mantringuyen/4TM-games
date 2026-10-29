@@ -42,8 +42,8 @@ var touch_accumulated: Vector2 = Vector2.ZERO
 var is_touch_active: bool = false
 const TOUCH_STEP_X: float = 34.0
 const TOUCH_STEP_Y: float = 38.0
-const QUICK_DROP_SEPARATION_COMPACT: float = 18.0
-const QUICK_DROP_SEPARATION_REGULAR: float = 24.0
+const QUICK_DROP_SEPARATION_COMPACT: float = 20.0
+const QUICK_DROP_SEPARATION_REGULAR: float = 26.0
 
 
 func _init() -> void:
@@ -713,7 +713,9 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var ctrl_h: float = clampf(vp_h * 0.146, 118.0, 150.0)
 	
 	var avail_v: float = maxf(260.0, ad_top_y - hud_h)
-	var max_board_h: float = avail_v - piece_area_h - ctrl_h - (gap * 4.0)
+	# Generous visible gap between bottom of board and Falling controls
+	var board_to_ctrl_gap: float = 24.0 if is_compact else 32.0
+	var max_board_h: float = avail_v - piece_area_h - ctrl_h - board_to_ctrl_gap - (gap * 3.0)
 	
 	var max_layout_w: float = minf(vp_w, 720.0)
 	var board_sz := Vector2(max_layout_w * (10.0 / 12.0), max_layout_w)
@@ -723,19 +725,20 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var content_w: float = maxf(board_sz.x, minf(max_layout_w - 24.0, max_layout_w * (10.0 / 12.0)))
 	var content_x: float = (vp_w - content_w) * 0.5
 	
-	var cluster_h: float = piece_area_h + gap + board_sz.y + gap + ctrl_h
+	var cluster_h: float = piece_area_h + gap + board_sz.y + board_to_ctrl_gap + ctrl_h
 	var free_v: float = maxf(0.0, avail_v - cluster_h)
 	var extra_gap: float = free_v / 4.0
-	var step_gap: float = maxf(gap, gap + extra_gap * 0.45)
+	var step_gap: float = maxf(gap, gap + extra_gap * 0.40)
 	
-	var piece_area_y: float = hud_h + maxf(gap + 8.0, free_v * 0.30)
+	var piece_area_y: float = hud_h + maxf(gap + 6.0, free_v * 0.25)
 	var board_y: float = piece_area_y + piece_area_h + step_gap
-	var ctrl_y: float = board_y + board_sz.y + step_gap
+	var actual_b_gap: float = maxf(board_to_ctrl_gap, board_to_ctrl_gap + extra_gap * 0.45)
+	var ctrl_y: float = board_y + board_sz.y + actual_b_gap
 	
 	var max_ctrl_y: float = ad_top_y - ctrl_h - gap
 	if ctrl_y > max_ctrl_y:
 		ctrl_y = max_ctrl_y
-		board_y = ctrl_y - gap - board_sz.y
+		board_y = ctrl_y - maxf(18.0, board_to_ctrl_gap * 0.75) - board_sz.y
 		piece_area_y = maxf(hud_h + 8.0, board_y - gap - piece_area_h)
 	
 	if mode_piece_area:
@@ -754,7 +757,7 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	var group_sep: float = QUICK_DROP_SEPARATION_COMPACT if is_compact else QUICK_DROP_SEPARATION_REGULAR
 	var row1_h: float = floor((ctrl_h - group_sep) * 0.46)
 	var row2_h: float = maxf(54.0, ctrl_h - group_sep - row1_h)
-	var qd_w: float = round(content_w * 0.88)
+	var qd_w: float = round(content_w * 0.86)
 	var qd_x: float = content_x + (content_w - qd_w) * 0.5
 	
 	if touch_controls:
@@ -818,7 +821,7 @@ func _resize_touch_control_rows(ctrl_w: float, ctrl_h: float, is_compact: bool) 
 	vbox.size = Vector2(ctrl_w, ctrl_h)
 	var row1_h: float = floor((ctrl_h - sep) * 0.46)
 	var row2_h: float = maxf(54.0, ctrl_h - sep - row1_h)
-	var qd_w: float = round(ctrl_w * 0.88)
+	var qd_w: float = round(ctrl_w * 0.86)
 	if vbox.get_child_count() >= 2:
 		var r1 := vbox.get_child(0) as HBoxContainer
 		var r2 := vbox.get_child(1) as HBoxContainer
@@ -826,6 +829,7 @@ func _resize_touch_control_rows(ctrl_w: float, ctrl_h: float, is_compact: bool) 
 			r1.custom_minimum_size = Vector2(ctrl_w, row1_h)
 			r1.size = Vector2(ctrl_w, row1_h)
 			r1.position = Vector2.ZERO
+			r1.add_theme_constant_override("separation", 10 if is_compact else 12)
 		if r2:
 			r2.custom_minimum_size = Vector2(ctrl_w, row2_h)
 			r2.size = Vector2(ctrl_w, row2_h)
@@ -835,9 +839,9 @@ func _resize_touch_control_rows(ctrl_w: float, ctrl_h: float, is_compact: bool) 
 		btn_drop.size = Vector2(qd_w, row2_h)
 		btn_drop.position = Vector2((ctrl_w - qd_w) * 0.5, 0.0)
 	var f_sz: int = 16 if is_compact else 19
-	var qd_f_sz: int = 18 if is_compact else 22
-	var icon_sz := Vector2(40, 40) if is_compact else Vector2(46, 46)
-	var qd_icon_sz := Vector2(28, 28) if is_compact else Vector2(32, 32)
+	var qd_f_sz: int = 19 if is_compact else 22
+	var icon_sz := Vector2(42, 42) if is_compact else Vector2(48, 48)
+	var qd_icon_sz := Vector2(30, 30) if is_compact else Vector2(34, 34)
 	for b in [btn_left, btn_rotate, btn_right]:
 		if b:
 			b.add_theme_font_size_override("font_size", f_sz)
@@ -872,46 +876,52 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	vbox.add_theme_constant_override("separation", int(QUICK_DROP_SEPARATION_REGULAR))
 	touch_controls.add_child(vbox)
 	
-	# Group 1: LEFT / ROTATE / RIGHT (Coordinated Palette)
+	# Group 1: LEFT / ROTATE / RIGHT (Tactile 3D Palette)
 	var row1 = HBoxContainer.new()
 	row1.name = "MoveRotateGroup"
 	row1.custom_minimum_size = Vector2(0, 56)
-	row1.add_theme_constant_override("separation", 12)
+	row1.add_theme_constant_override("separation", 10)
 	row1.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row1)
 	
-	btn_left = _create_control_button("", Color(0.08, 0.48, 0.82, 0.98), Color(0.42, 0.86, 1.0, 1.0))
+	# LEFT: Vivid green background with large bold white arrow
+	btn_left = _create_control_button("", Color(0.16, 0.74, 0.32, 1.0), Color(0.58, 0.96, 0.68, 1.0))
 	btn_left.name = "BtnLeft"
-	UIIconScript.attach_to_button(btn_left, "left", Vector2(44, 44), "center", Color(0.90, 0.98, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_left, "left", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_left.pressed.connect(move_left)
 	row1.add_child(btn_left)
 	
-	btn_rotate = _create_control_button("", Color(0.44, 0.16, 0.68, 0.98), Color(0.82, 0.58, 1.0, 1.0))
+	# ROTATE: Purple background with large clearly visible white rotation icon
+	btn_rotate = _create_control_button("", Color(0.52, 0.18, 0.78, 1.0), Color(0.86, 0.62, 1.0, 1.0))
 	btn_rotate.name = "BtnRotate"
-	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(44, 44), "center", Color(0.96, 0.90, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_rotate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_rotate.pressed.connect(rotate_piece)
 	row1.add_child(btn_rotate)
 	
-	btn_right = _create_control_button("", Color(0.08, 0.48, 0.82, 0.98), Color(0.42, 0.86, 1.0, 1.0))
+	# RIGHT: Vivid green background with large bold white arrow (same color as LEFT)
+	btn_right = _create_control_button("", Color(0.16, 0.74, 0.32, 1.0), Color(0.58, 0.96, 0.68, 1.0))
 	btn_right.name = "BtnRight"
-	UIIconScript.attach_to_button(btn_right, "right", Vector2(44, 44), "center", Color(0.90, 0.98, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_right, "right", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_right.pressed.connect(move_right)
 	row1.add_child(btn_right)
 	
 	# Group 2: Centered & Visually Separated QUICK DROP
+	# Vivid blue background, large white downward icon, and large bold white QUICK DROP text
 	var row2 = HBoxContainer.new()
 	row2.name = "QuickDropRow"
 	row2.custom_minimum_size = Vector2(0, 58)
 	row2.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row2)
 	
-	btn_drop = _create_control_button("    QUICK DROP", Color(0.88, 0.42, 0.08, 0.98), Color(1.0, 0.78, 0.32, 1.0))
+	btn_drop = _create_control_button("    QUICK DROP", Color(0.10, 0.48, 0.92, 1.0), Color(0.58, 0.86, 1.0, 1.0))
 	btn_drop.name = "BtnQuickDrop"
-	UIIconScript.attach_to_button(btn_drop, "quick_drop", Vector2(32, 32), "left", Color(1.0, 0.96, 0.88, 1.0))
-	btn_drop.custom_minimum_size = Vector2(round(width * 0.88), 58)
+	btn_drop.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	btn_drop.add_theme_color_override("font_shadow_color", Color(0.02, 0.10, 0.30, 0.88))
+	UIIconScript.attach_to_button(btn_drop, "quick_drop", Vector2(34, 34), "left", Color(1.0, 1.0, 1.0, 1.0))
+	btn_drop.custom_minimum_size = Vector2(round(width * 0.86), 58)
 	btn_drop.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_drop.pressed.connect(quick_drop)
 	row2.add_child(btn_drop)
@@ -931,39 +941,45 @@ func _refresh_control_labels() -> void:
 	if btn_drop: btn_drop.text = "    " + gs.tr_text("ctrl_hard_drop")
 
 
-func _create_control_button(text: String, bg_col: Color, border_col: Color) -> Button:
+func _create_control_button(text: String, bg_col: Color, border_col: Color, extrusion: int = 6) -> Button:
 	var btn = Button.new()
 	btn.text = text
 	btn.add_theme_font_override("font", GameTypographyScript.get_hud_number_font(0.20, 1))
-	btn.add_theme_font_size_override("font_size", 17)
+	btn.add_theme_font_size_override("font_size", 18)
 	btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	btn.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.68))
+	btn.add_theme_color_override("font_shadow_color", Color(0.02, 0.04, 0.16, 0.85))
 	btn.add_theme_constant_override("shadow_offset_x", 1)
 	btn.add_theme_constant_override("shadow_offset_y", 2)
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = bg_col
 	style.border_width_left = 2
-	style.border_width_top = 2
+	style.border_width_top = 3
 	style.border_width_right = 2
-	style.border_width_bottom = 5
+	style.border_width_bottom = extrusion
 	style.border_color = border_col
-	style.corner_radius_top_left = 18
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_right = 18
-	style.corner_radius_bottom_left = 18
-	style.shadow_color = Color(0, 0, 0, 0.45)
-	style.shadow_size = 6
+	style.corner_radius_top_left = 20
+	style.corner_radius_top_right = 20
+	style.corner_radius_bottom_right = 20
+	style.corner_radius_bottom_left = 20
+	style.shadow_color = Color(0.02, 0.04, 0.14, 0.52)
+	style.shadow_size = 8
 	style.shadow_offset = Vector2(0, 3)
 	
 	var style_pressed = style.duplicate()
-	style_pressed.bg_color = bg_col.lightened(0.22)
+	style_pressed.bg_color = bg_col.lightened(0.12)
 	style_pressed.border_width_bottom = 2
+	style_pressed.shadow_size = 2
+	style_pressed.shadow_offset = Vector2(0, 1)
+	
+	var style_hover = style.duplicate()
+	style_hover.bg_color = bg_col.lightened(0.08)
 	
 	btn.add_theme_stylebox_override("normal", style)
-	btn.add_theme_stylebox_override("hover", style)
+	btn.add_theme_stylebox_override("hover", style_hover)
 	btn.add_theme_stylebox_override("pressed", style_pressed)
 	UIIconScript.remove_focus_outline(btn)
+	UIIconScript.attach_gloss_overlay(btn, 20)
 	return btn
 
 

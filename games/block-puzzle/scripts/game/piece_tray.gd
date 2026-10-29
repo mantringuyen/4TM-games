@@ -105,18 +105,18 @@ func _ensure_rotate_control() -> void:
 	btn_drag_rotate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn_drag_rotate.add_theme_font_override("font", GameTypographyScript.get_hud_number_font(0.20, 1))
 	btn_drag_rotate.add_theme_font_size_override("font_size", 18)
-	btn_drag_rotate.add_theme_color_override("font_color", Color(1.0, 0.98, 0.88, 1.0))
-	btn_drag_rotate.add_theme_color_override("font_shadow_color", Color(0.08, 0.02, 0.18, 0.85))
+	btn_drag_rotate.add_theme_color_override("font_color", Color(0.12, 0.16, 0.32, 1.0))
+	btn_drag_rotate.add_theme_color_override("font_shadow_color", Color(1.0, 0.94, 0.52, 0.85))
 	btn_drag_rotate.add_theme_constant_override("shadow_offset_x", 1)
 	btn_drag_rotate.add_theme_constant_override("shadow_offset_y", 2)
 
 	var st := StyleBoxFlat.new()
-	st.bg_color = Color(0.42, 0.16, 0.64, 0.98)
+	st.bg_color = Color(0.96, 0.72, 0.10, 1.0)
 	st.border_width_left = 2
-	st.border_width_top = 2
+	st.border_width_top = 3
 	st.border_width_right = 2
-	st.border_width_bottom = 5
-	st.border_color = Color(1.0, 0.88, 0.28, 1.0)
+	st.border_width_bottom = 6
+	st.border_color = Color(1.0, 0.94, 0.52, 1.0)
 	st.corner_radius_top_left = 20
 	st.corner_radius_top_right = 20
 	st.corner_radius_bottom_right = 20
@@ -125,20 +125,21 @@ func _ensure_rotate_control() -> void:
 	st.content_margin_right = 8.0
 	st.content_margin_top = 4.0
 	st.content_margin_bottom = 6.0
-	st.shadow_color = Color(0.04, 0.02, 0.14, 0.55)
+	st.shadow_color = Color(0.08, 0.05, 0.01, 0.45)
 	st.shadow_size = 8
 	st.shadow_offset = Vector2(0, 3)
 
 	var st_hov := st.duplicate()
-	st_hov.bg_color = Color(0.50, 0.22, 0.74, 0.99)
+	st_hov.bg_color = Color(1.0, 0.78, 0.18, 1.0)
 	var st_press := st.duplicate()
-	st_press.bg_color = Color(0.34, 0.12, 0.52, 0.99)
+	st_press.bg_color = Color(0.86, 0.62, 0.06, 1.0)
 	st_press.border_width_bottom = 2
 
 	btn_drag_rotate.add_theme_stylebox_override("normal", st)
 	btn_drag_rotate.add_theme_stylebox_override("hover", st_hov)
 	btn_drag_rotate.add_theme_stylebox_override("pressed", st_press)
-	UIIconScript.attach_to_button(btn_drag_rotate, "turn", Vector2(22, 22), "left", Color(1.0, 0.92, 0.34, 1.0))
+	UIIconScript.attach_to_button(btn_drag_rotate, "turn", Vector2(24, 24), "left", Color(0.12, 0.16, 0.32, 1.0))
+	UIIconScript.attach_gloss_overlay(btn_drag_rotate, 20)
 	if not btn_drag_rotate.pressed.is_connected(_on_btn_drag_rotate_pressed):
 		btn_drag_rotate.pressed.connect(_on_btn_drag_rotate_pressed)
 	_refresh_rotate_button_text()

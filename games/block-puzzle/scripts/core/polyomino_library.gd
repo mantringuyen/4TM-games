@@ -703,34 +703,45 @@ static func draw_material_block_cell(
 	var pat_col: Color = spec.get("pattern_color", Color(1, 1, 1, 0.5))
 	var acc_col: Color = spec.get("accent_color", Color(1, 1, 1, 0.8))
 	
-	var rad: int = int(clamp(cell_rect.size.x * 0.20, 4.0, 11.0))
+	var tile_rect: Rect2 = cell_rect.grow(-0.75)
+	var rad: int = int(clamp(tile_rect.size.x * 0.22, 4.0, 11.0))
+	
+	# 1. Soft contact shadow cast underneath the 3D tile
+	var shadow_offset := Vector2(0.0, maxf(1.8, tile_rect.size.y * 0.055))
+	var shadow_box := StyleBoxFlat.new()
+	shadow_box.bg_color = Color(0.01, 0.03, 0.10, 0.40)
+	shadow_box.corner_radius_top_left = rad + 1
+	shadow_box.corner_radius_top_right = rad + 1
+	shadow_box.corner_radius_bottom_right = rad + 1
+	shadow_box.corner_radius_bottom_left = rad + 1
+	canvas.draw_style_box(shadow_box, Rect2(tile_rect.position + shadow_offset, tile_rect.size))
+	
+	# 2. Outer 3D tile body with beveled edges and darker lower edge extrusion
 	var outer_box := StyleBoxFlat.new()
 	outer_box.bg_color = base_col
 	outer_box.border_width_left = 2
 	outer_box.border_width_top = 2
 	outer_box.border_width_right = 2
-	outer_box.border_width_bottom = max(4, int(cell_rect.size.y * 0.11))
-	outer_box.border_color = sh_col
+	outer_box.border_width_bottom = max(4, int(tile_rect.size.y * 0.12))
+	outer_box.border_color = sh_col.darkened(0.24)
 	outer_box.corner_radius_top_left = rad
 	outer_box.corner_radius_top_right = rad
 	outer_box.corner_radius_bottom_right = rad
 	outer_box.corner_radius_bottom_left = rad
-	outer_box.shadow_color = Color(0.0, 0.0, 0.0, 0.34)
-	outer_box.shadow_size = 4
-	outer_box.shadow_offset = Vector2(0, 2)
-	canvas.draw_style_box(outer_box, cell_rect)
+	canvas.draw_style_box(outer_box, tile_rect)
 	
-	var inset: float = maxf(3.0, cell_rect.size.x * 0.085)
-	var cushion_rect := cell_rect.grow(-inset)
+	# 3. Inner raised cushion face with subtle gradient & top-left light catch
+	var inset: float = maxf(2.6, tile_rect.size.x * 0.082)
+	var cushion_rect := tile_rect.grow(-inset)
 	cushion_rect.position.y -= 1.0
 	var irad: int = max(3, rad - 3)
 	var cushion_box := StyleBoxFlat.new()
-	cushion_box.bg_color = base_col.lightened(0.14)
+	cushion_box.bg_color = base_col.lightened(0.12)
 	cushion_box.border_width_top = 2
 	cushion_box.border_width_left = 2
 	cushion_box.border_width_right = 1
 	cushion_box.border_width_bottom = 2
-	cushion_box.border_color = hi_col
+	cushion_box.border_color = hi_col.lightened(0.15)
 	cushion_box.corner_radius_top_left = irad
 	cushion_box.corner_radius_top_right = irad
 	cushion_box.corner_radius_bottom_right = irad
@@ -740,6 +751,14 @@ static func draw_material_block_cell(
 	var cp: Vector2 = cushion_rect.position
 	var cs: Vector2 = cushion_rect.size
 	var center: Vector2 = cp + cs * 0.5
+	
+	# 4. Subtle top gradient overlay to enhance glossy 3D curvature
+	var top_half := Rect2(cp, Vector2(cs.x, cs.y * 0.52))
+	var grad_box := StyleBoxFlat.new()
+	grad_box.bg_color = Color(1.0, 1.0, 1.0, 0.16)
+	grad_box.corner_radius_top_left = irad
+	grad_box.corner_radius_top_right = irad
+	canvas.draw_style_box(grad_box, top_half)
 	
 	# Material-Specific Surface Pattern & Dimensional Detail
 	match mat_id:
@@ -894,15 +913,28 @@ static func draw_material_block_cell(
 			canvas.draw_colored_polygon(qp, pat_col)
 			canvas.draw_line(cp + Vector2(2.0, 2.0), cp + cs - Vector2(2.0, 2.0), acc_col, 1.8)
 	
-	# Top-left specular highlight bar for crisp 3D readability across all materials
-	var gloss_rect := Rect2(cp + Vector2(2.5, 2.0), Vector2(cs.x * 0.44, cs.y * 0.20))
+	# 5. Bright top-left glossy highlights for polished 3D tile look
+	var gloss_w: float = cs.x * 0.58
+	var gloss_h: float = cs.y * 0.24
+	var gloss_rect := Rect2(cp + Vector2(cs.x * 0.08, cs.y * 0.08), Vector2(gloss_w, gloss_h))
 	var gloss_box := StyleBoxFlat.new()
-	gloss_box.bg_color = Color(1.0, 1.0, 1.0, 0.42 if mat_id in ["stone", "red_brick", "wood", "moss_stone"] else 0.62)
+	var gloss_alpha: float = 0.40 if mat_id in ["stone", "red_brick", "wood", "moss_stone"] else 0.62
+	gloss_box.bg_color = Color(1.0, 1.0, 1.0, gloss_alpha)
 	gloss_box.corner_radius_top_left = max(2, irad - 1)
 	gloss_box.corner_radius_top_right = max(2, irad - 1)
-	gloss_box.corner_radius_bottom_right = max(2, irad - 1)
-	gloss_box.corner_radius_bottom_left = max(2, irad - 1)
+	gloss_box.corner_radius_bottom_right = max(2, irad - 2)
+	gloss_box.corner_radius_bottom_left = max(2, irad - 2)
 	canvas.draw_style_box(gloss_box, gloss_rect)
+	
+	# Crisp top-left specular glint spot
+	var glint_c := cp + Vector2(cs.x * 0.22, cs.y * 0.20)
+	var glint_r: float = clampf(cs.x * 0.08, 1.2, 3.2)
+	canvas.draw_circle(glint_c, glint_r, Color(1.0, 1.0, 1.0, 0.72))
+	
+	# Subtle bottom-right bounce-light reflection
+	var bounce_c := cp + Vector2(cs.x * 0.82, cs.y * 0.82)
+	var bounce_r: float = clampf(cs.x * 0.07, 1.0, 2.6)
+	canvas.draw_circle(bounce_c, bounce_r, Color(1.0, 1.0, 1.0, 0.22))
 	
 	# Special Milestone Level Gilded Filigree & Starlight Sparkle Effect
 	if is_special_milestone_level(level_num):

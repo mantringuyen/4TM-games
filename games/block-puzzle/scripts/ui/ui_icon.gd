@@ -482,6 +482,34 @@ static func attach_to_button(btn: Button, p_type: String, icon_sz: Vector2 = Vec
 	return existing
 
 
+static func attach_gloss_overlay(btn: Button, corner_r: int = 20) -> Control:
+	if not btn:
+		return null
+	var existing: Control = btn.get_node_or_null("ButtonGloss") as Control
+	if existing:
+		return existing
+	var gloss := Control.new()
+	gloss.name = "ButtonGloss"
+	gloss.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(gloss)
+	btn.move_child(gloss, 0)
+	gloss.draw.connect(func():
+		if btn:
+			var sz: Vector2 = btn.size
+			if sz.x > 8.0 and sz.y > 8.0:
+				var gh: float = maxf(8.0, (sz.y - 6.0) * 0.42)
+				var gr := Rect2(Vector2(4.0, 2.5), Vector2(sz.x - 8.0, gh))
+				var sb := StyleBoxFlat.new()
+				sb.bg_color = Color(1.0, 1.0, 1.0, 0.22)
+				sb.corner_radius_top_left = max(2, corner_r - 3)
+				sb.corner_radius_top_right = max(2, corner_r - 3)
+				gloss.draw_style_box(sb, gr)
+	)
+	if not btn.resized.is_connected(gloss.queue_redraw):
+		btn.resized.connect(gloss.queue_redraw)
+	return gloss
+
+
 static func setup_4tm_games_branding(brand_bar: HBoxContainer) -> Dictionary:
 	if not brand_bar:
 		return {}
@@ -864,35 +892,81 @@ func _draw() -> void:
 				draw_line(c + Vector2(r * 0.32, -r * 0.35), c + Vector2(r * 0.78, r * 0.35), Color(1.0, 0.36, 0.42, 1.0), 2.6, true)
 				draw_line(c + Vector2(r * 0.78, -r * 0.35), c + Vector2(r * 0.32, r * 0.35), Color(1.0, 0.36, 0.42, 1.0), 2.6, true)
 		"restart", "turn":
-			draw_arc(c, r * 0.68, -PI * 0.75, PI * 0.65, 20, primary_color, 2.8, true)
-			var tip: Vector2 = c + Vector2(cos(-PI * 0.75), sin(-PI * 0.75)) * (r * 0.68)
-			var arr_t := PackedVector2Array([tip + Vector2(-4, -5), tip + Vector2(6, -2), tip + Vector2(-2, 6)])
+			var arc_w: float = maxf(3.6, r * 0.26)
+			var arc_r: float = r * 0.66
+			var arr_sh_col := Color(0.02, 0.02, 0.08, 0.40)
+			# Drop shadow
+			draw_arc(c + Vector2(0, 2.0), arc_r, -PI * 0.75, PI * 0.68, 24, arr_sh_col, arc_w, true)
+			# Main arc
+			draw_arc(c, arc_r, -PI * 0.75, PI * 0.68, 24, primary_color, arc_w, true)
+			var tip: Vector2 = c + Vector2(cos(-PI * 0.75), sin(-PI * 0.75)) * arc_r
+			var head_sz: float = maxf(7.0, r * 0.42)
+			var arr_t := PackedVector2Array([
+				tip + Vector2(-head_sz * 0.6, -head_sz * 0.7),
+				tip + Vector2(head_sz * 0.9, -head_sz * 0.2),
+				tip + Vector2(-head_sz * 0.2, head_sz * 0.8)
+			])
+			var arr_t_sh := PackedVector2Array([
+				tip + Vector2(-head_sz * 0.6, -head_sz * 0.7) + Vector2(0, 2.0),
+				tip + Vector2(head_sz * 0.9, -head_sz * 0.2) + Vector2(0, 2.0),
+				tip + Vector2(-head_sz * 0.2, head_sz * 0.8) + Vector2(0, 2.0)
+			])
+			draw_colored_polygon(arr_t_sh, arr_sh_col)
 			draw_colored_polygon(arr_t, primary_color)
 		"home":
 			var roof := PackedVector2Array([c + Vector2(-r * 0.78, 0.0), c + Vector2(0.0, -r * 0.78), c + Vector2(r * 0.78, 0.0)])
 			draw_colored_polygon(roof, primary_color)
 			draw_rect(Rect2(c + Vector2(-r * 0.52, 0.0), Vector2(r * 1.04, r * 0.72)), primary_color, true)
 		"left":
-			var l_pts := PackedVector2Array([c + Vector2(r * 0.48, -r * 0.68), c + Vector2(-r * 0.58, 0.0), c + Vector2(r * 0.48, r * 0.68)])
+			var l_pts := PackedVector2Array([
+				c + Vector2(r * 0.50, -r * 0.72),
+				c + Vector2(-r * 0.60, 0.0),
+				c + Vector2(r * 0.50, r * 0.72)
+			])
+			var l_sh := PackedVector2Array([
+				c + Vector2(r * 0.50, -r * 0.72) + Vector2(0, 2.0),
+				c + Vector2(-r * 0.60, 0.0) + Vector2(0, 2.0),
+				c + Vector2(r * 0.50, r * 0.72) + Vector2(0, 2.0)
+			])
+			draw_colored_polygon(l_sh, Color(0.02, 0.06, 0.02, 0.40))
 			draw_colored_polygon(l_pts, primary_color)
 		"right":
-			var r_pts := PackedVector2Array([c + Vector2(-r * 0.48, -r * 0.68), c + Vector2(r * 0.58, 0.0), c + Vector2(-r * 0.48, r * 0.68)])
+			var r_pts := PackedVector2Array([
+				c + Vector2(-r * 0.50, -r * 0.72),
+				c + Vector2(r * 0.60, 0.0),
+				c + Vector2(-r * 0.50, r * 0.72)
+			])
+			var r_sh := PackedVector2Array([
+				c + Vector2(-r * 0.50, -r * 0.72) + Vector2(0, 2.0),
+				c + Vector2(r * 0.60, 0.0) + Vector2(0, 2.0),
+				c + Vector2(-r * 0.50, r * 0.72) + Vector2(0, 2.0)
+			])
+			draw_colored_polygon(r_sh, Color(0.02, 0.06, 0.02, 0.40))
 			draw_colored_polygon(r_pts, primary_color)
 		"down":
 			var d_pts := PackedVector2Array([c + Vector2(-r * 0.68, -r * 0.42), c + Vector2(r * 0.68, -r * 0.42), c + Vector2(0.0, r * 0.62)])
 			draw_colored_polygon(d_pts, primary_color)
 		"quick_drop", "downward_drop", "drop":
-			var shaft_w: float = maxf(3.0, r * 0.32)
-			draw_rect(Rect2(c + Vector2(-shaft_w * 0.5, -r * 0.78), Vector2(shaft_w, r * 0.72)), primary_color, true)
-			var arr_pts := PackedVector2Array([
-				c + Vector2(-r * 0.64, -r * 0.12),
-				c + Vector2(r * 0.64, -r * 0.12),
-				c + Vector2(0.0, r * 0.52)
-			])
-			draw_colored_polygon(arr_pts, primary_color)
-			var bar_h: float = maxf(2.5, r * 0.22)
+			var shaft_w: float = maxf(4.0, r * 0.34)
+			var bar_h: float = maxf(3.0, r * 0.22)
 			var bar_w: float = r * 1.36
-			draw_rect(Rect2(c + Vector2(-bar_w * 0.5, r * 0.68), Vector2(bar_w, bar_h)), primary_color, true)
+			var arr_pts := PackedVector2Array([
+				c + Vector2(-r * 0.68, -r * 0.12),
+				c + Vector2(r * 0.68, -r * 0.12),
+				c + Vector2(0.0, r * 0.56)
+			])
+			var qd_sh_col := Color(0.02, 0.06, 0.16, 0.42)
+			draw_rect(Rect2(c + Vector2(-shaft_w * 0.5, -r * 0.78 + 2.0), Vector2(shaft_w, r * 0.72)), qd_sh_col, true)
+			var arr_sh := PackedVector2Array([
+				c + Vector2(-r * 0.68, -r * 0.12 + 2.0),
+				c + Vector2(r * 0.68, -r * 0.12 + 2.0),
+				c + Vector2(0.0, r * 0.56 + 2.0)
+			])
+			draw_colored_polygon(arr_sh, qd_sh_col)
+			draw_rect(Rect2(c + Vector2(-bar_w * 0.5, r * 0.70 + 2.0), Vector2(bar_w, bar_h)), qd_sh_col, true)
+			draw_rect(Rect2(c + Vector2(-shaft_w * 0.5, -r * 0.78), Vector2(shaft_w, r * 0.72)), primary_color, true)
+			draw_colored_polygon(arr_pts, primary_color)
+			draw_rect(Rect2(c + Vector2(-bar_w * 0.5, r * 0.70), Vector2(bar_w, bar_h)), primary_color, true)
 		"bolt", "energy", "lightning":
 			var b_pts := PackedVector2Array([
 				c + Vector2(r * 0.15, -r * 0.82),
