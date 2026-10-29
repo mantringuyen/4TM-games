@@ -157,8 +157,8 @@ func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
 
 	if lbl_title:
 		GameTypographyScript.apply_heading_typography(lbl_title, 36 if is_compact else 40)
-		lbl_title.add_theme_color_override("font_color", Color(1.0, 0.94, 0.40, 1.0))
-		lbl_title.add_theme_color_override("font_shadow_color", Color(0.04, 0.08, 0.28, 0.90))
+		lbl_title.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
+		lbl_title.add_theme_color_override("font_shadow_color", Color(0.85, 0.78, 0.65, 0.60))
 
 	if btn_resume:
 		btn_resume.custom_minimum_size.y = resume_h
@@ -178,18 +178,8 @@ func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
 func _apply_panel_style() -> void:
 	if not panel_container:
 		return
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(0.24, 0.44, 0.86, 0.98)
-	st.border_width_left = 4
-	st.border_width_top = 4
-	st.border_width_right = 4
-	st.border_width_bottom = 10
-	st.border_color = Color(1.0, 0.92, 0.45, 1.0)
-	st.set_corner_radius_all(32)
-	st.shadow_color = Color(0.04, 0.08, 0.28, 0.60)
-	st.shadow_size = 24
-	st.shadow_offset = Vector2(0, 8)
-	panel_container.add_theme_stylebox_override("panel", st)
+	UIIconScript.apply_cream_panel_style(panel_container)
+
 
 
 func _apply_action_button_style(btn: Button, bg_col: Color, border_col: Color) -> void:

@@ -1220,14 +1220,14 @@ func _draw() -> void:
 	outer_cabinet.border_width_top = 3
 	outer_cabinet.border_width_right = 3
 	outer_cabinet.border_width_bottom = 6
-	outer_cabinet.border_color = Color(0.12, 0.38, 0.88, 0.90)
+	outer_cabinet.border_color = Color(0.957, 0.847, 0.541, 0.90) # Warm cream-gold #F4D88A
 	outer_cabinet.corner_radius_top_left = 22
 	outer_cabinet.corner_radius_top_right = 22
 	outer_cabinet.corner_radius_bottom_right = 22
 	outer_cabinet.corner_radius_bottom_left = 22
-	outer_cabinet.shadow_color = Color(0.01, 0.02, 0.10, 0.55)
-	outer_cabinet.shadow_size = 14
-	outer_cabinet.shadow_offset = Vector2(0, 5)
+	outer_cabinet.shadow_color = Color(0.18, 0.12, 0.08, 0.35)
+	outer_cabinet.shadow_size = 12
+	outer_cabinet.shadow_offset = Vector2(0, 4)
 	draw_style_box(outer_cabinet, bg_rect.grow(2.0))
 
 	# Outer dark contour rim so cabinet edge is sharp
@@ -1237,7 +1237,7 @@ func _draw() -> void:
 	outer_contour.border_width_top = 1
 	outer_contour.border_width_right = 1
 	outer_contour.border_width_bottom = 1
-	outer_contour.border_color = Color(0.01, 0.04, 0.12, 0.60)
+	outer_contour.border_color = Color(0.333, 0.231, 0.196, 0.60) # Dark Brown contour #553B32
 	outer_contour.corner_radius_top_left = 23
 	outer_contour.corner_radius_top_right = 23
 	outer_contour.corner_radius_bottom_right = 23
@@ -1251,7 +1251,7 @@ func _draw() -> void:
 	inner_well.border_width_top = 2
 	inner_well.border_width_right = 2
 	inner_well.border_width_bottom = 2
-	inner_well.border_color = Color(0.08, 0.22, 0.58, 0.75)
+	inner_well.border_color = Color(0.957, 0.847, 0.541, 0.60)
 	inner_well.corner_radius_top_left = 18
 	inner_well.corner_radius_top_right = 18
 	inner_well.corner_radius_bottom_right = 18
@@ -1266,7 +1266,7 @@ func _draw() -> void:
 	empty_socket_even.border_width_top = 1
 	empty_socket_even.border_width_right = 1
 	empty_socket_even.border_width_bottom = 1
-	empty_socket_even.border_color = Color(0.18, 0.38, 0.72, EMPTY_CELL_BORDER_ALPHA)
+	empty_socket_even.border_color = Color(0.847, 0.788, 0.624, 0.35) # Subtle #D8C99F
 	empty_socket_even.corner_radius_top_left = cell_rad
 	empty_socket_even.corner_radius_top_right = cell_rad
 	empty_socket_even.corner_radius_bottom_right = cell_rad
@@ -1281,8 +1281,7 @@ func _draw() -> void:
 	empty_socket_glass_rim.border_width_top = 1
 	empty_socket_glass_rim.border_width_right = 1
 	empty_socket_glass_rim.border_width_bottom = 1
-	var rim_tint: Color = lvl_accent.lightened(0.55)
-	empty_socket_glass_rim.border_color = Color(rim_tint.r, rim_tint.g, rim_tint.b, EMPTY_CELL_BORDER_ALPHA * 0.85)
+	empty_socket_glass_rim.border_color = Color(0.847, 0.788, 0.624, 0.25) # Subtle #D8C99F
 	empty_socket_glass_rim.corner_radius_top_left = inner_rad
 	empty_socket_glass_rim.corner_radius_top_right = inner_rad
 	empty_socket_glass_rim.corner_radius_bottom_right = inner_rad

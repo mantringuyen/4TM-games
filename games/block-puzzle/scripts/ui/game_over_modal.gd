@@ -75,24 +75,30 @@ func _on_inventory_changed_modal(_inv) -> void:
 
 func _ready() -> void:
 	_ensure_nodes()
+	if panel_container:
+		UIIconScript.apply_cream_panel_style(panel_container)
 	_rewarded_ad = RewardedAdScript.new()
 	if btn_extra_life:
+		UIIconScript.apply_secondary_game_button_style(btn_extra_life, false, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_extra_life, 22)
 		UIIconScript.attach_to_button(btn_extra_life, "extra_life", Vector2(28, 28), "left")
 		if not btn_extra_life.pressed.is_connected(_on_btn_extra_life_pressed):
 			btn_extra_life.pressed.connect(_on_btn_extra_life_pressed)
 	if btn_watch_ad:
+		UIIconScript.apply_reward_game_button_style(btn_watch_ad, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_watch_ad, 22)
 		UIIconScript.attach_to_button(btn_watch_ad, "play", Vector2(26, 26), "left")
 		if not btn_watch_ad.pressed.is_connected(_on_btn_watch_ad_pressed):
 			btn_watch_ad.pressed.connect(_on_btn_watch_ad_pressed)
 	if btn_next_level:
+		UIIconScript.apply_primary_game_button_style(btn_next_level)
 		GameTypographyScript.apply_primary_button_typography(btn_next_level, 24)
 		UIIconScript.attach_to_button(btn_next_level, "play", Vector2(26, 26), "left")
 		if not btn_next_level.pressed.is_connected(_on_btn_next_level_pressed):
 			btn_next_level.pressed.connect(_on_btn_next_level_pressed)
 	if btn_retry:
-		GameTypographyScript.apply_secondary_button_typography(btn_retry, 22)
+		UIIconScript.apply_primary_game_button_style(btn_retry)
+		GameTypographyScript.apply_primary_button_typography(btn_retry, 22)
 		UIIconScript.attach_to_button(btn_retry, "restart", Vector2(26, 26), "left")
 		if not btn_retry.pressed.is_connected(_on_btn_retry_pressed):
 			btn_retry.pressed.connect(_on_btn_retry_pressed)
@@ -280,6 +286,8 @@ func _render_modal_state() -> void:
 	last_next_level = int(last_stats.get("next_level", last_final_level + 1))
 	
 	if lbl_title:
+		GameTypographyScript.apply_heading_typography(lbl_title, 28)
+		lbl_title.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 		if is_complete:
 			var fmt_c = state_mgr.tr_text("modal_level_complete") if state_mgr else "LEVEL %d COMPLETE!"
 			lbl_title.text = fmt_c % last_final_level
@@ -288,11 +296,17 @@ func _render_modal_state() -> void:
 			lbl_title.text = fmt_o % last_final_level
 	
 	if lbl_final_score_title and state_mgr:
+		GameTypographyScript.apply_body_typography(lbl_final_score_title, 16)
 		lbl_final_score_title.text = state_mgr.tr_text("modal_final_score")
+		lbl_final_score_title.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 	if lbl_final_score:
+		GameTypographyScript.apply_hud_score_typography(lbl_final_score, 38)
 		lbl_final_score.text = str(last_final_score)
+		lbl_final_score.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 	if lbl_high_score and state_mgr:
+		GameTypographyScript.apply_body_typography(lbl_high_score, 15)
 		lbl_high_score.text = state_mgr.tr_text("modal_best_score") % state_mgr.high_score
+		lbl_high_score.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 	
 	var stars_earned: int = int(last_stats.get("stars", 0))
 	if lbl_stars:
@@ -302,6 +316,8 @@ func _render_modal_state() -> void:
 			lbl_stars.text = "%d/3 STARS" % stars_earned
 	
 	if lbl_unlock_status:
+		GameTypographyScript.apply_body_typography(lbl_unlock_status, 15)
+		lbl_unlock_status.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 		if is_complete:
 			lbl_unlock_status.visible = true
 			var fmt_u = state_mgr.tr_text("modal_unlocked_next") if state_mgr else "LEVEL %d UNLOCKED!"
@@ -314,8 +330,10 @@ func _render_modal_state() -> void:
 	
 	var coins_earned: int = int(last_stats.get("coins_earned", 0))
 	if lbl_reward_coins:
+		GameTypographyScript.apply_heading_typography(lbl_reward_coins, 20)
 		var fmt_r = state_mgr.tr_text("modal_reward_coins") if state_mgr else "REWARD: +%d COINS"
 		lbl_reward_coins.text = fmt_r % coins_earned
+		lbl_reward_coins.add_theme_color_override("font_color", UIIconScript.COLOR_CORAL_SECONDARY)
 	
 	if is_complete:
 		# Level Complete modal state

@@ -108,6 +108,40 @@ static func is_button_frameless(btn: Button) -> bool:
 	return true
 
 
+# Unified Visual Palette Constants
+const COLOR_CREAM_BASE: Color = Color(0.968, 0.922, 0.824, 0.98)       # #F7EBD2 Warm Cream Panel Fill
+const COLOR_CREAM_LIGHT: Color = Color(1.0, 0.976, 0.925, 1.0)       # #FFF9EC Light Cream Face
+const COLOR_GREEN_PRIMARY: Color = Color(0.149, 0.788, 0.420, 1.0)   # #26C96B Fresh Green Primary
+const COLOR_GREEN_HIGHLIGHT: Color = Color(0.408, 0.886, 0.616, 1.0) # #68E29D Primary Top Highlight
+const COLOR_YELLOW_ACCENT: Color = Color(0.957, 0.784, 0.290, 1.0)   # #F4C84A Warm Yellow Accent
+const COLOR_YELLOW_LIGHT: Color = Color(0.988, 0.918, 0.647, 1.0)    # #FCEAA5
+const COLOR_CORAL_SECONDARY: Color = Color(0.914, 0.545, 0.263, 1.0) # #E98B43 Coral/Orange Accent
+const COLOR_CORAL_LIGHT: Color = Color(0.973, 0.714, 0.510, 1.0)     # #F8B682
+const COLOR_DARK_BROWN: Color = Color(0.333, 0.231, 0.196, 1.0)     # #553B32 Dark Brown Outline/Text
+const COLOR_DARK_BROWN_SHADOW: Color = Color(0.20, 0.12, 0.08, 0.45)
+
+
+static func apply_cream_panel_style(panel: PanelContainer, corner_r: int = 32) -> void:
+	if not panel:
+		return
+	var st := StyleBoxFlat.new()
+	st.bg_color = COLOR_CREAM_BASE
+	st.border_width_left = 3
+	st.border_width_top = 4
+	st.border_width_right = 3
+	st.border_width_bottom = 10
+	st.border_color = COLOR_DARK_BROWN
+	st.set_corner_radius_all(corner_r)
+	st.shadow_color = COLOR_DARK_BROWN_SHADOW
+	st.shadow_size = 22
+	st.shadow_offset = Vector2(0, 8)
+	st.content_margin_left = 16.0
+	st.content_margin_right = 16.0
+	st.content_margin_top = 16.0
+	st.content_margin_bottom = 20.0
+	panel.add_theme_stylebox_override("panel", st)
+
+
 static func apply_audio_toggle_button_identity_style(btn: Button) -> void:
 	if not btn:
 		return
@@ -118,17 +152,14 @@ static func apply_audio_toggle_button_identity_style(btn: Button) -> void:
 	btn.self_modulate = Color(1.0, 1.0, 1.0, 1.0)
 	
 	var base_st := StyleBoxFlat.new()
-	base_st.bg_color = Color(0.88, 0.62, 0.08, 0.98)
+	base_st.bg_color = COLOR_CREAM_LIGHT
 	base_st.border_width_left = 2
-	base_st.border_width_top = 2
+	base_st.border_width_top = 3
 	base_st.border_width_right = 2
 	base_st.border_width_bottom = 6
-	base_st.border_color = Color(1.0, 0.92, 0.48, 1.0)
-	base_st.corner_radius_top_left = 20
-	base_st.corner_radius_top_right = 20
-	base_st.corner_radius_bottom_right = 20
-	base_st.corner_radius_bottom_left = 20
-	base_st.shadow_color = Color(0.02, 0.06, 0.22, 0.50)
+	base_st.border_color = COLOR_DARK_BROWN
+	base_st.set_corner_radius_all(20)
+	base_st.shadow_color = COLOR_DARK_BROWN_SHADOW
 	base_st.shadow_size = 8
 	base_st.shadow_offset = Vector2(0, 3)
 	
@@ -138,52 +169,18 @@ static func apply_audio_toggle_button_identity_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("hover_pressed", base_st)
 	btn.add_theme_stylebox_override("disabled", base_st)
 	remove_focus_outline(btn)
-	btn.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_hover_pressed_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_focus_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_disabled_color", Color(1.0, 1.0, 1.0, 1.0))
+	btn.add_theme_color_override("font_color", COLOR_DARK_BROWN)
+	btn.add_theme_color_override("font_hover_color", COLOR_DARK_BROWN)
+	btn.add_theme_color_override("font_pressed_color", COLOR_DARK_BROWN)
+	btn.add_theme_color_override("font_hover_pressed_color", COLOR_DARK_BROWN)
+	btn.add_theme_color_override("font_focus_color", COLOR_DARK_BROWN)
+	btn.add_theme_color_override("font_disabled_color", COLOR_DARK_BROWN)
 	btn.add_theme_font_override("font", GameTypographyScript.get_display_font(0.18, 1))
+	setup_button_press_feedback(btn, false)
 
 
 static func apply_voice_button_identity_style(btn: Button) -> void:
-	if not btn:
-		return
-	btn.disabled = false
-	btn.toggle_mode = false
-	btn.focus_mode = Control.FOCUS_NONE
-	btn.modulate = Color(1.0, 1.0, 1.0, 1.0)
-	btn.self_modulate = Color(1.0, 1.0, 1.0, 1.0)
-	
-	var base_st := StyleBoxFlat.new()
-	base_st.bg_color = Color(0.08, 0.58, 0.68, 0.98)
-	base_st.border_width_left = 2
-	base_st.border_width_top = 2
-	base_st.border_width_right = 2
-	base_st.border_width_bottom = 6
-	base_st.border_color = Color(0.58, 0.95, 1.0, 1.0)
-	base_st.corner_radius_top_left = 20
-	base_st.corner_radius_top_right = 20
-	base_st.corner_radius_bottom_right = 20
-	base_st.corner_radius_bottom_left = 20
-	base_st.shadow_color = Color(0.02, 0.14, 0.22, 0.50)
-	base_st.shadow_size = 8
-	base_st.shadow_offset = Vector2(0, 3)
-	
-	btn.add_theme_stylebox_override("normal", base_st)
-	btn.add_theme_stylebox_override("hover", base_st)
-	btn.add_theme_stylebox_override("pressed", base_st)
-	btn.add_theme_stylebox_override("hover_pressed", base_st)
-	btn.add_theme_stylebox_override("disabled", base_st)
-	remove_focus_outline(btn)
-	btn.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_hover_pressed_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_focus_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_color_override("font_disabled_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_font_override("font", GameTypographyScript.get_display_font(0.18, 1))
+	apply_audio_toggle_button_identity_style(btn)
 
 
 static func apply_game_button_style(
@@ -203,9 +200,9 @@ static func apply_game_button_style(
 	st.border_width_top = 4
 	st.border_width_right = 3
 	st.border_width_bottom = extrusion_depth
-	st.border_color = highlight_col
+	st.border_color = COLOR_DARK_BROWN
 	st.set_corner_radius_all(corner_r)
-	st.shadow_color = Color(0.02, 0.04, 0.16, 0.60)
+	st.shadow_color = COLOR_DARK_BROWN_SHADOW
 	st.shadow_size = shadow_sz
 	st.shadow_offset = shadow_off
 	st.content_margin_left = 14.0
@@ -214,8 +211,8 @@ static func apply_game_button_style(
 	st.content_margin_bottom = 6.0 + float(extrusion_depth) * 0.35
 
 	var st_hov := st.duplicate() as StyleBoxFlat
-	st_hov.bg_color = bg_col.lightened(0.10)
-	st_hov.border_color = highlight_col.lightened(0.12)
+	st_hov.bg_color = bg_col.lightened(0.08)
+	st_hov.border_color = COLOR_DARK_BROWN
 	st_hov.shadow_size = shadow_sz + 2
 	st_hov.shadow_offset = shadow_off + Vector2(0, 1)
 
@@ -228,9 +225,9 @@ static func apply_game_button_style(
 	st_press.content_margin_bottom = 6.0
 
 	var st_dis := st.duplicate() as StyleBoxFlat
-	st_dis.bg_color = Color(0.24, 0.30, 0.44, 0.85)
-	st_dis.border_color = Color(0.40, 0.46, 0.58, 0.80)
-	st_dis.shadow_color = Color(0.01, 0.02, 0.08, 0.30)
+	st_dis.bg_color = Color(0.82, 0.78, 0.72, 0.85)
+	st_dis.border_color = Color(0.55, 0.48, 0.40, 0.80)
+	st_dis.shadow_color = Color(0.20, 0.12, 0.08, 0.20)
 	st_dis.shadow_size = 4
 	st_dis.shadow_offset = Vector2(0, 2)
 
@@ -240,66 +237,89 @@ static func apply_game_button_style(
 	btn.add_theme_stylebox_override("disabled", st_dis)
 	btn.add_theme_stylebox_override("focus", get_empty_focus_stylebox())
 	btn.add_theme_font_override("font", GameTypographyScript.get_display_font(0.20, 1))
+	btn.add_theme_color_override("font_color", COLOR_DARK_BROWN if bg_col.get_luminance() > 0.60 else Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", COLOR_DARK_BROWN if bg_col.get_luminance() > 0.60 else Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", COLOR_DARK_BROWN if bg_col.get_luminance() > 0.60 else Color.WHITE)
+	btn.add_theme_color_override("font_disabled_color", COLOR_DARK_BROWN.lerp(Color.WHITE, 0.40))
 	remove_focus_outline(btn)
+	setup_button_press_feedback(btn, false)
 
 
 static func apply_primary_game_button_style(btn: Button, corner_r: int = 34) -> void:
 	apply_game_button_style(
 		btn,
-		Color(0.12, 0.84, 0.44, 1.0),
-		Color(0.74, 1.0, 0.58, 1.0),
-		12,
+		COLOR_GREEN_PRIMARY,
+		COLOR_GREEN_HIGHLIGHT,
+		10,
 		corner_r,
 		18,
 		Vector2(0, 8)
 	)
+	if btn:
+		btn.add_theme_color_override("font_color", Color.WHITE)
+		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
+		btn.add_theme_constant_override("outline_size", 6)
 
 
 static func apply_secondary_game_button_style(btn: Button, is_selected: bool = false, corner_r: int = 22) -> void:
 	if is_selected:
 		apply_game_button_style(
 			btn,
-			Color(0.12, 0.58, 0.98, 1.0),
-			Color(0.70, 0.96, 1.0, 1.0),
+			COLOR_CORAL_SECONDARY,
+			COLOR_CORAL_LIGHT,
 			8,
 			corner_r,
 			12,
 			Vector2(0, 5)
 		)
+		if btn:
+			btn.add_theme_color_override("font_color", Color.WHITE)
+			btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
+			btn.add_theme_constant_override("outline_size", 4)
 	else:
 		apply_game_button_style(
 			btn,
-			Color(0.24, 0.46, 0.88, 1.0),
-			Color(0.68, 0.88, 1.0, 1.0),
+			COLOR_CREAM_LIGHT,
+			COLOR_CREAM_BASE,
 			7,
 			corner_r,
 			10,
 			Vector2(0, 4)
 		)
+		if btn:
+			btn.add_theme_color_override("font_color", COLOR_DARK_BROWN)
+			btn.add_theme_color_override("font_outline_color", COLOR_CREAM_BASE)
+			btn.add_theme_constant_override("outline_size", 0)
 
 
 static func apply_reward_game_button_style(btn: Button, corner_r: int = 22) -> void:
 	apply_game_button_style(
 		btn,
-		Color(0.96, 0.28, 0.56, 1.0),
-		Color(1.0, 0.90, 0.40, 1.0),
+		COLOR_YELLOW_ACCENT,
+		COLOR_YELLOW_LIGHT,
 		8,
 		corner_r,
 		12,
 		Vector2(0, 5)
 	)
+	if btn:
+		btn.add_theme_color_override("font_color", COLOR_DARK_BROWN)
 
 
 static func apply_danger_game_button_style(btn: Button, corner_r: int = 20) -> void:
 	apply_game_button_style(
 		btn,
-		Color(0.86, 0.20, 0.26, 1.0),
-		Color(1.0, 0.62, 0.66, 1.0),
+		Color(0.90, 0.32, 0.32, 1.0),
+		Color(0.98, 0.62, 0.62, 1.0),
 		7,
 		corner_r,
 		10,
 		Vector2(0, 4)
 	)
+	if btn:
+		btn.add_theme_color_override("font_color", Color.WHITE)
+		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
+		btn.add_theme_constant_override("outline_size", 4)
 
 
 static func remove_focus_outline(ctrl: Control) -> void:
