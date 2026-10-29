@@ -83,7 +83,11 @@ var selected_game_mode: int:
 
 @onready var modal_settings: Control = get_node_or_null("Modals/SettingsModal")
 @onready var lbl_settings_title: Label = get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/LblTitle")
-@onready var btn_language_modal: Button = get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/BtnLanguageModal")
+@onready var language_control_row: HBoxContainer = (get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow") as HBoxContainer) if get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow") != null else (_find_node("LanguageControlRow") as HBoxContainer)
+@onready var btn_language_modal: Button = (get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow/BtnLanguageModal") as Button) if get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow/BtnLanguageModal") != null else (_find_node("BtnLanguageModal") as Button)
+@onready var btn_control_mode_modal: Button = (get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow/BtnControlModeModal") as Button) if get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow/BtnControlModeModal") != null else (_find_node("BtnControlModeModal") as Button)
+@onready var btn_control_mode: Button = btn_control_mode_modal
+@onready var btn_gesture_button: Button = btn_control_mode_modal
 @onready var btn_close_settings: Button = get_node_or_null("Modals/SettingsModal/Panel/VBoxContainer/BtnClose")
 @onready var audio_toggles_row: HBoxContainer = _find_node("AudioTogglesRow") as HBoxContainer
 @onready var voice_haptics_row: HBoxContainer = _find_node("VoiceHapticsRow") as HBoxContainer
@@ -355,6 +359,8 @@ func _ready() -> void:
 		btn_daily_gift.pressed.connect(_on_btn_daily_gift_pressed)
 	if btn_language_modal:
 		btn_language_modal.pressed.connect(_on_btn_language_pressed)
+	if btn_control_mode_modal:
+		btn_control_mode_modal.pressed.connect(_on_btn_control_mode_pressed)
 	if btn_top_settings:
 		btn_top_settings.pressed.connect(_on_btn_settings_pressed)
 	if is_inside_tree() and get_viewport():
@@ -452,6 +458,8 @@ func _ready() -> void:
 			gs.special_item_inventory_changed.connect(_on_gs_inventory_changed)
 		if gs.has_signal("language_changed") and not gs.language_changed.is_connected(_on_gs_language_changed):
 			gs.language_changed.connect(_on_gs_language_changed)
+		if gs.has_signal("control_mode_changed") and not gs.control_mode_changed.is_connected(_on_gs_control_mode_changed):
+			gs.control_mode_changed.connect(_on_gs_control_mode_changed)
 		if gs.has_signal("voice_settings_changed") and not gs.voice_settings_changed.is_connected(_on_gs_voice_changed):
 			gs.voice_settings_changed.connect(_on_gs_voice_changed)
 		if gs.has_signal("mode_changed") and not gs.mode_changed.is_connected(_on_gs_mode_changed):
@@ -2292,7 +2300,11 @@ func _apply_language_texts() -> void:
 	var is_vi := (lang == "vi")
 	
 	if btn_language_modal:
-		btn_language_modal.text = "    " + _tr("language_label")
+		btn_language_modal.text = "   " + _tr("language_label")
+	if btn_control_mode_modal:
+		var is_gesture: bool = gs.is_gesture_control() if (gs and gs.has_method("is_gesture_control")) else false
+		var ctrl_key := "control_mode_gesture" if is_gesture else "control_mode_button"
+		btn_control_mode_modal.text = "   " + _tr(ctrl_key)
 	if btn_top_settings:
 		btn_top_settings.text = ""
 		btn_top_settings.tooltip_text = _tr("settings_title")
@@ -2350,6 +2362,23 @@ func _on_btn_language_pressed() -> void:
 	if gs and gs.has_method("toggle_language"):
 		gs.toggle_language()
 	_refresh_all_ui()
+
+
+func _on_btn_control_mode_pressed() -> void:
+	_play_sfx("click")
+	var gs = get_node_or_null("/root/GameState")
+	if gs and gs.has_method("toggle_control_mode"):
+		gs.toggle_control_mode(true)
+	elif gs and "current_control_mode" in gs:
+		gs.current_control_mode = 1 if gs.current_control_mode == 0 else 0
+		if gs.has_signal("control_mode_changed"):
+			gs.control_mode_changed.emit(gs.current_control_mode)
+	_refresh_all_ui()
+
+
+func _on_gs_control_mode_changed(_new_mode: int) -> void:
+	_refresh_all_ui()
+
 
 
 
@@ -5928,13 +5957,15 @@ func update_responsive_account_and_settings_modals(vp_size: Vector2 = Vector2(72
 		audio_toggles_row.add_theme_constant_override("separation", row_sep)
 	if voice_haptics_row:
 		voice_haptics_row.add_theme_constant_override("separation", row_sep)
+	if language_control_row:
+		language_control_row.add_theme_constant_override("separation", row_sep)
 	var pair_font_sz: int = 15 if is_very_compact else (16 if is_compact else 18)
 	var full_font_sz: int = 17 if is_very_compact else (18 if is_compact else 20)
-	for pair_btn in [btn_toggle_music, btn_toggle_sound, btn_toggle_voice, btn_toggle_haptics]:
+	for pair_btn in [btn_toggle_music, btn_toggle_sound, btn_toggle_voice, btn_toggle_haptics, btn_language_modal, btn_control_mode_modal]:
 		if pair_btn:
 			pair_btn.custom_minimum_size.y = settings_btn_h
 			pair_btn.add_theme_font_size_override("font_size", pair_font_sz)
-	for full_btn in [btn_language_modal, btn_settings_account]:
+	for full_btn in [btn_settings_account]:
 		if full_btn:
 			full_btn.custom_minimum_size.y = settings_btn_h
 			full_btn.add_theme_font_size_override("font_size", full_font_sz)
@@ -6379,10 +6410,18 @@ func _update_settings_buttons() -> void:
 		GameTypographyScript.apply_secondary_button_typography(btn_toggle_haptics, 18)
 
 	if btn_language_modal:
-		btn_language_modal.text = "    " + _tr("language_label")
+		btn_language_modal.text = "   " + _tr("language_label")
 		_apply_settings_group_button_style(btn_language_modal, Color(0.92, 0.28, 0.62, 0.98), Color(1.0, 0.72, 0.88, 1.0))
-		UIIconScript.attach_to_button(btn_language_modal, "language", Vector2(24, 24), "left", Color(1.0, 0.88, 0.95, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 19, Color(0.42, 0.08, 0.24, 0.95))
+		UIIconScript.attach_to_button(btn_language_modal, "language", Vector2(22, 22), "left", Color(1.0, 0.88, 0.95, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 18, Color(0.42, 0.08, 0.24, 0.95))
+
+	if btn_control_mode_modal:
+		var is_gesture: bool = state_mgr.is_gesture_control() if (state_mgr and state_mgr.has_method("is_gesture_control")) else false
+		var ctrl_key := "control_mode_gesture" if is_gesture else "control_mode_button"
+		btn_control_mode_modal.text = "   " + _tr(ctrl_key)
+		_apply_settings_group_button_style(btn_control_mode_modal, Color(0.18, 0.44, 0.88, 0.98), Color(0.68, 0.88, 1.0, 1.0))
+		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop" if not is_gesture else "turn", Vector2(22, 22), "left", Color(0.78, 0.92, 1.0, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 18, Color(0.06, 0.16, 0.36, 0.95))
 
 	if btn_settings_account:
 		btn_settings_account.text = "    " + _tr("btn_account")

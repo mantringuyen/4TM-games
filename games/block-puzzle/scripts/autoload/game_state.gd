@@ -34,6 +34,11 @@ enum PlayStyle {
 	DRAG_AND_DROP           ## Drag & Drop Play Style: 3-piece tray, replenish 3 pieces when empty, no gravity
 }
 
+enum ControlMode {
+	BUTTON = 0,             ## Button Mode: shows 4 falling controls (Left, Rotate, Right, Quick Drop) & Drag & Drop Turn/Rotate button
+	GESTURE = 1             ## Gesture Mode: hides on-screen controls, uses touch/board gestures
+}
+
 enum State {
 	MENU,                   ## In main menu / level map / mode & play style selection
 	PLAYING,                ## Active gameplay session
@@ -44,6 +49,7 @@ enum State {
 signal state_changed(new_state: State, previous_state: State)
 signal mode_changed(new_mode: GameMode)
 signal play_style_changed(new_style: PlayStyle)
+signal control_mode_changed(new_mode: int)
 signal language_changed(new_lang: String)
 signal game_started(mode: GameMode)
 signal combination_started(mode: GameMode, style: PlayStyle)
@@ -355,6 +361,7 @@ var current_mode: GameMode = GameMode.CLASSIC
 var current_play_style: PlayStyle = PlayStyle.FALLING
 var _play_style_explicit: bool = false
 var current_language: String = "en"
+var current_control_mode: int = ControlMode.BUTTON
 
 var score: int = 0
 var high_score: int = 0
@@ -542,6 +549,8 @@ const TRANSLATIONS: Dictionary = {
 		"haptics_on": "HAPTIC: ON",
 		"haptics_off": "HAPTIC: OFF",
 		"language_label": "LANGUAGE: EN",
+		"control_mode_button": "CONTROL: Button",
+		"control_mode_gesture": "CONTROL: Gesture",
 		"btn_close": "CLOSE",
 		"stats_title": "PLAYER RECORDS",
 		"stats_best_score": "HIGH SCORE: %d",
@@ -650,6 +659,8 @@ const TRANSLATIONS: Dictionary = {
 		"haptics_on": "RUNG: BẬT",
 		"haptics_off": "RUNG: TẮT",
 		"language_label": "NGÔN NGỮ: VI",
+		"control_mode_button": "ĐIỀU KHIỂN: Nút",
+		"control_mode_gesture": "ĐIỀU KHIỂN: Cử chỉ",
 		"btn_close": "ĐÓNG",
 		"stats_title": "THÀNH TÍCH NGƯỜI CHƠI",
 		"stats_best_score": "ĐIỂM CAO NHẤT: %d",
@@ -770,6 +781,39 @@ func toggle_language() -> String:
 	var next_lang := "vi" if current_language == "en" else "en"
 	set_language(next_lang)
 	return current_language
+
+
+# ==============================================================================
+# CONTROL MODE API (BUTTON DEFAULT / GESTURE)
+# ==============================================================================
+
+func get_control_mode() -> int:
+	return current_control_mode
+
+
+func is_gesture_control() -> bool:
+	return current_control_mode == ControlMode.GESTURE
+
+
+func get_control_mode_name(mode: int = current_control_mode) -> String:
+	return "Gesture" if mode == ControlMode.GESTURE else "Button"
+
+
+func set_control_mode(mode: int, save_to_disk: bool = true) -> void:
+	var target_mode: int = ControlMode.GESTURE if mode == ControlMode.GESTURE else ControlMode.BUTTON
+	if current_control_mode == target_mode:
+		return
+	current_control_mode = target_mode
+	if save_to_disk:
+		save_progression()
+	control_mode_changed.emit(current_control_mode)
+
+
+func toggle_control_mode(save_to_disk: bool = true) -> int:
+	var next_mode: int = ControlMode.GESTURE if current_control_mode == ControlMode.BUTTON else ControlMode.BUTTON
+	set_control_mode(next_mode, save_to_disk)
+	return current_control_mode
+
 
 
 func tr_text(key: String) -> String:
@@ -966,6 +1010,7 @@ func delete_local_account_data(save_to_disk: bool = true) -> Dictionary:
 	var preserved_voice: String = audio_mgr.get_voice_mode() if (audio_mgr and audio_mgr.has_method("get_voice_mode")) else voice_mode
 	var preserved_haptics: bool = haptics_enabled
 	var preserved_lang: String = current_language
+	var preserved_control: int = current_control_mode
 
 	reset_progression(false)
 	score = 0
@@ -978,12 +1023,13 @@ func delete_local_account_data(save_to_disk: bool = true) -> Dictionary:
 		"extra_life": 0
 	}
 
-	# Restore unrelated app settings (Music, SFX, Voice, Haptics, Language)
+	# Restore unrelated app settings (Music, SFX, Voice, Haptics, Language, Control Mode)
 	music_enabled = preserved_music
 	sound_enabled = preserved_sfx
 	voice_mode = preserved_voice
 	haptics_enabled = preserved_haptics
 	current_language = preserved_lang
+	current_control_mode = preserved_control
 	if audio_mgr:
 		audio_mgr.music_enabled = preserved_music
 		audio_mgr.sound_enabled = preserved_sfx
@@ -1006,7 +1052,8 @@ func delete_local_account_data(save_to_disk: bool = true) -> Dictionary:
 		"sound_enabled": sound_enabled,
 		"voice_mode": voice_mode,
 		"haptics_enabled": haptics_enabled,
-		"language": current_language
+		"language": current_language,
+		"control_mode": current_control_mode
 	}
 
 
@@ -1030,6 +1077,7 @@ func save_progression(custom_path: String = PROGRESSION_SAVE_PATH) -> void:
 	cfg.set_value("progression", "last_energy_daily_refill_date", last_energy_daily_refill_date)
 	cfg.set_value("progression", "last_special_item_ad_dates", last_special_item_ad_dates.duplicate())
 	cfg.set_value("settings", "language", current_language)
+	cfg.set_value("settings", "control_mode", int(current_control_mode))
 	cfg.set_value("settings", "selected_game_mode", int(current_mode))
 	cfg.set_value("settings", "selected_play_style", int(current_play_style))
 	cfg.set_value("settings", "music_enabled", music_enabled)
@@ -1085,6 +1133,10 @@ func load_progression(custom_path: String = PROGRESSION_SAVE_PATH) -> bool:
 	var saved_lang = String(cfg.get_value("settings", "language", current_language)).to_lower()
 	if saved_lang == "vi" or saved_lang == "en":
 		current_language = saved_lang
+	if cfg.has_section_key("settings", "control_mode"):
+		set_control_mode(int(cfg.get_value("settings", "control_mode", int(ControlMode.BUTTON))), false)
+	else:
+		current_control_mode = ControlMode.BUTTON
 	var saved_mode: int = int(cfg.get_value("settings", "selected_game_mode", int(GameMode.CLASSIC)))
 	var saved_style: int = int(cfg.get_value("settings", "selected_play_style", int(PlayStyle.FALLING)))
 	current_mode = GameMode.MODERN_DRAG_AND_DROP if saved_mode == int(GameMode.MODERN_DRAG_AND_DROP) else GameMode.CLASSIC

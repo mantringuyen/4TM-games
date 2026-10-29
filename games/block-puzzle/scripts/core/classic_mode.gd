@@ -58,6 +58,9 @@ func _on_mode_initialized() -> void:
 	if gs and gs.has_signal("language_changed"):
 		if not gs.language_changed.is_connected(_on_language_changed):
 			gs.language_changed.connect(_on_language_changed)
+	if gs and gs.has_signal("control_mode_changed"):
+		if not gs.control_mode_changed.is_connected(_on_control_mode_changed):
+			gs.control_mode_changed.connect(_on_control_mode_changed)
 	if is_inside_tree() and get_viewport():
 		if not get_viewport().size_changed.is_connected(_update_layout):
 			get_viewport().size_changed.connect(_update_layout)
@@ -67,9 +70,31 @@ func _on_language_changed(_lang: String) -> void:
 	_refresh_control_labels()
 
 
+func _on_control_mode_changed(_mode: int) -> void:
+	_update_control_mode_visibility()
+
+
+func _update_control_mode_visibility() -> void:
+	var gs = _get_game_state()
+	var is_gesture: bool = gs.is_gesture_control() if (gs and gs.has_method("is_gesture_control")) else false
+	var show_buttons: bool = not is_gesture
+	if touch_controls:
+		touch_controls.visible = show_buttons
+	if btn_left:
+		btn_left.visible = show_buttons
+	if btn_rotate:
+		btn_rotate.visible = show_buttons
+	if btn_right:
+		btn_right.visible = show_buttons
+	if btn_drop:
+		btn_drop.visible = show_buttons
+
+
 func _on_mode_started() -> void:
 	if not board or not mode_piece_area:
 		_setup_board_and_piece_area()
+	
+	_update_control_mode_visibility()
 	
 	pending_special_item = ""
 	if board.has_method("configure_grid_dimensions") and (board.GRID_WIDTH != 10 or board.GRID_HEIGHT != 12):
@@ -893,6 +918,7 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	
 	add_child(touch_controls)
 	_refresh_control_labels()
+	_update_control_mode_visibility()
 
 
 func _refresh_control_labels() -> void:

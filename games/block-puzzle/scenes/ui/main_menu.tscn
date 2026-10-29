@@ -469,12 +469,26 @@ theme_override_font_sizes/font_size = 26
 text = "SETTINGS"
 horizontal_alignment = 1
 
-[node name="BtnLanguageModal" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+[node name="LanguageControlRow" type="HBoxContainer" parent="Modals/SettingsModal/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnLanguageModal" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow"]
 custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_lang")
 text = "LANGUAGE: EN"
+
+[node name="BtnControlModeModal" type="Button" parent="Modals/SettingsModal/Panel/VBoxContainer/LanguageControlRow"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_nav")
+text = "CONTROL: Button"
 
 [node name="AudioTogglesRow" type="HBoxContainer" parent="Modals/SettingsModal/Panel/VBoxContainer"]
 layout_mode = 2

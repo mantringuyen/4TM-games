@@ -65,11 +65,29 @@ func _ready() -> void:
 	if gs and gs.has_signal("language_changed"):
 		if not gs.language_changed.is_connected(_on_language_changed):
 			gs.language_changed.connect(_on_language_changed)
+	if gs and gs.has_signal("control_mode_changed"):
+		if not gs.control_mode_changed.is_connected(_on_control_mode_changed):
+			gs.control_mode_changed.connect(_on_control_mode_changed)
 	queue_redraw()
 
 
 func _on_language_changed(_lang: String) -> void:
 	_refresh_rotate_button_text()
+
+
+func _on_control_mode_changed(_mode: int) -> void:
+	_update_rotate_control_visibility()
+
+
+func _update_rotate_control_visibility() -> void:
+	if not btn_drag_rotate:
+		return
+	var gs = _get_game_state()
+	var is_gesture: bool = gs.is_gesture_control() if (gs and gs.has_method("is_gesture_control")) else false
+	if is_gesture:
+		btn_drag_rotate.visible = false
+	else:
+		btn_drag_rotate.visible = (get_active_dragging_piece() != null)
 
 
 func _ensure_rotate_control() -> void:
@@ -125,7 +143,9 @@ func _ensure_rotate_control() -> void:
 		btn_drag_rotate.pressed.connect(_on_btn_drag_rotate_pressed)
 	_refresh_rotate_button_text()
 	_layout_rotate_control()
-	btn_drag_rotate.visible = (get_active_dragging_piece() != null)
+	var gs = _get_game_state()
+	var is_gesture: bool = gs.is_gesture_control() if (gs and gs.has_method("is_gesture_control")) else false
+	btn_drag_rotate.visible = (get_active_dragging_piece() != null) and not is_gesture
 
 
 func _refresh_rotate_button_text() -> void:
@@ -718,9 +738,12 @@ func _on_piece_drag_started(piece: Control) -> void:
 			other.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ensure_rotate_control()
 	_layout_rotate_control()
+	var gs = _get_game_state()
+	var is_gesture: bool = gs.is_gesture_control() if (gs and gs.has_method("is_gesture_control")) else false
 	if btn_drag_rotate:
-		btn_drag_rotate.visible = true
-		btn_drag_rotate.move_to_front()
+		btn_drag_rotate.visible = not is_gesture
+		if btn_drag_rotate.visible:
+			btn_drag_rotate.move_to_front()
 	piece_drag_started.emit(piece)
 
 
