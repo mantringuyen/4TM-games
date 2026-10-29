@@ -78,23 +78,47 @@ export default {
       });
       gzRequest.headers.set('Accept-Encoding', 'identity');
 
-      const gzResponse = await env.ASSETS.fetch(gzRequest);
-      if (gzResponse.status === 200 && gzResponse.body) {
-        // Always decompress at the Worker before returning the response
-        const decompressedStream = gzResponse.body.pipeThrough(new DecompressionStream('gzip'));
-        const headers = new Headers(gzResponse.headers);
-        headers.set('Content-Type', 'application/wasm');
-        headers.delete('Content-Encoding');
-        headers.delete('Content-Length'); // Omit Content-Length so browser streams uncompressed bytes via chunked transfer
-        headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-        headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
-        headers.set('Cache-Control', 'public, max-age=300');
-        return new Response(decompressedStream, {
-          status: 200,
-          statusText: 'OK',
-          headers,
-        });
-      }
+      try {
+        const gzResponse = await env.ASSETS.fetch(gzRequest);
+        if (gzResponse.status === 200 && (request.method === 'HEAD' || gzResponse.body)) {
+          const clientAcceptsGzip = /\bgzip\b/i.test(request.headers.get('accept-encoding') || '');
+          const headers = new Headers(gzResponse.headers);
+
+          headers.set('Content-Type', 'application/wasm');
+          headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+          headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+          headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+          headers.set('Access-Control-Allow-Origin', '*');
+          headers.set('Cache-Control', 'public, max-age=300');
+          headers.set('Vary', 'Accept-Encoding');
+
+          if (clientAcceptsGzip) {
+            // Stream pre-compressed .wasm.gz response directly when client supports gzip
+            headers.set('Content-Encoding', 'gzip');
+            const cl = gzResponse.headers.get('content-length');
+            if (cl) {
+              headers.set('Content-Length', cl);
+            }
+            return new Response(request.method === 'HEAD' ? null : gzResponse.body, {
+              status: 200,
+              statusText: 'OK',
+              headers,
+            });
+          } else {
+            // Stream-decompress at the Worker when client does not support gzip
+            headers.delete('Content-Encoding');
+            headers.delete('Content-Length');
+            const decompressedStream = gzResponse.body
+              ? gzResponse.body.pipeThrough(new DecompressionStream('gzip'))
+              : null;
+            return new Response(request.method === 'HEAD' ? null : decompressedStream, {
+              status: 200,
+              statusText: 'OK',
+              headers,
+            });
+          }
+        }
+      } catch (_) {}
 
       // Explicit WASM 404 error — MUST NEVER return HTML
       return new Response('404: WebAssembly module asset not found on 4tm-games-dev', {
@@ -103,6 +127,8 @@ export default {
           'Content-Type': 'text/plain; charset=utf-8',
           'Cross-Origin-Opener-Policy': 'same-origin',
           'Cross-Origin-Embedder-Policy': 'require-corp',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+          'Access-Control-Allow-Origin': '*',
         },
       });
     }
@@ -114,6 +140,8 @@ export default {
           'Content-Type': 'text/plain; charset=utf-8',
           'Cross-Origin-Opener-Policy': 'same-origin',
           'Cross-Origin-Embedder-Policy': 'require-corp',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+          'Access-Control-Allow-Origin': '*',
         },
       });
     }
@@ -240,6 +268,8 @@ export default {
           'Content-Type': 'text/plain; charset=utf-8',
           'Cross-Origin-Opener-Policy': 'same-origin',
           'Cross-Origin-Embedder-Policy': 'require-corp',
+          'Cross-Origin-Resource-Policy': 'cross-origin',
+          'Access-Control-Allow-Origin': '*',
         },
       });
     }
@@ -256,6 +286,8 @@ export default {
 
     headers.set('Cross-Origin-Opener-Policy', 'same-origin');
     headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+    headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    headers.set('Access-Control-Allow-Origin', '*');
 
     if (cleanPathname.endsWith('.html') || cleanPathname.endsWith('/') || cleanPathname.endsWith('.js')) {
       headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
