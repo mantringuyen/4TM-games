@@ -1215,7 +1215,7 @@ func _draw() -> void:
 		lvl_accent = l_theme.get("grid_tint", lvl_accent)
 
 	var outer_cabinet = StyleBoxFlat.new()
-	outer_cabinet.bg_color = Color(0.04, 0.09, 0.26, maxf(0.92, BOARD_CABINET_ALPHA))
+	outer_cabinet.bg_color = Color(0.04, 0.09, 0.26, BOARD_CABINET_ALPHA)
 	outer_cabinet.border_width_left = 3
 	outer_cabinet.border_width_top = 3
 	outer_cabinet.border_width_right = 3
@@ -1246,7 +1246,7 @@ func _draw() -> void:
 	
 	# Deep navy board well
 	var inner_well = StyleBoxFlat.new()
-	inner_well.bg_color = Color(0.03, 0.07, 0.20, maxf(0.90, BOARD_SURFACE_ALPHA))
+	inner_well.bg_color = Color(0.03, 0.07, 0.20, BOARD_SURFACE_ALPHA)
 	inner_well.border_width_left = 2
 	inner_well.border_width_top = 2
 	inner_well.border_width_right = 2

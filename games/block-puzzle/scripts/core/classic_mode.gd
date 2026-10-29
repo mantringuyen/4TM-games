@@ -42,8 +42,8 @@ var touch_accumulated: Vector2 = Vector2.ZERO
 var is_touch_active: bool = false
 const TOUCH_STEP_X: float = 34.0
 const TOUCH_STEP_Y: float = 38.0
-const QUICK_DROP_SEPARATION_COMPACT: float = 20.0
-const QUICK_DROP_SEPARATION_REGULAR: float = 26.0
+const QUICK_DROP_SEPARATION_COMPACT: float = 24.0
+const QUICK_DROP_SEPARATION_REGULAR: float = 32.0
 
 
 func _init() -> void:
@@ -714,7 +714,7 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 	# 2. Dedicated Next Piece Area between Header and Play Board (enlarged for visibility)
 	var piece_area_h: float = clampf(vp_h * 0.076, 56.0, 78.0)
 	# 4. Dedicated Control Area (Left/Rotate/Right group + separated centered Quick Drop enlarged)
-	var ctrl_h: float = clampf(vp_h * 0.146, 118.0, 150.0)
+	var ctrl_h: float = clampf(vp_h * 0.162, 138.0, 172.0)
 	
 	var avail_v: float = maxf(260.0, ad_top_y - hud_h)
 	# Generous visible gap between bottom of board and Falling controls
@@ -759,9 +759,9 @@ func update_layout_for_viewport(vp_size: Vector2) -> Dictionary:
 		board.position = Vector2(margin_x, board_y)
 	
 	var group_sep: float = QUICK_DROP_SEPARATION_COMPACT if is_compact else QUICK_DROP_SEPARATION_REGULAR
-	var row1_h: float = floor((ctrl_h - group_sep) * 0.46)
-	var row2_h: float = maxf(54.0, ctrl_h - group_sep - row1_h)
-	var qd_w: float = round(content_w * 0.86)
+	var row1_h: float = floor((ctrl_h - group_sep) * 0.48)
+	var row2_h: float = maxf(58.0, ctrl_h - group_sep - row1_h)
+	var qd_w: float = round(content_w * 0.88)
 	var qd_x: float = content_x + (content_w - qd_w) * 0.5
 	
 	if touch_controls:
@@ -823,9 +823,9 @@ func _resize_touch_control_rows(ctrl_w: float, ctrl_h: float, is_compact: bool) 
 	vbox.position = Vector2.ZERO
 	vbox.custom_minimum_size = Vector2(ctrl_w, ctrl_h)
 	vbox.size = Vector2(ctrl_w, ctrl_h)
-	var row1_h: float = floor((ctrl_h - sep) * 0.46)
-	var row2_h: float = maxf(54.0, ctrl_h - sep - row1_h)
-	var qd_w: float = round(ctrl_w * 0.86)
+	var row1_h: float = floor((ctrl_h - sep) * 0.48)
+	var row2_h: float = maxf(58.0, ctrl_h - sep - row1_h)
+	var qd_w: float = round(ctrl_w * 0.88)
 	if vbox.get_child_count() >= 2:
 		var r1 := vbox.get_child(0) as HBoxContainer
 		var r2 := vbox.get_child(1) as HBoxContainer
@@ -833,7 +833,7 @@ func _resize_touch_control_rows(ctrl_w: float, ctrl_h: float, is_compact: bool) 
 			r1.custom_minimum_size = Vector2(ctrl_w, row1_h)
 			r1.size = Vector2(ctrl_w, row1_h)
 			r1.position = Vector2.ZERO
-			r1.add_theme_constant_override("separation", 10 if is_compact else 12)
+			r1.add_theme_constant_override("separation", 10 if is_compact else 14)
 		if r2:
 			r2.custom_minimum_size = Vector2(ctrl_w, row2_h)
 			r2.size = Vector2(ctrl_w, row2_h)
@@ -842,10 +842,10 @@ func _resize_touch_control_rows(ctrl_w: float, ctrl_h: float, is_compact: bool) 
 		btn_drop.custom_minimum_size = Vector2(qd_w, row2_h)
 		btn_drop.size = Vector2(qd_w, row2_h)
 		btn_drop.position = Vector2((ctrl_w - qd_w) * 0.5, 0.0)
-	var f_sz: int = 16 if is_compact else 19
-	var qd_f_sz: int = 19 if is_compact else 22
-	var icon_sz := Vector2(42, 42) if is_compact else Vector2(48, 48)
-	var qd_icon_sz := Vector2(30, 30) if is_compact else Vector2(34, 34)
+	var f_sz: int = 18 if is_compact else 21
+	var qd_f_sz: int = 21 if is_compact else 24
+	var icon_sz := Vector2(48, 48) if is_compact else Vector2(54, 54)
+	var qd_icon_sz := Vector2(38, 38) if is_compact else Vector2(42, 42)
 	for b in [btn_left, btn_rotate, btn_right]:
 		if b:
 			b.add_theme_font_size_override("font_size", f_sz)
@@ -870,53 +870,52 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	touch_controls = Control.new()
 	touch_controls.name = "ClassicTouchControls"
 	touch_controls.position = Vector2(margin_x, 795)
-	touch_controls.size = Vector2(width, 124)
+	touch_controls.size = Vector2(width, 142)
 	
 	var vbox = VBoxContainer.new()
 	vbox.name = "ControlsVBox"
 	vbox.position = Vector2.ZERO
-	vbox.custom_minimum_size = Vector2(width, 124)
-	vbox.size = Vector2(width, 124)
+	vbox.custom_minimum_size = Vector2(width, 142)
+	vbox.size = Vector2(width, 142)
 	vbox.add_theme_constant_override("separation", int(QUICK_DROP_SEPARATION_REGULAR))
 	touch_controls.add_child(vbox)
 	
 	# Group 1: LEFT / ROTATE / RIGHT (Tactile 3D Palette)
 	var row1 = HBoxContainer.new()
 	row1.name = "MoveRotateGroup"
-	row1.custom_minimum_size = Vector2(0, 56)
-	row1.add_theme_constant_override("separation", 10)
+	row1.custom_minimum_size = Vector2(0, 62)
+	row1.add_theme_constant_override("separation", 12)
 	row1.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row1)
 	
-	# LEFT: Vivid emerald green background with large bold white arrow (matches reference image)
+	# LEFT: Vivid emerald green background with large bold white arrow
 	btn_left = _create_control_button("", Color(0.30, 0.82, 0.14, 1.0), Color(0.68, 0.98, 0.52, 1.0), 8)
 	btn_left.name = "BtnLeft"
-	UIIconScript.attach_to_button(btn_left, "left", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_left, "left", Vector2(52, 52), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_left.pressed.connect(move_left)
 	row1.add_child(btn_left)
 	
-	# ROTATE: Vivid royal purple background with large clearly visible white rotation icon (matches reference image)
-	btn_rotate = _create_control_button("", Color(0.60, 0.20, 0.92, 1.0), Color(0.88, 0.68, 1.0, 1.0), 8)
+	# ROTATE / TURN: Vibrant Sunny Yellow background with large white rotation icon
+	btn_rotate = _create_control_button("", Color(0.98, 0.82, 0.08, 1.0), Color(1.0, 0.96, 0.52, 1.0), 8)
 	btn_rotate.name = "BtnRotate"
-	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_rotate, "turn", Vector2(52, 52), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_rotate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_rotate.pressed.connect(rotate_piece)
 	row1.add_child(btn_rotate)
 	
-	# RIGHT: Vivid emerald green background with large bold white arrow (same color as LEFT)
+	# RIGHT: Vivid emerald green background with large bold white arrow
 	btn_right = _create_control_button("", Color(0.30, 0.82, 0.14, 1.0), Color(0.68, 0.98, 0.52, 1.0), 8)
 	btn_right.name = "BtnRight"
-	UIIconScript.attach_to_button(btn_right, "right", Vector2(46, 46), "center", Color(1.0, 1.0, 1.0, 1.0))
+	UIIconScript.attach_to_button(btn_right, "right", Vector2(52, 52), "center", Color(1.0, 1.0, 1.0, 1.0))
 	btn_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_right.pressed.connect(move_right)
 	row1.add_child(btn_right)
 	
 	# Group 2: Centered & Visually Separated QUICK DROP
-	# Vivid bright azure blue background, large white downward icon, and large bold white QUICK DROP text
 	var row2 = HBoxContainer.new()
 	row2.name = "QuickDropRow"
-	row2.custom_minimum_size = Vector2(0, 58)
+	row2.custom_minimum_size = Vector2(0, 64)
 	row2.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(row2)
 	
@@ -924,8 +923,8 @@ func _setup_touch_controls(margin_x: float, width: float) -> void:
 	btn_drop.name = "BtnQuickDrop"
 	btn_drop.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
 	btn_drop.add_theme_color_override("font_shadow_color", Color(0.02, 0.10, 0.30, 0.88))
-	UIIconScript.attach_to_button(btn_drop, "quick_drop", Vector2(34, 34), "left", Color(1.0, 1.0, 1.0, 1.0))
-	btn_drop.custom_minimum_size = Vector2(round(width * 0.86), 58)
+	UIIconScript.attach_to_button(btn_drop, "quick_drop", Vector2(40, 40), "left", Color(1.0, 1.0, 1.0, 1.0))
+	btn_drop.custom_minimum_size = Vector2(round(width * 0.88), 64)
 	btn_drop.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_drop.pressed.connect(quick_drop)
 	row2.add_child(btn_drop)

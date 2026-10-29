@@ -901,12 +901,6 @@ func _draw() -> void:
 				draw_arc(c + Vector2(r * 0.20, 0), r * 0.45, -PI * 0.35, PI * 0.35, 10, primary_color, 2.2, true)
 			else:
 				draw_line(c + Vector2(r * 0.32, -r * 0.35), c + Vector2(r * 0.78, r * 0.35), Color(1.0, 0.36, 0.42, 1.0), 2.6, true)
-				draw_line(c + Vector2(r * 0.78, -r * 0.35), c + Vector2(r * 0.32, r * 0.35), Color(1.0, 0.36, 0.42, 1.0), 2.6, true)
-		"restart", "turn":
-			var arc_w: float = maxf(3.6, r * 0.26)
-			var arc_r: float = r * 0.66
-			var arr_sh_col := Color(0.02, 0.02, 0.08, 0.40)
-			# Drop shadow
 		"restart", "turn":
 			var sh_col := Color(0.0, 0.0, 0.0, 0.38)
 			var sh_off := Vector2(0, 2.5)

@@ -1204,6 +1204,10 @@ func _setup_vector_icons() -> void:
 		UIIconScript.apply_secondary_game_button_style(btn_language_modal, false, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 20)
 		UIIconScript.attach_to_button(btn_language_modal, "globe", Vector2(24, 24), "left", Color(0.82, 0.98, 1.0, 1.0))
+	if btn_control_mode_modal:
+		UIIconScript.apply_secondary_game_button_style(btn_control_mode_modal, false, 22)
+		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 20)
+		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop", Vector2(24, 24), "left", Color(0.82, 0.98, 1.0, 1.0))
 	if btn_classic:
 		UIIconScript.attach_to_button(btn_classic, "crown", Vector2(30, 30), "left", Color(1.0, 0.90, 0.28, 1.0))
 	if btn_modern:
@@ -6419,9 +6423,9 @@ func _update_settings_buttons() -> void:
 		var is_gesture: bool = state_mgr.is_gesture_control() if (state_mgr and state_mgr.has_method("is_gesture_control")) else false
 		var ctrl_key := "control_mode_gesture" if is_gesture else "control_mode_button"
 		btn_control_mode_modal.text = "   " + _tr(ctrl_key)
-		_apply_settings_group_button_style(btn_control_mode_modal, Color(0.18, 0.44, 0.88, 0.98), Color(0.68, 0.88, 1.0, 1.0))
-		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop" if not is_gesture else "turn", Vector2(22, 22), "left", Color(0.78, 0.92, 1.0, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 18, Color(0.06, 0.16, 0.36, 0.95))
+		_apply_settings_group_button_style(btn_control_mode_modal, Color(0.92, 0.28, 0.62, 0.98), Color(1.0, 0.72, 0.88, 1.0))
+		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop" if not is_gesture else "turn", Vector2(22, 22), "left", Color(1.0, 0.88, 0.95, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 18, Color(0.42, 0.08, 0.24, 0.95))
 
 	if btn_settings_account:
 		btn_settings_account.text = "    " + _tr("btn_account")

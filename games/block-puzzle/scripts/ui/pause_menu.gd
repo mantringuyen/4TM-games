@@ -147,32 +147,32 @@ func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
 		if vbox:
 			vbox.add_theme_constant_override("separation", 14 if is_very_compact else (16 if is_compact else 20))
 
-	var resume_h: float = 82.0 if is_very_compact else (88.0 if is_compact else 94.0)
-	var restart_h: float = 74.0 if is_very_compact else (80.0 if is_compact else 84.0)
-	var menu_h: float = 74.0 if is_very_compact else (80.0 if is_compact else 84.0)
-	var toggle_h: float = 68.0 if is_very_compact else (72.0 if is_compact else 76.0)
+	var resume_h: float = 88.0 if is_very_compact else (94.0 if is_compact else 102.0)
+	var restart_h: float = 82.0 if is_very_compact else (88.0 if is_compact else 94.0)
+	var menu_h: float = 82.0 if is_very_compact else (88.0 if is_compact else 94.0)
+	var toggle_h: float = 72.0 if is_very_compact else (76.0 if is_compact else 80.0)
 
 	if voice_haptics_row:
 		voice_haptics_row.custom_minimum_size.y = toggle_h + (10.0 if is_very_compact else (14.0 if is_compact else 18.0))
 
 	if lbl_title:
-		GameTypographyScript.apply_heading_typography(lbl_title, 34 if is_compact else 38)
+		GameTypographyScript.apply_heading_typography(lbl_title, 36 if is_compact else 40)
 		lbl_title.add_theme_color_override("font_color", Color(1.0, 0.94, 0.40, 1.0))
 		lbl_title.add_theme_color_override("font_shadow_color", Color(0.04, 0.08, 0.28, 0.90))
 
 	if btn_resume:
 		btn_resume.custom_minimum_size.y = resume_h
-		GameTypographyScript.apply_primary_button_typography(btn_resume, 28 if is_compact else 30)
+		GameTypographyScript.apply_primary_button_typography(btn_resume, 30 if is_compact else 33)
 	if btn_restart:
 		btn_restart.custom_minimum_size.y = restart_h
-		GameTypographyScript.apply_secondary_button_typography(btn_restart, 24 if is_compact else 26)
+		GameTypographyScript.apply_secondary_button_typography(btn_restart, 26 if is_compact else 28)
 	if btn_menu:
 		btn_menu.custom_minimum_size.y = menu_h
-		GameTypographyScript.apply_secondary_button_typography(btn_menu, 24 if is_compact else 26, Color(0.24, 0.04, 0.06, 0.95))
+		GameTypographyScript.apply_secondary_button_typography(btn_menu, 26 if is_compact else 28, Color(0.24, 0.04, 0.06, 0.95))
 	for b in [btn_music, btn_sound, btn_voice, btn_haptics]:
 		if b:
 			b.custom_minimum_size.y = toggle_h
-			GameTypographyScript.apply_secondary_button_typography(b, 18 if is_very_compact else 19)
+			GameTypographyScript.apply_secondary_button_typography(b, 20 if is_very_compact else (21 if is_compact else 22))
 
 
 func _apply_panel_style() -> void:
