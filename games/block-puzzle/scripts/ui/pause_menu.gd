@@ -69,17 +69,17 @@ func _ready() -> void:
 		UIIconScript.attach_to_button(btn_haptics, "haptic", Vector2(22, 22), "left", Color(1.0, 0.90, 0.38, 1.0))
 		btn_haptics.pressed.connect(_on_btn_haptics_pressed)
 	if btn_restart:
-		_apply_action_button_style(btn_restart, Color(0.18, 0.58, 0.98, 1.0), Color(0.76, 0.95, 1.0, 1.0))
+		UIIconScript.apply_utility_game_button_style(btn_restart, false, 24)
 		GameTypographyScript.apply_secondary_button_typography(btn_restart, 24)
 		UIIconScript.attach_to_button(btn_restart, "restart", Vector2(28, 28), "left")
 		btn_restart.pressed.connect(_on_btn_restart_pressed)
 	if btn_resume:
-		_apply_action_button_style(btn_resume, Color(0.10, 0.86, 0.46, 1.0), Color(0.78, 1.0, 0.62, 1.0))
+		UIIconScript.apply_primary_game_button_style(btn_resume, 24)
 		GameTypographyScript.apply_primary_button_typography(btn_resume, 28)
 		UIIconScript.attach_to_button(btn_resume, "play", Vector2(30, 30), "left")
 		btn_resume.pressed.connect(_on_btn_resume_pressed)
 	if btn_menu:
-		_apply_red_exit_style(btn_menu)
+		UIIconScript.apply_danger_game_button_style(btn_menu, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_menu, 24, Color(0.24, 0.04, 0.06, 0.95))
 		UIIconScript.attach_to_button(btn_menu, "close", Vector2(26, 26), "left", Color(1.0, 0.94, 0.94, 1.0))
 		btn_menu.pressed.connect(_on_btn_menu_pressed)
@@ -182,33 +182,10 @@ func _apply_panel_style() -> void:
 
 
 
-func _apply_action_button_style(btn: Button, bg_col: Color, border_col: Color) -> void:
+func _apply_action_button_style(btn: Button, bg_col: Color, _border_col: Color = Color.TRANSPARENT) -> void:
 	if not btn:
 		return
-	var st := StyleBoxFlat.new()
-	st.bg_color = bg_col
-	st.border_width_left = 3
-	st.border_width_top = 3
-	st.border_width_right = 3
-	st.border_width_bottom = 8
-	st.border_color = border_col
-	st.set_corner_radius_all(24)
-	st.shadow_color = Color(0.02, 0.04, 0.16, 0.60)
-	st.shadow_size = 14
-	st.shadow_offset = Vector2(0, 5)
-	var st_hov := st.duplicate()
-	st_hov.bg_color = bg_col.lightened(0.10)
-	st_hov.border_color = border_col.lightened(0.12)
-	var st_press := st.duplicate()
-	st_press.bg_color = bg_col.darkened(0.08)
-	st_press.border_width_bottom = 3
-	st_press.shadow_size = 4
-	st_press.shadow_offset = Vector2(0, 2)
-	btn.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_stylebox_override("normal", st)
-	btn.add_theme_stylebox_override("hover", st_hov)
-	btn.add_theme_stylebox_override("pressed", st_press)
-	UIIconScript.remove_focus_outline(btn)
+	UIIconScript.apply_game_button_style(btn, bg_col, bg_col.lightened(0.12), 8, 24)
 
 
 func _setup_leave_button_spacing() -> void:
@@ -244,30 +221,7 @@ func get_leave_button_spacing_metrics() -> Dictionary:
 func _apply_red_exit_style(btn: Button) -> void:
 	if not btn:
 		return
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(0.92, 0.18, 0.28, 0.98)
-	st.border_width_left = 3
-	st.border_width_top = 3
-	st.border_width_right = 3
-	st.border_width_bottom = 7
-	st.border_color = Color(1.0, 0.72, 0.76, 1.0)
-	st.set_corner_radius_all(22)
-	st.shadow_color = Color(0.18, 0.02, 0.04, 0.55)
-	st.shadow_size = 12
-	st.shadow_offset = Vector2(0, 5)
-	var st_hov := st.duplicate()
-	st_hov.bg_color = Color(0.96, 0.24, 0.32, 0.99)
-	st_hov.border_color = Color(1.0, 0.78, 0.82, 1.0)
-	var st_press := st.duplicate()
-	st_press.bg_color = Color(0.74, 0.12, 0.20, 0.99)
-	st_press.border_width_bottom = 3
-	st_press.shadow_size = 4
-	st_press.shadow_offset = Vector2(0, 2)
-	btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.98, 1.0))
-	btn.add_theme_stylebox_override("normal", st)
-	btn.add_theme_stylebox_override("hover", st_hov)
-	btn.add_theme_stylebox_override("pressed", st_press)
-	btn.set_meta("is_red_exit_action", true)
+	UIIconScript.apply_danger_game_button_style(btn, 22)
 
 
 func has_equal_width_voice_haptics_row() -> bool:

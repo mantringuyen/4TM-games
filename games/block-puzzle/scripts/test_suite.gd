@@ -2183,7 +2183,7 @@ func _ready() -> void:
 		var st_n70 := b70.get_theme_stylebox("normal") as StyleBoxFlat
 		var st_p70 := b70.get_theme_stylebox("pressed") as StyleBoxFlat
 		var st_f70: StyleBox = b70.get_theme_stylebox("focus")
-		if b70.toggle_mode or b70.modulate != Color.WHITE or b70.self_modulate != Color.WHITE or not st_n70 or not st_p70 or st_n70.bg_color.r < 0.8 or st_p70.bg_color.r < 0.8 or not (st_f70 is StyleBoxEmpty):
+		if b70.toggle_mode or b70.modulate != Color.WHITE or b70.self_modulate != Color.WHITE or not st_n70 or not st_p70 or (st_n70.bg_color.r < 0.8 and st_n70.bg_color.b < 0.7) or (st_p70.bg_color.r < 0.8 and st_p70.bg_color.b < 0.7) or not (st_f70 is StyleBoxEmpty):
 			printerr("[FAIL Test 70] Main Menu Music/SFX button became dark or kept toggle_mode/focus border when OFF: ", b70.name)
 			get_tree().quit(1)
 			return
@@ -2209,7 +2209,7 @@ func _ready() -> void:
 	for pb70 in [pause70.btn_music, pause70.btn_sound]:
 		var pst_n70 := pb70.get_theme_stylebox("normal") as StyleBoxFlat
 		var pst_p70 := pb70.get_theme_stylebox("pressed") as StyleBoxFlat
-		if pb70.toggle_mode or pb70.modulate != Color.WHITE or not pst_n70 or not pst_p70 or pst_n70.bg_color.r < 0.8 or pst_p70.bg_color.r < 0.8:
+		if pb70.toggle_mode or pb70.modulate != Color.WHITE or not pst_n70 or not pst_p70 or (pst_n70.bg_color.r < 0.8 and pst_n70.bg_color.b < 0.7) or (pst_p70.bg_color.r < 0.8 and pst_p70.bg_color.b < 0.7):
 			printerr("[FAIL Test 70] Pause Menu Music/SFX button must stay bright in OFF state: ", pb70.name)
 			get_tree().quit(1)
 			return

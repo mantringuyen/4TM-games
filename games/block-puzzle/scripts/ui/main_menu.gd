@@ -1100,12 +1100,12 @@ func _get_gift_style(is_active: bool) -> StyleBoxFlat:
 	if is_active:
 		if _gift_style_active == null:
 			_gift_style_active = StyleBoxFlat.new()
-			_gift_style_active.bg_color = Color(0.98, 0.36, 0.58, 1.0)
+			_gift_style_active.bg_color = UIIconScript.COLOR_YELLOW_ACCENT
 			_gift_style_active.border_width_left = 2
 			_gift_style_active.border_width_top = 2
 			_gift_style_active.border_width_right = 2
 			_gift_style_active.border_width_bottom = 5
-			_gift_style_active.border_color = Color(1.0, 0.88, 0.36, 1.0)
+			_gift_style_active.border_color = UIIconScript.COLOR_DARK_BROWN
 			_gift_style_active.corner_radius_top_left = 18
 			_gift_style_active.corner_radius_top_right = 18
 			_gift_style_active.corner_radius_bottom_right = 18
@@ -1114,7 +1114,7 @@ func _get_gift_style(is_active: bool) -> StyleBoxFlat:
 			_gift_style_active.content_margin_right = 8.0
 			_gift_style_active.content_margin_top = 0.0
 			_gift_style_active.content_margin_bottom = 0.0
-			_gift_style_active.shadow_color = Color(0.32, 0.04, 0.18, 0.55)
+			_gift_style_active.shadow_color = UIIconScript.COLOR_DARK_BROWN_SHADOW
 			_gift_style_active.shadow_size = 8
 			_gift_style_active.shadow_offset = Vector2(0, 3)
 		return _gift_style_active
@@ -1226,7 +1226,7 @@ func _setup_vector_icons() -> void:
 			btn_start.remove_child(existing_play_icon)
 			existing_play_icon.queue_free()
 	if btn_how_to_play:
-		UIIconScript.apply_secondary_game_button_style(btn_how_to_play, false, 22)
+		UIIconScript.apply_config_game_button_style(btn_how_to_play, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_how_to_play, 20)
 		UIIconScript.attach_to_button(btn_how_to_play, "info", Vector2(26, 26), "left", Color(0.86, 0.98, 1.0, 1.0))
 	if btn_settings_account:
@@ -1257,6 +1257,7 @@ func _setup_vector_icons() -> void:
 		_apply_red_exit_style(btn_confirm_delete)
 		UIIconScript.attach_to_button(btn_confirm_delete, "trash", Vector2(22, 22), "left", Color(1.0, 0.94, 0.94, 1.0))
 	if btn_start_selected_level:
+		UIIconScript.apply_primary_game_button_style(btn_start_selected_level, 26)
 		UIIconScript.attach_to_button(btn_start_selected_level, "play", Vector2(26, 26), "left", Color(1.0, 0.98, 0.82, 1.0))
 	if btn_spin_wheel:
 		_apply_spin_button_blue_style()
@@ -1279,6 +1280,17 @@ func _setup_vector_icons() -> void:
 		if red_btn:
 			_apply_red_exit_style(red_btn)
 			UIIconScript.attach_to_button(red_btn, "close", Vector2(22, 22), "left", Color(1.0, 0.92, 0.92, 1.0))
+	for modal_panel_path in [
+		"Modals/HowToPlayModal/Panel",
+		"Modals/SettingsModal/Panel",
+		"Modals/AccountModal/Panel",
+		"Modals/LevelMapModal/Panel",
+		"Modals/LuckyWheelModal/Panel",
+		"Modals/DeleteConfirmDialog/Panel"
+	]:
+		var mp := get_node_or_null(modal_panel_path) as Control
+		if mp:
+			UIIconScript.apply_cream_panel_style(mp)
 	_setup_leave_button_spacing()
 	UIIconScript.setup_all_buttons_feedback(self)
 
@@ -1728,15 +1740,8 @@ func _make_red_exit_style(bg_col: Color = Color(0.88, 0.18, 0.26, 0.98), border_
 func _apply_red_exit_style(btn: Button) -> void:
 	if not btn:
 		return
-	var st_norm := _make_red_exit_style(Color(0.88, 0.18, 0.26, 0.98), Color(1.0, 0.68, 0.72, 1.0), 7)
-	var st_hov := _make_red_exit_style(Color(0.96, 0.24, 0.32, 0.99), Color(1.0, 0.80, 0.84, 1.0), 7)
-	var st_press := _make_red_exit_style(Color(0.74, 0.12, 0.20, 0.99), Color(1.0, 0.56, 0.60, 1.0), 3)
-	btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.98, 1.0))
-	btn.add_theme_stylebox_override("normal", st_norm)
-	btn.add_theme_stylebox_override("hover", st_hov)
-	btn.add_theme_stylebox_override("pressed", st_press)
+	UIIconScript.apply_danger_game_button_style(btn, 22)
 	GameTypographyScript.apply_secondary_button_typography(btn, 20, Color(0.24, 0.04, 0.06, 0.95))
-	btn.set_meta("is_red_exit_action", true)
 
 
 func _setup_leave_button_spacing() -> void:
@@ -5264,17 +5269,17 @@ func _make_card_style(bg_col: Color, border_col: Color, border_w: int = 2) -> St
 	s.corner_radius_top_right = 26
 	s.corner_radius_bottom_right = 26
 	s.corner_radius_bottom_left = 26
-	s.shadow_color = Color(0.04, 0.04, 0.18, 0.52)
+	s.shadow_color = UIIconScript.COLOR_DARK_BROWN_SHADOW
 	s.shadow_size = 10
 	s.shadow_offset = Vector2(0, 4)
 	return s
 
 
 func _update_mode_selection_ui() -> void:
-	var style_classic_sel = _make_card_style(Color(0.92, 0.48, 0.10, 0.98), Color(1.0, 0.94, 0.45, 1.0), 3)
-	var style_modern_sel = _make_card_style(Color(0.12, 0.60, 0.94, 0.98), Color(0.55, 0.98, 1.0, 1.0), 3)
-	var style_play_sel = _make_card_style(Color(0.84, 0.24, 0.68, 0.98), Color(1.0, 0.82, 0.96, 1.0), 3)
-	var style_unsel = _make_card_style(Color(0.16, 0.24, 0.56, 0.90), Color(0.48, 0.60, 0.92, 0.85), 2)
+	var style_classic_sel = _make_card_style(UIIconScript.COLOR_ORANGE_UTILITY, UIIconScript.COLOR_DARK_BROWN, 3)
+	var style_modern_sel = _make_card_style(UIIconScript.COLOR_ORANGE_UTILITY, UIIconScript.COLOR_DARK_BROWN, 3)
+	var style_play_sel = _make_card_style(UIIconScript.COLOR_ORANGE_UTILITY, UIIconScript.COLOR_DARK_BROWN, 3)
+	var style_unsel = _make_card_style(UIIconScript.COLOR_ORANGE_UNSELECTED, UIIconScript.COLOR_DARK_BROWN, 2)
 
 	var is_modern = (selected_mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
 	var is_falling = (selected_play_style == GameStateScript.PlayStyle.FALLING)
@@ -5353,12 +5358,12 @@ func _ensure_account_modal_structure() -> void:
 		local_account_card.name = "LocalAccountCard"
 		local_account_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var card_sb := StyleBoxFlat.new()
-		card_sb.bg_color = Color(0.11, 0.24, 0.56, 0.96)
+		card_sb.bg_color = UIIconScript.COLOR_CREAM_BASE
 		card_sb.border_width_left = 2
 		card_sb.border_width_top = 2
 		card_sb.border_width_right = 2
 		card_sb.border_width_bottom = 5
-		card_sb.border_color = Color(0.36, 0.88, 1.0, 0.98)
+		card_sb.border_color = UIIconScript.COLOR_DARK_BROWN
 		card_sb.corner_radius_top_left = 18
 		card_sb.corner_radius_top_right = 18
 		card_sb.corner_radius_bottom_right = 18
@@ -5367,7 +5372,7 @@ func _ensure_account_modal_structure() -> void:
 		card_sb.content_margin_right = 14.0
 		card_sb.content_margin_top = 10.0
 		card_sb.content_margin_bottom = 12.0
-		card_sb.shadow_color = Color(0.03, 0.06, 0.20, 0.55)
+		card_sb.shadow_color = UIIconScript.COLOR_DARK_BROWN_SHADOW
 		card_sb.shadow_size = 6
 		card_sb.shadow_offset = Vector2(0, 3)
 		local_account_card.add_theme_stylebox_override("panel", card_sb)
@@ -5627,58 +5632,14 @@ func _create_unavailable_provider_button(btn_name: String, label_txt: String, pr
 func _apply_account_entry_button_style(btn: Button) -> void:
 	if not btn:
 		return
-	var st_n := StyleBoxFlat.new()
-	st_n.bg_color = Color(0.18, 0.42, 0.88, 0.98)
-	st_n.border_width_left = 2
-	st_n.border_width_top = 2
-	st_n.border_width_right = 2
-	st_n.border_width_bottom = 6
-	st_n.border_color = Color(0.46, 0.90, 1.0, 1.0)
-	st_n.corner_radius_top_left = 20
-	st_n.corner_radius_top_right = 20
-	st_n.corner_radius_bottom_right = 20
-	st_n.corner_radius_bottom_left = 20
-	st_n.shadow_color = Color(0.04, 0.10, 0.30, 0.55)
-	st_n.shadow_size = 6
-	st_n.shadow_offset = Vector2(0, 3)
-	var st_h := st_n.duplicate()
-	st_h.bg_color = Color(0.24, 0.50, 0.96, 0.99)
-	var st_p := st_n.duplicate()
-	st_p.bg_color = Color(0.14, 0.34, 0.76, 0.99)
-	st_p.border_width_bottom = 3
-	btn.add_theme_color_override("font_color", Color(1.0, 0.99, 1.0, 1.0))
-	btn.add_theme_stylebox_override("normal", st_n)
-	btn.add_theme_stylebox_override("hover", st_h)
-	btn.add_theme_stylebox_override("pressed", st_p)
+	UIIconScript.apply_config_game_button_style(btn, 20)
 	GameTypographyScript.apply_secondary_button_typography(btn, 18)
 
 
 func _apply_cancel_safe_button_style(btn: Button) -> void:
 	if not btn:
 		return
-	var st_n := StyleBoxFlat.new()
-	st_n.bg_color = Color(0.20, 0.48, 0.86, 0.98)
-	st_n.border_width_left = 2
-	st_n.border_width_top = 2
-	st_n.border_width_right = 2
-	st_n.border_width_bottom = 6
-	st_n.border_color = Color(0.56, 0.90, 1.0, 1.0)
-	st_n.corner_radius_top_left = 20
-	st_n.corner_radius_top_right = 20
-	st_n.corner_radius_bottom_right = 20
-	st_n.corner_radius_bottom_left = 20
-	st_n.shadow_color = Color(0.04, 0.10, 0.28, 0.55)
-	st_n.shadow_size = 6
-	st_n.shadow_offset = Vector2(0, 3)
-	var st_h := st_n.duplicate()
-	st_h.bg_color = Color(0.26, 0.56, 0.94, 0.99)
-	var st_p := st_n.duplicate()
-	st_p.bg_color = Color(0.16, 0.38, 0.72, 0.99)
-	st_p.border_width_bottom = 3
-	btn.add_theme_color_override("font_color", Color(0.98, 0.99, 1.0, 1.0))
-	btn.add_theme_stylebox_override("normal", st_n)
-	btn.add_theme_stylebox_override("hover", st_h)
-	btn.add_theme_stylebox_override("pressed", st_p)
+	UIIconScript.apply_utility_game_button_style(btn, false, 20)
 	GameTypographyScript.apply_secondary_button_typography(btn, 18)
 
 
@@ -6316,53 +6277,13 @@ func _hide_all_modals() -> void:
 func _apply_settings_panel_style() -> void:
 	var settings_panel := get_node_or_null("Modals/SettingsModal/Panel") as Control
 	if settings_panel:
-		var st := StyleBoxFlat.new()
-		st.bg_color = Color(0.24, 0.44, 0.86, 0.98)
-		st.border_width_left = 3
-		st.border_width_top = 3
-		st.border_width_right = 3
-		st.border_width_bottom = 8
-		st.border_color = Color(0.42, 0.94, 1.0, 1.0)
-		st.set_corner_radius_all(32)
-		st.shadow_color = Color(0.04, 0.08, 0.28, 0.60)
-		st.shadow_size = 28
-		st.shadow_offset = Vector2(0, 8)
-		settings_panel.add_theme_stylebox_override("panel", st)
+		UIIconScript.apply_cream_panel_style(settings_panel)
 
 
-func _apply_settings_group_button_style(btn: Button, bg_col: Color, border_col: Color) -> void:
+func _apply_settings_group_button_style(btn: Button, bg_col: Color, _border_col: Color = Color.TRANSPARENT) -> void:
 	if not btn:
 		return
-	var st := StyleBoxFlat.new()
-	st.bg_color = bg_col
-	st.border_width_left = 3
-	st.border_width_top = 3
-	st.border_width_right = 3
-	st.border_width_bottom = 6
-	st.border_color = border_col
-	st.set_corner_radius_all(22)
-	st.shadow_color = Color(0.02, 0.04, 0.16, 0.50)
-	st.shadow_size = 10
-	st.shadow_offset = Vector2(0, 4)
-	st.content_margin_left = 12.0
-	st.content_margin_right = 12.0
-
-	var st_hov := st.duplicate() as StyleBoxFlat
-	st_hov.bg_color = bg_col.lightened(0.08)
-	st_hov.border_color = border_col.lightened(0.10)
-
-	var st_press := st.duplicate() as StyleBoxFlat
-	st_press.bg_color = bg_col.darkened(0.08)
-	st_press.border_width_bottom = 2
-	st_press.shadow_size = 3
-	st_press.shadow_offset = Vector2(0, 2)
-
-	btn.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
-	btn.add_theme_stylebox_override("normal", st)
-	btn.add_theme_stylebox_override("hover", st_hov)
-	btn.add_theme_stylebox_override("pressed", st_press)
-	btn.add_theme_stylebox_override("disabled", st)
-	UIIconScript.remove_focus_outline(btn)
+	UIIconScript.apply_game_button_style(btn, bg_col, bg_col.lightened(0.12), 6, 22)
 
 
 func _update_settings_buttons() -> void:
@@ -6415,23 +6336,23 @@ func _update_settings_buttons() -> void:
 
 	if btn_language_modal:
 		btn_language_modal.text = "   " + _tr("language_label")
-		_apply_settings_group_button_style(btn_language_modal, Color(0.92, 0.28, 0.62, 0.98), Color(1.0, 0.72, 0.88, 1.0))
-		UIIconScript.attach_to_button(btn_language_modal, "language", Vector2(22, 22), "left", Color(1.0, 0.88, 0.95, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 18, Color(0.42, 0.08, 0.24, 0.95))
+		UIIconScript.apply_utility_game_button_style(btn_language_modal, false, 22)
+		UIIconScript.attach_to_button(btn_language_modal, "globe", Vector2(22, 22), "left", Color(1.0, 0.95, 0.70, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 18, UIIconScript.COLOR_DARK_BROWN)
 
 	if btn_control_mode_modal:
 		var is_gesture: bool = state_mgr.is_gesture_control() if (state_mgr and state_mgr.has_method("is_gesture_control")) else false
 		var ctrl_key := "control_mode_gesture" if is_gesture else "control_mode_button"
 		btn_control_mode_modal.text = "   " + _tr(ctrl_key)
-		_apply_settings_group_button_style(btn_control_mode_modal, Color(0.92, 0.28, 0.62, 0.98), Color(1.0, 0.72, 0.88, 1.0))
-		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop" if not is_gesture else "turn", Vector2(22, 22), "left", Color(1.0, 0.88, 0.95, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 18, Color(0.42, 0.08, 0.24, 0.95))
+		UIIconScript.apply_utility_game_button_style(btn_control_mode_modal, false, 22)
+		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop" if not is_gesture else "turn", Vector2(22, 22), "left", Color(1.0, 0.95, 0.70, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 18, UIIconScript.COLOR_DARK_BROWN)
 
 	if btn_settings_account:
 		btn_settings_account.text = "    " + _tr("btn_account")
-		_apply_settings_group_button_style(btn_settings_account, Color(0.12, 0.72, 0.38, 0.98), Color(0.62, 1.0, 0.76, 1.0))
+		UIIconScript.apply_config_game_button_style(btn_settings_account, 22)
 		UIIconScript.attach_to_button(btn_settings_account, "account", Vector2(24, 24), "left", Color(0.82, 1.0, 0.88, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_settings_account, 19, Color(0.04, 0.28, 0.12, 0.95))
+		GameTypographyScript.apply_secondary_button_typography(btn_settings_account, 19, UIIconScript.COLOR_DARK_BROWN)
 
 
 	if btn_close_settings:
