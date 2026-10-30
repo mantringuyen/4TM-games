@@ -1028,12 +1028,12 @@ func _apply_level_button_progress_style() -> void:
 		return
 	if _level_progress_style == null:
 		_level_progress_style = StyleBoxFlat.new()
-		_level_progress_style.bg_color = Color(0.80, 0.46, 0.08, 0.98)
+		_level_progress_style.bg_color = UIIconScript.COLOR_BRONZE_LEVEL
 		_level_progress_style.border_width_left = 2
 		_level_progress_style.border_width_top = 2
 		_level_progress_style.border_width_right = 2
 		_level_progress_style.border_width_bottom = 5
-		_level_progress_style.border_color = Color(1.0, 0.90, 0.36, 1.0)
+		_level_progress_style.border_color = UIIconScript.COLOR_BRONZE_LIGHT
 		_level_progress_style.corner_radius_top_left = 18
 		_level_progress_style.corner_radius_top_right = 18
 		_level_progress_style.corner_radius_bottom_right = 18
@@ -1047,11 +1047,11 @@ func _apply_level_button_progress_style() -> void:
 		_level_progress_style.shadow_offset = Vector2(0, 3)
 
 		_level_progress_style_hover = _level_progress_style.duplicate()
-		_level_progress_style_hover.bg_color = Color(0.88, 0.54, 0.12, 0.99)
-		_level_progress_style_hover.border_color = Color(1.0, 0.95, 0.52, 1.0)
+		_level_progress_style_hover.bg_color = UIIconScript.COLOR_BRONZE_LEVEL.lightened(0.12)
+		_level_progress_style_hover.border_color = Color(1.0, 0.88, 0.44, 1.0)
 
 		_level_progress_style_pressed = _level_progress_style.duplicate()
-		_level_progress_style_pressed.bg_color = Color(0.68, 0.36, 0.06, 0.99)
+		_level_progress_style_pressed.bg_color = UIIconScript.COLOR_BRONZE_LEVEL.darkened(0.12)
 		_level_progress_style_pressed.border_width_bottom = 3
 
 	btn_top_level.add_theme_stylebox_override("normal", _level_progress_style)
@@ -1226,7 +1226,7 @@ func _setup_vector_icons() -> void:
 			btn_start.remove_child(existing_play_icon)
 			existing_play_icon.queue_free()
 	if btn_how_to_play:
-		UIIconScript.apply_config_game_button_style(btn_how_to_play, 22)
+		UIIconScript.apply_neutral_utility_button_style(btn_how_to_play, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_how_to_play, 20)
 		UIIconScript.attach_to_button(btn_how_to_play, "info", Vector2(26, 26), "left", Color(0.86, 0.98, 1.0, 1.0))
 	if btn_settings_account:
@@ -5276,11 +5276,6 @@ func _make_card_style(bg_col: Color, border_col: Color, border_w: int = 2) -> St
 
 
 func _update_mode_selection_ui() -> void:
-	var style_classic_sel = _make_card_style(UIIconScript.COLOR_ORANGE_UTILITY, UIIconScript.COLOR_DARK_BROWN, 3)
-	var style_modern_sel = _make_card_style(UIIconScript.COLOR_ORANGE_UTILITY, UIIconScript.COLOR_DARK_BROWN, 3)
-	var style_play_sel = _make_card_style(UIIconScript.COLOR_ORANGE_UTILITY, UIIconScript.COLOR_DARK_BROWN, 3)
-	var style_unsel = _make_card_style(UIIconScript.COLOR_ORANGE_UNSELECTED, UIIconScript.COLOR_DARK_BROWN, 2)
-
 	var is_modern = (selected_mode == GameStateScript.GameMode.MODERN_DRAG_AND_DROP)
 	var is_falling = (selected_play_style == GameStateScript.PlayStyle.FALLING)
 
@@ -5292,30 +5287,22 @@ func _update_mode_selection_ui() -> void:
 	# Clean selectable buttons/cards with procedural vector icons (UIIcon) and font-verified text
 	if btn_classic:
 		btn_classic.text = "    " + classic_label
-		btn_classic.add_theme_color_override("font_color", Color(1.0, 0.98, 0.82, 1.0) if not is_modern else Color(0.92, 0.96, 1.0, 0.92))
-		btn_classic.add_theme_stylebox_override("normal", style_classic_sel if not is_modern else style_unsel)
-		btn_classic.add_theme_stylebox_override("hover", style_classic_sel if not is_modern else style_unsel)
+		UIIconScript.apply_teal_mode_button_style(btn_classic, not is_modern, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_classic, 24)
 
 	if btn_modern:
 		btn_modern.text = "    " + modern_label
-		btn_modern.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0) if is_modern else Color(0.92, 0.96, 1.0, 0.92))
-		btn_modern.add_theme_stylebox_override("normal", style_modern_sel if is_modern else style_unsel)
-		btn_modern.add_theme_stylebox_override("hover", style_modern_sel if is_modern else style_unsel)
+		UIIconScript.apply_teal_mode_button_style(btn_modern, is_modern, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_modern, 24)
 
 	if btn_falling:
 		btn_falling.text = "    " + falling_label
-		btn_falling.add_theme_color_override("font_color", Color(1.0, 0.96, 1.0, 1.0) if is_falling else Color(0.92, 0.96, 1.0, 0.92))
-		btn_falling.add_theme_stylebox_override("normal", style_play_sel if is_falling else style_unsel)
-		btn_falling.add_theme_stylebox_override("hover", style_play_sel if is_falling else style_unsel)
+		UIIconScript.apply_purple_style_button_style(btn_falling, is_falling, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_falling, 24)
 
 	if btn_drag_drop:
 		btn_drag_drop.text = "    " + drag_drop_label
-		btn_drag_drop.add_theme_color_override("font_color", Color(1.0, 0.96, 1.0, 1.0) if not is_falling else Color(0.92, 0.96, 1.0, 0.92))
-		btn_drag_drop.add_theme_stylebox_override("normal", style_play_sel if not is_falling else style_unsel)
-		btn_drag_drop.add_theme_stylebox_override("hover", style_play_sel if not is_falling else style_unsel)
+		UIIconScript.apply_purple_style_button_style(btn_drag_drop, not is_falling, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_drag_drop, 24)
 
 	var gs = get_node_or_null("/root/GameState")
@@ -5342,6 +5329,76 @@ func _on_btn_settings_pressed() -> void:
 	if modal_settings:
 		modal_settings.visible = true
 	_on_viewport_resized()
+
+
+func _create_stat_item(parent: Control, val_name: String, default_val: String, label_txt: String) -> Label:
+	var item_vbox := VBoxContainer.new()
+	item_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	item_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	item_vbox.add_theme_constant_override("separation", 0)
+	parent.add_child(item_vbox)
+
+	var lbl_val := Label.new()
+	lbl_val.name = val_name
+	lbl_val.text = default_val
+	lbl_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_val.add_theme_font_size_override("font_size", 16)
+	lbl_val.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
+	GameTypographyScript.apply_heading_typography(lbl_val, 16, true)
+	item_vbox.add_child(lbl_val)
+
+	var lbl_sub := Label.new()
+	lbl_sub.name = val_name + "_Label"
+	lbl_sub.text = label_txt
+	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_sub.add_theme_font_size_override("font_size", 11)
+	lbl_sub.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
+	item_vbox.add_child(lbl_sub)
+
+	return lbl_val
+
+
+func _create_clean_stat_card(card_name: String, card_title: String) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.name = card_name
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = UIIconScript.COLOR_CREAM_LIGHT
+	sb.border_width_left = 1
+	sb.border_width_top = 1
+	sb.border_width_right = 1
+	sb.border_width_bottom = 3
+	sb.border_color = UIIconScript.COLOR_DARK_BROWN
+	sb.corner_radius_top_left = 12
+	sb.corner_radius_top_right = 12
+	sb.corner_radius_bottom_right = 12
+	sb.corner_radius_bottom_left = 12
+	sb.content_margin_left = 10.0
+	sb.content_margin_right = 10.0
+	sb.content_margin_top = 6.0
+	sb.content_margin_bottom = 6.0
+	p.add_theme_stylebox_override("panel", sb)
+
+	var vb := VBoxContainer.new()
+	vb.name = "CardVBox"
+	vb.add_theme_constant_override("separation", 2)
+	p.add_child(vb)
+
+	var lbl_t := Label.new()
+	lbl_t.name = "CardTitle"
+	lbl_t.text = card_title
+	lbl_t.add_theme_font_size_override("font_size", 12)
+	lbl_t.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
+	GameTypographyScript.apply_heading_typography(lbl_t, 12, false)
+	vb.add_child(lbl_t)
+
+	var hb := HBoxContainer.new()
+	hb.name = "CardStatsRow"
+	hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	hb.add_theme_constant_override("separation", 8)
+	vb.add_child(hb)
+
+	return p
 
 
 func _ensure_account_modal_structure() -> void:
@@ -5390,7 +5447,7 @@ func _ensure_account_modal_structure() -> void:
 		header_row.add_theme_constant_override("separation", 8)
 		local_vbox.add_child(header_row)
 
-		var loc_icon := UIIconScript.new("account", Color(0.46, 0.96, 1.0, 1.0))
+		var loc_icon := UIIconScript.new("account", UIIconScript.COLOR_DARK_BROWN)
 		loc_icon.name = "LocalAccountIcon"
 		loc_icon.align_mode = "none"
 		loc_icon.custom_minimum_size = Vector2(24, 24)
@@ -5402,7 +5459,8 @@ func _ensure_account_modal_structure() -> void:
 		lbl_local_account_title.text = _tr("account_local_title")
 		lbl_local_account_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl_local_account_title.add_theme_font_size_override("font_size", 19)
-		lbl_local_account_title.add_theme_color_override("font_color", Color(1.0, 0.95, 0.42, 1.0))
+		lbl_local_account_title.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
+		GameTypographyScript.apply_heading_typography(lbl_local_account_title, 19, true)
 		header_row.add_child(lbl_local_account_title)
 
 		var badge_panel := PanelContainer.new()
@@ -5437,8 +5495,47 @@ func _ensure_account_modal_structure() -> void:
 		lbl_local_desc.text = _tr("account_local_desc")
 		lbl_local_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lbl_local_desc.add_theme_font_size_override("font_size", 13)
-		lbl_local_desc.add_theme_color_override("font_color", Color(0.84, 0.93, 1.0, 0.94))
+		lbl_local_desc.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 		local_vbox.add_child(lbl_local_desc)
+
+		# 3 Clean Prominent Cards inside ScrollContainer
+		var scroll_cards := ScrollContainer.new()
+		scroll_cards.name = "StatsScrollContainer"
+		scroll_cards.custom_minimum_size.y = 120.0
+		scroll_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll_cards.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		local_vbox.add_child(scroll_cards)
+
+		var cards_vbox := VBoxContainer.new()
+		cards_vbox.name = "CardsVBox"
+		cards_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cards_vbox.add_theme_constant_override("separation", 6)
+		scroll_cards.add_child(cards_vbox)
+
+		# 1. Progress Card
+		var card_prog := _create_clean_stat_card("ProgressCard", "PROGRESS")
+		cards_vbox.add_child(card_prog)
+		var prog_row: HBoxContainer = card_prog.find_child("CardStatsRow", true, false)
+		if prog_row:
+			_create_stat_item(prog_row, "LblCardLevelVal", "1", "Level")
+			_create_stat_item(prog_row, "LblCardStarsVal", "0", "Stars")
+			_create_stat_item(prog_row, "LblCardUnlockedVal", "1 / 500", "Unlocked")
+
+		# 2. Records Card
+		var card_rec := _create_clean_stat_card("RecordsCard", "RECORDS")
+		cards_vbox.add_child(card_rec)
+		var rec_row: HBoxContainer = card_rec.find_child("CardStatsRow", true, false)
+		if rec_row:
+			_create_stat_item(rec_row, "LblCardScoreVal", "0", "High Score")
+			_create_stat_item(rec_row, "LblCardLinesVal", "0", "Lines Cleared")
+
+		# 3. Resources Card
+		var card_res := _create_clean_stat_card("ResourcesCard", "RESOURCES")
+		cards_vbox.add_child(card_res)
+		var res_row: HBoxContainer = card_res.find_child("CardStatsRow", true, false)
+		if res_row:
+			_create_stat_item(res_row, "LblCardCoinsVal", "250", "Coins")
+			_create_stat_item(res_row, "LblCardEnergyVal", "24 / 24", "Energy")
 
 		if stats_box:
 			if stats_box.get_parent() != local_vbox:
@@ -5448,12 +5545,15 @@ func _ensure_account_modal_structure() -> void:
 			stats_box.add_theme_constant_override("separation", 3)
 			if lbl_account_score:
 				lbl_account_score.add_theme_font_size_override("font_size", 14)
+				lbl_account_score.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 				lbl_account_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 			if lbl_account_lines:
 				lbl_account_lines.add_theme_font_size_override("font_size", 13)
+				lbl_account_lines.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 				lbl_account_lines.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 			if lbl_reward_status:
 				lbl_reward_status.add_theme_font_size_override("font_size", 14)
+				lbl_reward_status.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 				lbl_reward_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 
 		btn_delete_data = Button.new()
@@ -5875,6 +5975,23 @@ func _refresh_account_ui() -> void:
 			lbl_reward_status.text = _tr("stats_summary") % [
 				state_mgr.total_stars, state_mgr.coins, state_mgr.highest_unlocked_level, GameStateScript.TOTAL_LEVELS
 			]
+
+		if local_account_card:
+			var card_lvl := local_account_card.find_child("LblCardLevelVal", true, false) as Label
+			var card_stars := local_account_card.find_child("LblCardStarsVal", true, false) as Label
+			var card_unlocked := local_account_card.find_child("LblCardUnlockedVal", true, false) as Label
+			var card_score := local_account_card.find_child("LblCardScoreVal", true, false) as Label
+			var card_lines := local_account_card.find_child("LblCardLinesVal", true, false) as Label
+			var card_coins := local_account_card.find_child("LblCardCoinsVal", true, false) as Label
+			var card_energy := local_account_card.find_child("LblCardEnergyVal", true, false) as Label
+
+			if card_lvl: card_lvl.text = String.num_int64(state_mgr.highest_unlocked_level)
+			if card_stars: card_stars.text = String.num_int64(state_mgr.total_stars)
+			if card_unlocked: card_unlocked.text = "%d / %d" % [state_mgr.highest_unlocked_level, GameStateScript.TOTAL_LEVELS]
+			if card_score: card_score.text = String.num_int64(state_mgr.high_score)
+			if card_lines: card_lines.text = String.num_int64(state_mgr.lines_cleared_total)
+			if card_coins: card_coins.text = String.num_int64(state_mgr.coins)
+			if card_energy: card_energy.text = "%d / %d" % [state_mgr.get_energy(), GameStateScript.MAX_ENERGY]
 
 
 func update_responsive_account_and_settings_modals(vp_size: Vector2 = Vector2(720, 1280)) -> Dictionary:
