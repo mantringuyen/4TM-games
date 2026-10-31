@@ -104,7 +104,8 @@ func _ready() -> void:
 			btn_retry.pressed.connect(_on_btn_retry_pressed)
 	if btn_menu:
 		_apply_red_exit_style(btn_menu)
-		UIIconScript.attach_to_button(btn_menu, "close", Vector2(24, 24), "left", Color(1.0, 0.94, 0.94, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_menu, 24, Color(1.0, 0.98, 0.98, 1.0))
+		UIIconScript.attach_to_button(btn_menu, "close", Vector2(26, 26), "left", Color(1.0, 0.94, 0.94, 1.0))
 		if not btn_menu.pressed.is_connected(_on_btn_menu_pressed):
 			btn_menu.pressed.connect(_on_btn_menu_pressed)
 	_setup_leave_button_spacing()
@@ -168,6 +169,16 @@ func update_responsive_layout(vp_size: Vector2 = Vector2.ZERO) -> void:
 		panel_container.offset_top = panel_top_y - vp_h * 0.5
 		panel_container.offset_bottom = panel_top_y + target_h - vp_h * 0.5
 
+	var btn_h: float = 50.0 if is_very_compact else (56.0 if is_compact else 64.0)
+	var menu_h: float = 46.0 if is_very_compact else (50.0 if is_compact else 58.0)
+	for b in [btn_next_level, btn_retry, btn_extra_life, btn_watch_ad]:
+		if b:
+			b.custom_minimum_size.y = btn_h
+			GameTypographyScript.apply_primary_button_typography(b, 20 if is_compact else 22)
+	if btn_menu:
+		btn_menu.custom_minimum_size.y = menu_h
+		GameTypographyScript.apply_secondary_button_typography(btn_menu, 20 if is_compact else 22, Color(1.0, 0.98, 0.98, 1.0))
+
 
 func _setup_leave_button_spacing() -> void:
 	if btn_menu and btn_menu.get_parent() is VBoxContainer:
@@ -210,6 +221,9 @@ func _apply_red_exit_style(btn: Button) -> void:
 	st.corner_radius_top_right = 20
 	st.corner_radius_bottom_right = 20
 	st.corner_radius_bottom_left = 20
+	st.shadow_color = UIIconScript.COLOR_DARK_BROWN_SHADOW
+	st.shadow_size = 8
+	st.shadow_offset = Vector2(0, 3)
 	var st_hov := st.duplicate()
 	st_hov.bg_color = Color(0.94, 0.22, 0.30, 0.99)
 	var st_press := st.duplicate()
@@ -220,6 +234,7 @@ func _apply_red_exit_style(btn: Button) -> void:
 	btn.add_theme_stylebox_override("hover", st_hov)
 	btn.add_theme_stylebox_override("pressed", st_press)
 	btn.set_meta("is_red_exit_action", true)
+	UIIconScript.setup_button_press_feedback(btn)
 
 
 func _is_button_red(btn: Button) -> bool:

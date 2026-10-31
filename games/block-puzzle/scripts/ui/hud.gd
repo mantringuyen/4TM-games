@@ -473,15 +473,15 @@ func _ensure_energy_header_control() -> void:
 		energy_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		energy_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var st_ep := StyleBoxFlat.new()
-		st_ep.bg_color = Color(0.06, 0.46, 0.56, 0.98)
-		st_ep.border_width_left = 2
-		st_ep.border_width_top = 2
-		st_ep.border_width_right = 2
-		st_ep.border_width_bottom = 5
+		st_ep.bg_color = Color(0.06, 0.46, 0.56, 0.0)
+		st_ep.border_width_left = 0
+		st_ep.border_width_top = 0
+		st_ep.border_width_right = 0
+		st_ep.border_width_bottom = 0
 		st_ep.border_color = Color(0.30, 0.96, 0.88, 1.0)
-		st_ep.shadow_color = Color(0.02, 0.16, 0.24, 0.60)
-		st_ep.shadow_size = 7
-		st_ep.shadow_offset = Vector2(0, 3)
+		st_ep.shadow_color = Color(0, 0, 0, 0)
+		st_ep.shadow_size = 0
+		st_ep.shadow_offset = Vector2.ZERO
 		st_ep.set_corner_radius_all(18)
 		st_ep.content_margin_left = 7.0
 		st_ep.content_margin_right = 7.0

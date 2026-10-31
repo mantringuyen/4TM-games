@@ -79,7 +79,7 @@ const BOARD_SURFACE_ALPHA: float = 0.055
 const BOARD_CABINET_ALPHA: float = 0.06
 const EMPTY_CELL_ALPHA_EVEN: float = 0.04
 const EMPTY_CELL_ALPHA_ODD: float = 0.05
-const EMPTY_CELL_BORDER_ALPHA: float = 0.65
+const EMPTY_CELL_BORDER_ALPHA: float = 0.45
 var custom_level_grid_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 
 # Line Clear Visual Feedback & Celebratory Particles State
@@ -1266,7 +1266,7 @@ func _draw() -> void:
 	empty_socket_even.border_width_top = 1
 	empty_socket_even.border_width_right = 1
 	empty_socket_even.border_width_bottom = 1
-	empty_socket_even.border_color = Color(0.847, 0.788, 0.624, 0.35) # Subtle #D8C99F
+	empty_socket_even.border_color = Color(0.90, 0.86, 0.74, EMPTY_CELL_BORDER_ALPHA) # Slightly brighter warm outline
 	empty_socket_even.corner_radius_top_left = cell_rad
 	empty_socket_even.corner_radius_top_right = cell_rad
 	empty_socket_even.corner_radius_bottom_right = cell_rad
@@ -1281,7 +1281,7 @@ func _draw() -> void:
 	empty_socket_glass_rim.border_width_top = 1
 	empty_socket_glass_rim.border_width_right = 1
 	empty_socket_glass_rim.border_width_bottom = 1
-	empty_socket_glass_rim.border_color = Color(0.847, 0.788, 0.624, 0.25) # Subtle #D8C99F
+	empty_socket_glass_rim.border_color = Color(0.90, 0.86, 0.74, EMPTY_CELL_BORDER_ALPHA * 0.72)
 	empty_socket_glass_rim.corner_radius_top_left = inner_rad
 	empty_socket_glass_rim.corner_radius_top_right = inner_rad
 	empty_socket_glass_rim.corner_radius_bottom_right = inner_rad

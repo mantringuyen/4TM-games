@@ -490,15 +490,15 @@ func _ensure_energy_header_control() -> void:
 		energy_panel.size = Vector2(134, 48)
 		energy_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var ep_sb := StyleBoxFlat.new()
-		ep_sb.bg_color = Color(0.06, 0.46, 0.56, 0.98)
-		ep_sb.border_width_left = 2
-		ep_sb.border_width_top = 2
-		ep_sb.border_width_right = 2
-		ep_sb.border_width_bottom = 6
+		ep_sb.bg_color = Color(0.06, 0.46, 0.56, 0.0)
+		ep_sb.border_width_left = 0
+		ep_sb.border_width_top = 0
+		ep_sb.border_width_right = 0
+		ep_sb.border_width_bottom = 0
 		ep_sb.border_color = Color(0.30, 0.96, 0.88, 1.0)
-		ep_sb.shadow_color = Color(0.02, 0.16, 0.24, 0.60)
-		ep_sb.shadow_size = 8
-		ep_sb.shadow_offset = Vector2(0, 3)
+		ep_sb.shadow_color = Color(0, 0, 0, 0)
+		ep_sb.shadow_size = 0
+		ep_sb.shadow_offset = Vector2.ZERO
 		ep_sb.corner_radius_top_left = 22
 		ep_sb.corner_radius_top_right = 22
 		ep_sb.corner_radius_bottom_right = 22
@@ -5287,22 +5287,22 @@ func _update_mode_selection_ui() -> void:
 	# Clean selectable buttons/cards with procedural vector icons (UIIcon) and font-verified text
 	if btn_classic:
 		btn_classic.text = "    " + classic_label
-		UIIconScript.apply_teal_mode_button_style(btn_classic, not is_modern, 26)
+		UIIconScript.apply_ocean_blue_mode_button_style(btn_classic, not is_modern, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_classic, 24)
 
 	if btn_modern:
 		btn_modern.text = "    " + modern_label
-		UIIconScript.apply_teal_mode_button_style(btn_modern, is_modern, 26)
+		UIIconScript.apply_ocean_blue_mode_button_style(btn_modern, is_modern, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_modern, 24)
 
 	if btn_falling:
 		btn_falling.text = "    " + falling_label
-		UIIconScript.apply_purple_style_button_style(btn_falling, is_falling, 26)
+		UIIconScript.apply_emerald_style_button_style(btn_falling, is_falling, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_falling, 24)
 
 	if btn_drag_drop:
 		btn_drag_drop.text = "    " + drag_drop_label
-		UIIconScript.apply_purple_style_button_style(btn_drag_drop, not is_falling, 26)
+		UIIconScript.apply_emerald_style_button_style(btn_drag_drop, not is_falling, 26)
 		GameTypographyScript.apply_secondary_button_typography(btn_drag_drop, 24)
 
 	var gs = get_node_or_null("/root/GameState")

@@ -128,17 +128,28 @@ const COLOR_RED_LIGHT: Color = Color(0.984, 0.478, 0.522, 1.0)          # #FB7A8
 const COLOR_DARK_BROWN: Color = Color(0.333, 0.231, 0.196, 1.0)        # #553B32 Dark Brown Outline/Text
 const COLOR_DARK_BROWN_SHADOW: Color = Color(0.20, 0.12, 0.08, 0.45)
 
-# Mode Group 1: Classic & Modern (Deep Teal / Green)
-const COLOR_TEAL_MODE_SEL: Color = Color(0.08, 0.54, 0.42, 1.0)        # Deep Teal Selected
-const COLOR_TEAL_MODE_SEL_HI: Color = Color(0.38, 0.94, 0.76, 1.0)     # Bright Teal Border/Highlight
-const COLOR_TEAL_MODE_UNSEL: Color = Color(0.12, 0.32, 0.28, 0.94)      # Muted Deep Teal Unselected
-const COLOR_TEAL_MODE_UNSEL_HI: Color = Color(0.24, 0.48, 0.42, 0.90)
+# Mode Group 1: Classic & Modern (Deep Ocean Blue family)
+const COLOR_OCEAN_BLUE_SEL: Color = Color(0.12, 0.44, 0.84, 1.0)        # Deep Ocean Blue Selected
+const COLOR_OCEAN_BLUE_SEL_HI: Color = Color(0.48, 0.80, 1.0, 1.0)     # Bright Ocean Blue Highlight
+const COLOR_OCEAN_BLUE_UNSEL: Color = Color(0.10, 0.22, 0.44, 0.94)      # Muted Deep Ocean Blue Unselected
+const COLOR_OCEAN_BLUE_UNSEL_HI: Color = Color(0.24, 0.42, 0.68, 0.90)
 
-# Mode Group 2: Falling & Drag & Drop (Distinct Purple)
-const COLOR_PURPLE_STYLE_SEL: Color = Color(0.56, 0.22, 0.80, 1.0)      # Rich Purple Selected
-const COLOR_PURPLE_STYLE_SEL_HI: Color = Color(0.86, 0.62, 1.0, 1.0)    # Bright Purple Border/Highlight
-const COLOR_PURPLE_STYLE_UNSEL: Color = Color(0.28, 0.16, 0.38, 0.94)    # Muted Purple Unselected
-const COLOR_PURPLE_STYLE_UNSEL_HI: Color = Color(0.44, 0.28, 0.56, 0.90)
+# Mode Group 2: Falling & Drag & Drop (Vivid Emerald Green - strong contrast vs #293D8A navy background)
+const COLOR_EMERALD_STYLE_SEL: Color = Color(0.08, 0.68, 0.48, 1.0)      # Vivid Emerald Green Selected
+const COLOR_EMERALD_STYLE_SEL_HI: Color = Color(0.42, 0.98, 0.78, 1.0)   # Bright Emerald Highlight
+const COLOR_EMERALD_STYLE_UNSEL: Color = Color(0.08, 0.34, 0.26, 0.94)   # Muted Emerald Unselected
+const COLOR_EMERALD_STYLE_UNSEL_HI: Color = Color(0.18, 0.52, 0.42, 0.90)
+
+# Compatibility aliases
+const COLOR_TEAL_MODE_SEL: Color = COLOR_OCEAN_BLUE_SEL
+const COLOR_TEAL_MODE_SEL_HI: Color = COLOR_OCEAN_BLUE_SEL_HI
+const COLOR_TEAL_MODE_UNSEL: Color = COLOR_OCEAN_BLUE_UNSEL
+const COLOR_TEAL_MODE_UNSEL_HI: Color = COLOR_OCEAN_BLUE_UNSEL_HI
+
+const COLOR_PURPLE_STYLE_SEL: Color = COLOR_EMERALD_STYLE_SEL
+const COLOR_PURPLE_STYLE_SEL_HI: Color = COLOR_EMERALD_STYLE_SEL_HI
+const COLOR_PURPLE_STYLE_UNSEL: Color = COLOR_EMERALD_STYLE_UNSEL
+const COLOR_PURPLE_STYLE_UNSEL_HI: Color = COLOR_EMERALD_STYLE_UNSEL_HI
 
 # Neutral Utility Slate (Reduces excessive blue for non-Settings buttons)
 const COLOR_NEUTRAL_SLATE: Color = Color(0.32, 0.38, 0.46, 1.0)        # #526175 Neutral Slate Utility
@@ -322,9 +333,9 @@ static func apply_reward_game_button_style(btn: Button, corner_r: int = 22) -> v
 		btn.add_theme_constant_override("outline_size", 2)
 
 
-static func apply_teal_mode_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
-	var bg_col := COLOR_TEAL_MODE_SEL if is_selected else COLOR_TEAL_MODE_UNSEL
-	var hi_col := COLOR_TEAL_MODE_SEL_HI if is_selected else COLOR_TEAL_MODE_UNSEL_HI
+static func apply_ocean_blue_mode_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
+	var bg_col := COLOR_OCEAN_BLUE_SEL if is_selected else COLOR_OCEAN_BLUE_UNSEL
+	var hi_col := COLOR_OCEAN_BLUE_SEL_HI if is_selected else COLOR_OCEAN_BLUE_UNSEL_HI
 	apply_game_button_style(
 		btn,
 		bg_col,
@@ -335,29 +346,37 @@ static func apply_teal_mode_button_style(btn: Button, is_selected: bool = false,
 		Vector2(0, 6) if is_selected else Vector2(0, 3)
 	)
 	if btn:
-		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.90, 1.0) if is_selected else Color(0.85, 0.94, 0.90, 0.88))
+		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.95, 1.0) if is_selected else Color(0.85, 0.92, 1.0, 0.88))
 		btn.add_theme_color_override("font_hover_color", Color.WHITE)
 		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
 		btn.add_theme_constant_override("outline_size", 4)
+
+
+static func apply_emerald_style_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
+	var bg_col := COLOR_EMERALD_STYLE_SEL if is_selected else COLOR_EMERALD_STYLE_UNSEL
+	var hi_col := COLOR_EMERALD_STYLE_SEL_HI if is_selected else COLOR_EMERALD_STYLE_UNSEL_HI
+	apply_game_button_style(
+		btn,
+		bg_col,
+		hi_col,
+		9 if is_selected else 6,
+		corner_r,
+		14 if is_selected else 9,
+		Vector2(0, 6) if is_selected else Vector2(0, 3)
+	)
+	if btn:
+		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.95, 1.0) if is_selected else Color(0.85, 0.98, 0.92, 0.88))
+		btn.add_theme_color_override("font_hover_color", Color.WHITE)
+		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
+		btn.add_theme_constant_override("outline_size", 4)
+
+
+static func apply_teal_mode_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
+	apply_ocean_blue_mode_button_style(btn, is_selected, corner_r)
 
 
 static func apply_purple_style_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
-	var bg_col := COLOR_PURPLE_STYLE_SEL if is_selected else COLOR_PURPLE_STYLE_UNSEL
-	var hi_col := COLOR_PURPLE_STYLE_SEL_HI if is_selected else COLOR_PURPLE_STYLE_UNSEL_HI
-	apply_game_button_style(
-		btn,
-		bg_col,
-		hi_col,
-		9 if is_selected else 6,
-		corner_r,
-		14 if is_selected else 9,
-		Vector2(0, 6) if is_selected else Vector2(0, 3)
-	)
-	if btn:
-		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.95, 1.0) if is_selected else Color(0.90, 0.85, 0.95, 0.88))
-		btn.add_theme_color_override("font_hover_color", Color.WHITE)
-		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
-		btn.add_theme_constant_override("outline_size", 4)
+	apply_emerald_style_button_style(btn, is_selected, corner_r)
 
 
 static func apply_neutral_utility_button_style(btn: Button, corner_r: int = 22) -> void:
