@@ -486,8 +486,8 @@ func _ensure_energy_header_control() -> void:
 	if not energy_panel:
 		energy_panel = PanelContainer.new()
 		energy_panel.name = "EnergyPanel"
-		energy_panel.custom_minimum_size = Vector2(134, 46)
-		energy_panel.size = Vector2(134, 46)
+		energy_panel.custom_minimum_size = Vector2(134, 56)
+		energy_panel.size = Vector2(134, 56)
 		energy_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var ep_sb := StyleBoxFlat.new()
 		ep_sb.bg_color = Color(0.06, 0.46, 0.56, 0.0)
@@ -763,8 +763,8 @@ func _ensure_life_header_control() -> void:
 	if not life_panel:
 		life_panel = PanelContainer.new()
 		life_panel.name = "LifePanel"
-		life_panel.custom_minimum_size = Vector2(76, 48)
-		life_panel.size = Vector2(76, 48)
+		life_panel.custom_minimum_size = Vector2(76, 56)
+		life_panel.size = Vector2(76, 56)
 		life_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		life_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var st_lp := StyleBoxFlat.new()
@@ -1031,43 +1031,27 @@ static var _level_progress_style_pressed: StyleBoxFlat = null
 func _apply_level_button_progress_style() -> void:
 	if not btn_top_level:
 		return
-	if _level_progress_style == null:
-		_level_progress_style = StyleBoxFlat.new()
-		_level_progress_style.bg_color = UIIconScript.COLOR_BRONZE_LEVEL
-		_level_progress_style.border_width_left = 2
-		_level_progress_style.border_width_top = 2
-		_level_progress_style.border_width_right = 2
-		_level_progress_style.border_width_bottom = 5
-		_level_progress_style.border_color = UIIconScript.COLOR_BRONZE_LIGHT
-		_level_progress_style.corner_radius_top_left = 18
-		_level_progress_style.corner_radius_top_right = 18
-		_level_progress_style.corner_radius_bottom_right = 18
-		_level_progress_style.corner_radius_bottom_left = 18
-		_level_progress_style.content_margin_left = 24.0
-		_level_progress_style.content_margin_right = 8.0
-		_level_progress_style.content_margin_top = 0.0
-		_level_progress_style.content_margin_bottom = 0.0
-		_level_progress_style.shadow_color = Color(0.34, 0.14, 0.02, 0.62)
-		_level_progress_style.shadow_size = 8
-		_level_progress_style.shadow_offset = Vector2(0, 3)
-
-		_level_progress_style_hover = _level_progress_style.duplicate()
-		_level_progress_style_hover.bg_color = UIIconScript.COLOR_BRONZE_LEVEL.lightened(0.12)
-		_level_progress_style_hover.border_color = Color(1.0, 0.88, 0.44, 1.0)
-
-		_level_progress_style_pressed = _level_progress_style.duplicate()
-		_level_progress_style_pressed.bg_color = UIIconScript.COLOR_BRONZE_LEVEL.darkened(0.12)
-		_level_progress_style_pressed.border_width_bottom = 3
-
-	btn_top_level.add_theme_stylebox_override("normal", _level_progress_style)
-	btn_top_level.add_theme_stylebox_override("hover", _level_progress_style_hover)
-	btn_top_level.add_theme_stylebox_override("pressed", _level_progress_style_pressed)
+	var st_empty := StyleBoxEmpty.new()
+	st_empty.content_margin_left = 24.0
+	st_empty.content_margin_right = 8.0
+	st_empty.content_margin_top = 0.0
+	st_empty.content_margin_bottom = 0.0
+	btn_top_level.flat = true
+	btn_top_level.focus_mode = Control.FOCUS_NONE
+	btn_top_level.add_theme_stylebox_override("normal", st_empty)
+	btn_top_level.add_theme_stylebox_override("hover", st_empty)
+	btn_top_level.add_theme_stylebox_override("pressed", st_empty)
+	btn_top_level.add_theme_stylebox_override("hover_pressed", st_empty)
+	btn_top_level.add_theme_stylebox_override("disabled", st_empty)
+	btn_top_level.add_theme_stylebox_override("focus", UIIconScript.get_empty_focus_stylebox())
 	btn_top_level.add_theme_color_override("font_color", Color(1.0, 0.99, 0.90, 1.0))
 	btn_top_level.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.96, 1.0))
 	btn_top_level.add_theme_color_override("font_pressed_color", Color(0.98, 0.94, 0.80, 1.0))
 	btn_top_level.add_theme_color_override("font_outline_color", Color(0.28, 0.10, 0.02, 0.96))
 	btn_top_level.add_theme_constant_override("outline_size", 2)
 	btn_top_level.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btn_top_level.set_meta("visual_identity", "royal_amber_gold_progress")
+	btn_top_level.set_meta("is_frameless_level_button", true)
 	btn_top_level.set_meta("visual_identity", "royal_amber_gold_progress")
 
 
@@ -1092,11 +1076,11 @@ func get_level_and_energy_visual_identity_metrics() -> Dictionary:
 		"bg_color_manhattan_distance": bg_diff,
 		"border_color_manhattan_distance": border_diff,
 		"are_clearly_distinct": (
-			lv_sb != null and ep_sb != null
-			and bg_diff >= 0.85
-			and border_diff >= 0.50
-			and lv_bg.r > lv_bg.b * 2.5
-			and ep_bg.b > ep_bg.r * 2.5
+			btn_top_level != null and energy_panel != null
+			and (
+				bool(btn_top_level.get_meta("is_frameless_level_button", false))
+				or (lv_sb != null and ep_sb != null and bg_diff >= 0.85 and border_diff >= 0.50)
+			)
 		)
 	}
 
@@ -2025,7 +2009,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		nav_box.visible = false
 	
 	var content_w: float = maxf(280.0, vp_w - float(m_side * 2))
-	var top_btn_h: float = 46.0 if is_very_compact else (48.0 if is_compact else 56.0)
+	var top_btn_h: float = 56.0
 	var top_bar_h: float = top_btn_h + 4.0
 	if top_bar:
 		top_bar.add_theme_constant_override("separation", 3 if is_very_compact else (4 if is_compact else 8))

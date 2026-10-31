@@ -352,6 +352,25 @@ static func apply_ocean_blue_mode_button_style(btn: Button, is_selected: bool = 
 		btn.add_theme_constant_override("outline_size", 4)
 
 
+static func apply_orange_mode_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
+	var bg_col := COLOR_ORANGE_UTILITY if is_selected else COLOR_ORANGE_UNSELECTED
+	var hi_col := COLOR_ORANGE_LIGHT if is_selected else COLOR_ORANGE_UNSEL_LIGHT
+	apply_game_button_style(
+		btn,
+		bg_col,
+		hi_col,
+		9 if is_selected else 6,
+		corner_r,
+		14 if is_selected else 9,
+		Vector2(0, 6) if is_selected else Vector2(0, 3)
+	)
+	if btn:
+		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.95, 1.0) if is_selected else Color(1.0, 0.92, 0.82, 0.88))
+		btn.add_theme_color_override("font_hover_color", Color.WHITE)
+		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
+		btn.add_theme_constant_override("outline_size", 4)
+
+
 static func apply_emerald_style_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
 	var bg_col := COLOR_EMERALD_STYLE_SEL if is_selected else COLOR_EMERALD_STYLE_UNSEL
 	var hi_col := COLOR_EMERALD_STYLE_SEL_HI if is_selected else COLOR_EMERALD_STYLE_UNSEL_HI
@@ -371,12 +390,16 @@ static func apply_emerald_style_button_style(btn: Button, is_selected: bool = fa
 		btn.add_theme_constant_override("outline_size", 4)
 
 
-static func apply_teal_mode_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
+static func apply_blue_style_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
 	apply_ocean_blue_mode_button_style(btn, is_selected, corner_r)
 
 
+static func apply_teal_mode_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
+	apply_orange_mode_button_style(btn, is_selected, corner_r)
+
+
 static func apply_purple_style_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
-	apply_emerald_style_button_style(btn, is_selected, corner_r)
+	apply_ocean_blue_mode_button_style(btn, is_selected, corner_r)
 
 
 static func apply_neutral_utility_button_style(btn: Button, corner_r: int = 22) -> void:
