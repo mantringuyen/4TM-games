@@ -486,8 +486,8 @@ func _ensure_energy_header_control() -> void:
 	if not energy_panel:
 		energy_panel = PanelContainer.new()
 		energy_panel.name = "EnergyPanel"
-		energy_panel.custom_minimum_size = Vector2(134, 48)
-		energy_panel.size = Vector2(134, 48)
+		energy_panel.custom_minimum_size = Vector2(134, 46)
+		energy_panel.size = Vector2(134, 46)
 		energy_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var ep_sb := StyleBoxFlat.new()
 		ep_sb.bg_color = Color(0.06, 0.46, 0.56, 0.0)
@@ -519,15 +519,15 @@ func _ensure_energy_header_control() -> void:
 		hbox.custom_minimum_size = Vector2.ZERO
 		hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		hbox.add_theme_constant_override("separation", 5)
+		hbox.add_theme_constant_override("separation", 4)
 		energy_panel.add_child(hbox)
 
 		var bolt_icon = UIIconScript.new("bolt", Color(1.0, 0.92, 0.24, 1.0))
 		bolt_icon.name = "EnergyIcon"
 		bolt_icon.align_mode = "none"
 		bolt_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bolt_icon.custom_minimum_size = Vector2(26, 26)
-		bolt_icon.size = Vector2(26, 26)
+		bolt_icon.custom_minimum_size = Vector2(24, 24)
+		bolt_icon.size = Vector2(24, 24)
 		hbox.add_child(bolt_icon)
 
 		var empty_sb := StyleBoxEmpty.new()
@@ -545,11 +545,11 @@ func _ensure_energy_header_control() -> void:
 		lbl_energy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl_energy.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl_energy.add_theme_stylebox_override("normal", empty_sb)
-		lbl_energy.add_theme_font_size_override("font_size", 18)
+		lbl_energy.add_theme_font_size_override("font_size", 16)
 		lbl_energy.add_theme_color_override("font_color", Color(0.92, 1.0, 0.99, 1.0))
 		lbl_energy.add_theme_color_override("font_outline_color", Color(0.02, 0.18, 0.24, 0.96))
 		lbl_energy.add_theme_constant_override("outline_size", 2)
-		GameTypographyScript.apply_heading_typography(lbl_energy, 18, true)
+		GameTypographyScript.apply_energy_typography(lbl_energy, 16)
 		hbox.add_child(lbl_energy)
 
 		btn_energy_plus = Button.new()
@@ -558,12 +558,13 @@ func _ensure_energy_header_control() -> void:
 		btn_energy_plus.clip_text = true
 		btn_energy_plus.flat = true
 		btn_energy_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		btn_energy_plus.custom_minimum_size = Vector2(28, 28)
-		btn_energy_plus.size = Vector2(28, 28)
+		btn_energy_plus.custom_minimum_size = Vector2(24, 24)
+		btn_energy_plus.size = Vector2(24, 24)
 		btn_energy_plus.focus_mode = Control.FOCUS_NONE
 		btn_energy_plus.add_theme_constant_override("h_separation", 0)
 		btn_energy_plus.add_theme_constant_override("outline_size", 2)
-		btn_energy_plus.add_theme_font_size_override("font_size", 22)
+		btn_energy_plus.add_theme_font_override("font", GameTypographyScript.get_ui_font(0.16, 1))
+		btn_energy_plus.add_theme_font_size_override("font_size", 20)
 		btn_energy_plus.add_theme_color_override("font_color", Color(0.36, 0.96, 0.58, 1.0))
 		btn_energy_plus.add_theme_color_override("font_hover_color", Color(0.56, 1.0, 0.72, 1.0))
 		btn_energy_plus.add_theme_color_override("font_pressed_color", Color(0.24, 0.82, 0.46, 1.0))
@@ -574,7 +575,7 @@ func _ensure_energy_header_control() -> void:
 		btn_energy_plus.add_theme_stylebox_override("hover_pressed", empty_sb)
 		btn_energy_plus.add_theme_stylebox_override("disabled", empty_sb)
 		btn_energy_plus.add_theme_stylebox_override("focus", empty_sb)
-		UIIconScript.attach_to_button(btn_energy_plus, "plus", Vector2(28, 28), "center", Color(0.36, 0.96, 0.58, 1.0))
+		UIIconScript.attach_to_button(btn_energy_plus, "plus", Vector2(24, 24), "center", Color(0.36, 0.96, 0.58, 1.0))
 		UIIconScript.remove_focus_outline(btn_energy_plus)
 		btn_energy_plus.pressed.connect(_on_btn_energy_plus_pressed)
 		hbox.add_child(btn_energy_plus)
@@ -2056,10 +2057,10 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		if ep_hbox:
 			ep_hbox.custom_minimum_size = Vector2.ZERO
 			ep_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			ep_hbox.add_theme_constant_override("separation", 4 if is_very_compact else 5)
+			ep_hbox.add_theme_constant_override("separation", 3 if is_very_compact else 4)
 		var ep_bolt := energy_panel.find_child("EnergyIcon", true, false) as Control
 		if ep_bolt:
-			var bolt_side: float = 24.0 if is_very_compact else (26.0 if is_compact else 30.0)
+			var bolt_side: float = 22.0 if is_very_compact else (24.0 if is_compact else 28.0)
 			if "align_mode" in ep_bolt:
 				ep_bolt.align_mode = "none"
 			ep_bolt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2070,18 +2071,19 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			lbl_energy.clip_text = true
 			lbl_energy.custom_minimum_size = Vector2.ZERO
 			lbl_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			var e_f_sz: int = 16 if is_very_compact else (18 if is_compact else 20)
+			var e_f_sz: int = 14 if is_very_compact else (16 if is_compact else 18)
 			lbl_energy.add_theme_font_size_override("font_size", e_f_sz)
-			GameTypographyScript.apply_heading_typography(lbl_energy, e_f_sz, true)
+			GameTypographyScript.apply_energy_typography(lbl_energy, e_f_sz)
 			lbl_energy.update_minimum_size()
 		if btn_energy_plus:
-			var inner_plus_w: float = 26.0 if is_very_compact else (28.0 if is_compact else 32.0)
-			var inner_plus_h: float = 26.0 if is_very_compact else (28.0 if is_compact else 32.0)
+			var inner_plus_w: float = 22.0 if is_very_compact else (24.0 if is_compact else 28.0)
+			var inner_plus_h: float = 22.0 if is_very_compact else (24.0 if is_compact else 28.0)
 			btn_energy_plus.text = ""
 			btn_energy_plus.clip_text = true
 			btn_energy_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			btn_energy_plus.custom_minimum_size = Vector2(inner_plus_w, inner_plus_h)
 			btn_energy_plus.size = Vector2(inner_plus_w, inner_plus_h)
+			btn_energy_plus.add_theme_font_override("font", GameTypographyScript.get_ui_font(0.16, 1))
 			btn_energy_plus.add_theme_font_size_override("font_size", 20 if is_very_compact else (22 if is_compact else 24))
 			var plus_icon := btn_energy_plus.get_node_or_null("VectorIcon") as Control
 			if plus_icon:
