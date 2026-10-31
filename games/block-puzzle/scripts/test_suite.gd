@@ -3982,14 +3982,18 @@ func _ready() -> void:
 			get_tree().quit(1)
 			return
 
-	# 6. Daily Gift button state after today's spin: gray/inactive visual state with no extra text
+	# 6. Daily Gift button: frameless icon-only button with no text label in any language, active bright vs claimed inactive state
 	game_state.set_language("en", false)
 	game_state.daily_reward_claimed = false
 	menu102._refresh_progression_ui()
 	var gift_text_active: String = menu102.btn_daily_gift.text.strip_edges()
-	var gift_sb_active := menu102.btn_daily_gift.get_theme_stylebox("normal") as StyleBoxFlat
-	if gift_text_active != "DAILY GIFT" or gift_sb_active.bg_color.r < 0.80:
-		printerr("[FAIL Test 102.6] Active Daily Gift button must display DAILY GIFT and active bright color! text=", gift_text_active)
+	var gift_icon_active = menu102.btn_daily_gift.get_node_or_null("VectorIcon")
+	if gift_text_active != "":
+		printerr("[FAIL Test 102.6] Active Daily Gift button must be icon-only with no text! text=", gift_text_active)
+		get_tree().quit(1)
+		return
+	if not gift_icon_active:
+		printerr("[FAIL Test 102.6] Active Daily Gift button missing gift VectorIcon!")
 		get_tree().quit(1)
 		return
 
@@ -3997,13 +4001,8 @@ func _ready() -> void:
 	game_state.daily_reward_claimed = true
 	menu102._refresh_progression_ui()
 	var gift_text_claimed: String = menu102.btn_daily_gift.text.strip_edges()
-	var gift_sb_claimed := menu102.btn_daily_gift.get_theme_stylebox("normal") as StyleBoxFlat
-	if gift_text_claimed != "DAILY GIFT":
-		printerr("[FAIL Test 102.6] Daily Gift button must NOT add extra text like OK/DONE/CLAIMED after spin! Got: ", gift_text_claimed)
-		get_tree().quit(1)
-		return
-	if not gift_sb_claimed or gift_sb_claimed.bg_color.r > 0.35 or gift_sb_claimed.bg_color.g > 0.35:
-		printerr("[FAIL Test 102.6] Daily Gift button must switch to gray/inactive style after today's spin! Got: ", gift_sb_claimed.bg_color if gift_sb_claimed else "null")
+	if gift_text_claimed != "":
+		printerr("[FAIL Test 102.6] Daily Gift button must NOT add text after spin! Got: ", gift_text_claimed)
 		get_tree().quit(1)
 		return
 
@@ -4011,14 +4010,14 @@ func _ready() -> void:
 	game_state.set_language("vi", false)
 	game_state.daily_reward_claimed = false
 	menu102._refresh_progression_ui()
-	if menu102.btn_daily_gift.text.strip_edges() != "QUÀ HẰNG NGÀY":
-		printerr("[FAIL Test 102.6] Active Daily Gift button in VI must display QUÀ HẰNG NGÀY! Got: ", menu102.btn_daily_gift.text)
+	if menu102.btn_daily_gift.text.strip_edges() != "":
+		printerr("[FAIL Test 102.6] Active Daily Gift button in VI must be icon-only! Got: ", menu102.btn_daily_gift.text)
 		get_tree().quit(1)
 		return
 	game_state.daily_reward_claimed = true
 	menu102._refresh_progression_ui()
-	if menu102.btn_daily_gift.text.strip_edges() != "QUÀ HẰNG NGÀY":
-		printerr("[FAIL Test 102.6] Claimed Daily Gift button in VI must retain QUÀ HẰNG NGÀY without extra text! Got: ", menu102.btn_daily_gift.text)
+	if menu102.btn_daily_gift.text.strip_edges() != "":
+		printerr("[FAIL Test 102.6] Claimed Daily Gift button in VI must be icon-only! Got: ", menu102.btn_daily_gift.text)
 		get_tree().quit(1)
 		return
 

@@ -205,12 +205,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="BtnDailyGift" type="Button" parent="MarginContainer/VBoxContainer/TopStatusBar"]
-custom_minimum_size = Vector2(196, 56)
+custom_minimum_size = Vector2(140, 56)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 17
-theme_override_styles/normal = SubResource("StyleBoxFlat_gift")
-text = "     DAILY GIFT"
+flat = true
+text = ""
 
 [node name="BtnTopSettings" type="Button" parent="MarginContainer/VBoxContainer/TopStatusBar"]
 custom_minimum_size = Vector2(68, 56)

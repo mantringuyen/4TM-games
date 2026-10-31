@@ -128,17 +128,17 @@ const COLOR_RED_LIGHT: Color = Color(0.984, 0.478, 0.522, 1.0)          # #FB7A8
 const COLOR_DARK_BROWN: Color = Color(0.333, 0.231, 0.196, 1.0)        # #553B32 Dark Brown Outline/Text
 const COLOR_DARK_BROWN_SHADOW: Color = Color(0.20, 0.12, 0.08, 0.45)
 
-# Mode Group 1: Classic & Modern (Deep Ocean Blue family)
-const COLOR_OCEAN_BLUE_SEL: Color = Color(0.12, 0.44, 0.84, 1.0)        # Deep Ocean Blue Selected
-const COLOR_OCEAN_BLUE_SEL_HI: Color = Color(0.48, 0.80, 1.0, 1.0)     # Bright Ocean Blue Highlight
-const COLOR_OCEAN_BLUE_UNSEL: Color = Color(0.10, 0.22, 0.44, 0.94)      # Muted Deep Ocean Blue Unselected
-const COLOR_OCEAN_BLUE_UNSEL_HI: Color = Color(0.24, 0.42, 0.68, 0.90)
+# Mode Group 1: Classic & Modern (Deep Ocean Blue family - high contrast vs navy #293D8A)
+const COLOR_OCEAN_BLUE_SEL: Color = Color(0.14, 0.52, 0.94, 1.0)        # Bright Vivid Ocean Blue Selected
+const COLOR_OCEAN_BLUE_SEL_HI: Color = Color(0.58, 0.86, 1.0, 1.0)     # Specular Ocean Blue Highlight
+const COLOR_OCEAN_BLUE_UNSEL: Color = Color(0.22, 0.38, 0.65, 0.98)      # Saturated Medium Ocean Blue Unselected (clearly visible on navy)
+const COLOR_OCEAN_BLUE_UNSEL_HI: Color = Color(0.44, 0.64, 0.90, 0.95)
 
 # Mode Group 2: Falling & Drag & Drop (Vivid Emerald Green - strong contrast vs #293D8A navy background)
-const COLOR_EMERALD_STYLE_SEL: Color = Color(0.08, 0.68, 0.48, 1.0)      # Vivid Emerald Green Selected
-const COLOR_EMERALD_STYLE_SEL_HI: Color = Color(0.42, 0.98, 0.78, 1.0)   # Bright Emerald Highlight
-const COLOR_EMERALD_STYLE_UNSEL: Color = Color(0.08, 0.34, 0.26, 0.94)   # Muted Emerald Unselected
-const COLOR_EMERALD_STYLE_UNSEL_HI: Color = Color(0.18, 0.52, 0.42, 0.90)
+const COLOR_EMERALD_STYLE_SEL: Color = Color(0.10, 0.78, 0.52, 1.0)      # Vivid Glowing Emerald Green Selected
+const COLOR_EMERALD_STYLE_SEL_HI: Color = Color(0.55, 1.0, 0.82, 1.0)   # Radiant Mint Highlight Border
+const COLOR_EMERALD_STYLE_UNSEL: Color = Color(0.15, 0.52, 0.38, 0.98)   # Bright Jade/Sea Green Unselected (clearly visible on navy)
+const COLOR_EMERALD_STYLE_UNSEL_HI: Color = Color(0.35, 0.74, 0.58, 0.95)
 
 # Compatibility aliases
 const COLOR_TEAL_MODE_SEL: Color = COLOR_OCEAN_BLUE_SEL

@@ -509,8 +509,8 @@ func _ensure_energy_header_control() -> void:
 		energy_icon.name = "EnergyBoltIcon"
 		energy_icon.align_mode = "none"
 		energy_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		energy_icon.custom_minimum_size = Vector2(22, 22)
-		energy_icon.size = Vector2(22, 22)
+		energy_icon.custom_minimum_size = Vector2(26, 26)
+		energy_icon.size = Vector2(26, 26)
 		energy_icon.primary_color = Color(1.0, 0.94, 0.26, 1.0)
 		hbox.add_child(energy_icon)
 
@@ -527,10 +527,11 @@ func _ensure_energy_header_control() -> void:
 		lbl_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		lbl_energy.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl_energy.add_theme_stylebox_override("normal", st_plus)
-		lbl_energy.add_theme_font_size_override("font_size", 15)
+		lbl_energy.add_theme_font_size_override("font_size", 18)
 		lbl_energy.add_theme_color_override("font_color", Color(0.92, 1.0, 0.99, 1.0))
 		lbl_energy.add_theme_color_override("font_outline_color", Color(0.02, 0.18, 0.24, 0.96))
 		lbl_energy.add_theme_constant_override("outline_size", 2)
+		GameTypographyScript.apply_energy_typography(lbl_energy, 18)
 		hbox.add_child(lbl_energy)
 
 		btn_energy_plus = Button.new()
@@ -697,18 +698,17 @@ func _ensure_life_header_control() -> void:
 		life_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		life_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var st_lp := StyleBoxFlat.new()
-		st_lp.bg_color = Color(0.64, 0.12, 0.26, 0.98)
-		st_lp.border_width_left = 2
-		st_lp.border_width_top = 2
-		st_lp.border_width_right = 2
-		st_lp.border_width_bottom = 5
-		st_lp.border_color = Color(1.0, 0.68, 0.82, 1.0)
-		st_lp.shadow_color = Color(0.24, 0.02, 0.08, 0.60)
-		st_lp.shadow_size = 7
-		st_lp.shadow_offset = Vector2(0, 3)
+		st_lp.bg_color = Color(0.64, 0.12, 0.26, 0.0)
+		st_lp.border_width_left = 0
+		st_lp.border_width_top = 0
+		st_lp.border_width_right = 0
+		st_lp.border_width_bottom = 0
+		st_lp.border_color = Color(0, 0, 0, 0)
+		st_lp.shadow_size = 0
+		st_lp.shadow_offset = Vector2.ZERO
 		st_lp.set_corner_radius_all(18)
-		st_lp.content_margin_left = 6.0
-		st_lp.content_margin_right = 6.0
+		st_lp.content_margin_left = 4.0
+		st_lp.content_margin_right = 4.0
 		st_lp.content_margin_top = 0.0
 		st_lp.content_margin_bottom = 0.0
 		st_lp.expand_margin_left = 0.0
@@ -726,16 +726,16 @@ func _ensure_life_header_control() -> void:
 		hbox.custom_minimum_size = Vector2.ZERO
 		hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		hbox.add_theme_constant_override("separation", 4)
+		hbox.add_theme_constant_override("separation", 5)
 		life_panel.add_child(hbox)
 
 		life_icon = UIIconScript.new("extra_life")
 		life_icon.name = "LifeHeartIcon"
 		life_icon.align_mode = "none"
 		life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		life_icon.custom_minimum_size = Vector2(18, 18)
-		life_icon.size = Vector2(18, 18)
-		life_icon.primary_color = Color(1.0, 0.38, 0.58, 1.0)
+		life_icon.custom_minimum_size = Vector2(24, 24)
+		life_icon.size = Vector2(24, 24)
+		life_icon.primary_color = Color(1.0, 0.28, 0.44, 1.0)
 		hbox.add_child(life_icon)
 
 		var st_plus := StyleBoxEmpty.new()
@@ -751,10 +751,11 @@ func _ensure_life_header_control() -> void:
 		lbl_life.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		lbl_life.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl_life.add_theme_stylebox_override("normal", st_plus)
-		lbl_life.add_theme_font_size_override("font_size", 14)
+		lbl_life.add_theme_font_size_override("font_size", 18)
 		lbl_life.add_theme_color_override("font_color", Color(1.0, 0.94, 0.96, 1.0))
 		lbl_life.add_theme_color_override("font_outline_color", Color(0.24, 0.04, 0.08, 0.96))
 		lbl_life.add_theme_constant_override("outline_size", 2)
+		GameTypographyScript.apply_energy_typography(lbl_life, 18)
 		hbox.add_child(lbl_life)
 
 		btn_life_plus = Button.new()
@@ -1260,7 +1261,7 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 		lbl_goal_progress.size_flags_horizontal = Control.SIZE_SHRINK_END
 		lbl_goal_progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if energy_icon:
-		var bolt_sz := Vector2(14, 14) if is_ultra_narrow else (Vector2(16, 16) if is_compact else Vector2(20, 20))
+		var bolt_sz := Vector2(20, 20) if is_ultra_narrow else (Vector2(24, 24) if is_compact else Vector2(28, 28))
 		if "align_mode" in energy_icon:
 			energy_icon.align_mode = "none"
 		energy_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -1271,15 +1272,15 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	if lbl_energy:
 		lbl_energy.custom_minimum_size = Vector2.ZERO
 		lbl_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		GameTypographyScript.apply_energy_typography(lbl_energy, 11 if is_ultra_narrow else (12 if is_compact else 14))
+		GameTypographyScript.apply_energy_typography(lbl_energy, 15 if is_ultra_narrow else (17 if is_compact else 20))
 		lbl_energy.update_minimum_size()
 	if btn_energy_plus:
-		var plus_sz := Vector2(22, 22) if is_ultra_narrow else (Vector2(24, 24) if is_compact else Vector2(28, 28))
+		var plus_sz := Vector2(24, 24) if is_ultra_narrow else (Vector2(26, 26) if is_compact else Vector2(30, 30))
 		btn_energy_plus.text = ""
 		btn_energy_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn_energy_plus.custom_minimum_size = plus_sz
 		btn_energy_plus.size = plus_sz
-		btn_energy_plus.add_theme_font_size_override("font_size", 18 if is_ultra_narrow else (20 if is_compact else 22))
+		btn_energy_plus.add_theme_font_size_override("font_size", 20 if is_ultra_narrow else (22 if is_compact else 24))
 		var plus_icon := btn_energy_plus.get_node_or_null("VectorIcon") as Control
 		if plus_icon:
 			plus_icon.custom_minimum_size = plus_sz
@@ -1288,7 +1289,7 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 				plus_icon._on_parent_resized()
 		btn_energy_plus.update_minimum_size()
 	if energy_panel:
-		var ep_sz := Vector2(68.0, header_ctrl_h) if is_ultra_narrow else (Vector2(76.0, header_ctrl_h) if is_compact else Vector2(104.0, header_ctrl_h))
+		var ep_sz := Vector2(80.0, header_ctrl_h) if is_ultra_narrow else (Vector2(90.0, header_ctrl_h) if is_compact else Vector2(118.0, header_ctrl_h))
 		energy_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var ep_hbox := energy_panel.get_node_or_null("EnergyHBox") as HBoxContainer
 		if ep_hbox:
@@ -1300,7 +1301,7 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 		energy_panel.update_minimum_size()
 		energy_panel.size = ep_sz
 	if life_icon:
-		var heart_sz := Vector2(14, 14) if is_ultra_narrow else (Vector2(16, 16) if is_compact else Vector2(20, 20))
+		var heart_sz := Vector2(20, 20) if is_ultra_narrow else (Vector2(22, 22) if is_compact else Vector2(26, 26))
 		if "align_mode" in life_icon:
 			life_icon.align_mode = "none"
 		life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -1311,15 +1312,15 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	if lbl_life:
 		lbl_life.custom_minimum_size = Vector2.ZERO
 		lbl_life.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		GameTypographyScript.apply_energy_typography(lbl_life, 12 if is_ultra_narrow else (13 if is_compact else 15))
+		GameTypographyScript.apply_energy_typography(lbl_life, 15 if is_ultra_narrow else (17 if is_compact else 20))
 		lbl_life.update_minimum_size()
 	if btn_life_plus:
-		var l_plus_sz := Vector2(22, 22) if is_ultra_narrow else (Vector2(24, 24) if is_compact else Vector2(28, 28))
+		var l_plus_sz := Vector2(24, 24) if is_ultra_narrow else (Vector2(26, 26) if is_compact else Vector2(28, 28))
 		btn_life_plus.text = ""
 		btn_life_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn_life_plus.custom_minimum_size = l_plus_sz
 		btn_life_plus.size = l_plus_sz
-		btn_life_plus.add_theme_font_size_override("font_size", 18 if is_ultra_narrow else (20 if is_compact else 22))
+		btn_life_plus.add_theme_font_size_override("font_size", 20 if is_ultra_narrow else (22 if is_compact else 24))
 		var l_plus_icon := btn_life_plus.get_node_or_null("VectorIcon") as Control
 		if l_plus_icon:
 			l_plus_icon.custom_minimum_size = l_plus_sz
@@ -1328,7 +1329,7 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 				l_plus_icon._on_parent_resized()
 		btn_life_plus.update_minimum_size()
 	if life_panel:
-		var lp_sz := Vector2(62.0, header_ctrl_h) if is_ultra_narrow else (Vector2(68.0, header_ctrl_h) if is_compact else Vector2(92.0, header_ctrl_h))
+		var lp_sz := Vector2(68.0, header_ctrl_h) if is_ultra_narrow else (Vector2(76.0, header_ctrl_h) if is_compact else Vector2(94.0, header_ctrl_h))
 		life_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var lp_hbox := life_panel.get_node_or_null("LifeHBox") as HBoxContainer
 		if lp_hbox:
