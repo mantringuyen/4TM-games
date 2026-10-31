@@ -539,6 +539,7 @@ func _ensure_energy_header_control() -> void:
 		lbl_energy = Label.new()
 		lbl_energy.name = "LblEnergy"
 		lbl_energy.text = "24/24"
+		lbl_energy.clip_text = true
 		lbl_energy.custom_minimum_size = Vector2.ZERO
 		lbl_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		lbl_energy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -554,6 +555,7 @@ func _ensure_energy_header_control() -> void:
 		btn_energy_plus = Button.new()
 		btn_energy_plus.name = "BtnEnergyPlus"
 		btn_energy_plus.text = ""
+		btn_energy_plus.clip_text = true
 		btn_energy_plus.flat = true
 		btn_energy_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn_energy_plus.custom_minimum_size = Vector2(28, 28)
@@ -2065,6 +2067,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			ep_bolt.size = Vector2(bolt_side, bolt_side)
 			ep_bolt.update_minimum_size()
 		if lbl_energy:
+			lbl_energy.clip_text = true
 			lbl_energy.custom_minimum_size = Vector2.ZERO
 			lbl_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			var e_f_sz: int = 16 if is_very_compact else (18 if is_compact else 20)
@@ -2075,6 +2078,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			var inner_plus_w: float = 26.0 if is_very_compact else (28.0 if is_compact else 32.0)
 			var inner_plus_h: float = 26.0 if is_very_compact else (28.0 if is_compact else 32.0)
 			btn_energy_plus.text = ""
+			btn_energy_plus.clip_text = true
 			btn_energy_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			btn_energy_plus.custom_minimum_size = Vector2(inner_plus_w, inner_plus_h)
 			btn_energy_plus.size = Vector2(inner_plus_w, inner_plus_h)
