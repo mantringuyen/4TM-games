@@ -526,8 +526,8 @@ func _ensure_energy_header_control() -> void:
 		bolt_icon.name = "EnergyIcon"
 		bolt_icon.align_mode = "none"
 		bolt_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bolt_icon.custom_minimum_size = Vector2(54, 54)
-		bolt_icon.size = Vector2(54, 54)
+		bolt_icon.custom_minimum_size = Vector2(40, 40)
+		bolt_icon.size = Vector2(40, 40)
 		hbox.add_child(bolt_icon)
 
 		var empty_sb := StyleBoxEmpty.new()
@@ -2043,12 +2043,12 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			ep_sb.expand_margin_bottom = 0.0
 		var ep_hbox := energy_panel.get_node_or_null("HBox") as HBoxContainer
 		if ep_hbox:
-			ep_hbox.custom_minimum_size = Vector2.ZERO
+			ep_hbox.custom_minimum_size = Vector2(0, top_btn_h)
 			ep_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			ep_hbox.add_theme_constant_override("separation", 3 if is_very_compact else 4)
 		var ep_bolt := energy_panel.find_child("EnergyIcon", true, false) as Control
 		if ep_bolt:
-			var bolt_side: float = 38.0 if is_very_compact else (44.0 if is_compact else 50.0)
+			var bolt_side: float = 34.0 if is_very_compact else (38.0 if is_compact else 42.0)
 			if "align_mode" in ep_bolt:
 				ep_bolt.align_mode = "none"
 			ep_bolt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
