@@ -513,6 +513,10 @@ func _ensure_energy_header_control() -> void:
 		ep_sb.expand_margin_bottom = 0.0
 		energy_panel.add_theme_stylebox_override("panel", ep_sb)
 		energy_panel.set_meta("visual_identity", "electric_teal_stamina")
+		var ep_script := GDScript.new()
+		ep_script.source_code = "extends PanelContainer\nfunc _get_minimum_size() -> Vector2:\n\treturn Vector2(custom_minimum_size.x, 56.0)\n"
+		ep_script.reload()
+		energy_panel.set_script(ep_script)
 
 		var hbox := HBoxContainer.new()
 		hbox.name = "HBox"
