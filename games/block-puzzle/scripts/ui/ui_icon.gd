@@ -49,7 +49,7 @@ func _on_parent_resized() -> void:
 		var left_margin: float = 7.0 if parent_ctrl.size.x < 150.0 else 12.0
 		position = Vector2(left_margin, (parent_ctrl.size.y - size.y) * 0.5)
 	elif align_mode == "right":
-		var right_margin: float = 7.0 if parent_ctrl.size.x < 150.0 else 12.0
+		var right_margin: float = get_meta("right_margin", 30.0 if parent_ctrl.size.x < 150.0 else 40.0)
 		position = Vector2(parent_ctrl.size.x - size.x - right_margin, (parent_ctrl.size.y - size.y) * 0.5)
 	elif align_mode == "full":
 		position = Vector2.ZERO
@@ -160,6 +160,13 @@ const COLOR_BRONZE_LEVEL: Color = Color(0.68, 0.38, 0.08, 0.98)        # Bronze/
 const COLOR_BRONZE_LIGHT: Color = Color(0.96, 0.76, 0.30, 1.0)
 const COLOR_YELLOW_REWARD: Color = Color(1.0, 0.82, 0.18, 1.0)         # Radiant Reward Yellow
 const COLOR_YELLOW_REWARD_LIGHT: Color = Color(1.0, 0.94, 0.50, 1.0)
+
+# Account Button (Clear, Vivid Polished Green with Dark Green Extrusion)
+const COLOR_ACCOUNT_GREEN: Color = Color(0.12, 0.74, 0.36, 1.0)        # #1FC05C Vivid Polished Green
+const COLOR_ACCOUNT_GREEN_HI: Color = Color(0.48, 0.94, 0.64, 1.0)     # Radiant Specular Mint Top
+const COLOR_ACCOUNT_GREEN_DARK: Color = Color(0.06, 0.40, 0.18, 1.0)   # #0F662E Dark Green Rim / Extrusion
+const COLOR_ACCOUNT_GREEN_HOVER: Color = Color(0.18, 0.82, 0.42, 1.0)  # Bright Hover Green
+const COLOR_ACCOUNT_GREEN_PRESS: Color = Color(0.08, 0.60, 0.28, 1.0)  # Pressed Green
 
 
 static func apply_cream_panel_style(panel: Control, corner_r: int = 32) -> void:
@@ -388,6 +395,37 @@ static func apply_emerald_style_button_style(btn: Button, is_selected: bool = fa
 		btn.add_theme_color_override("font_hover_color", Color.WHITE)
 		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
 		btn.add_theme_constant_override("outline_size", 4)
+
+
+static func apply_vivid_green_account_button_style(btn: Button, corner_r: int = 24) -> void:
+	if not btn:
+		return
+	apply_game_button_style(
+		btn,
+		COLOR_ACCOUNT_GREEN,
+		COLOR_ACCOUNT_GREEN_HI,
+		8,
+		corner_r,
+		14,
+		Vector2(0, 5)
+	)
+	var st_n := btn.get_theme_stylebox("normal") as StyleBoxFlat
+	if st_n:
+		st_n.border_color = COLOR_ACCOUNT_GREEN_DARK
+	var st_h := btn.get_theme_stylebox("hover") as StyleBoxFlat
+	if st_h:
+		st_h.bg_color = COLOR_ACCOUNT_GREEN_HOVER
+		st_h.border_color = COLOR_ACCOUNT_GREEN_DARK
+	var st_p := btn.get_theme_stylebox("pressed") as StyleBoxFlat
+	if st_p:
+		st_p.bg_color = COLOR_ACCOUNT_GREEN_PRESS
+		st_p.border_color = COLOR_ACCOUNT_GREEN_DARK
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color(0.92, 1.0, 0.95, 1.0))
+	btn.add_theme_color_override("font_outline_color", Color(0.04, 0.22, 0.10, 0.96))
+	btn.add_theme_constant_override("outline_size", 4)
+	setup_button_press_feedback(btn, false)
 
 
 static func apply_blue_style_button_style(btn: Button, is_selected: bool = false, corner_r: int = 26) -> void:
@@ -860,13 +898,39 @@ static func draw_gear_shape(canvas: CanvasItem, center: Vector2, radius: float, 
 		canvas.draw_circle(k_pos, knob_r * 0.42, rim_col)
 
 
+static func draw_sparkle_glint(canvas: CanvasItem, pos: Vector2, r_sp: float, col: Color) -> void:
+	var pts := PackedVector2Array([
+		pos + Vector2(0.0, -r_sp),
+		pos + Vector2(r_sp * 0.28, -r_sp * 0.28),
+		pos + Vector2(r_sp, 0.0),
+		pos + Vector2(r_sp * 0.28, r_sp * 0.28),
+		pos + Vector2(0.0, r_sp),
+		pos + Vector2(-r_sp * 0.28, r_sp * 0.28),
+		pos + Vector2(-r_sp, 0.0),
+		pos + Vector2(-r_sp * 0.28, -r_sp * 0.28)
+	])
+	canvas.draw_colored_polygon(pts, col)
+	canvas.draw_circle(pos, maxf(1.0, r_sp * 0.22), Color.WHITE)
+
+
 static func draw_crown_shape(canvas: CanvasItem, center: Vector2, radius: float, col: Color) -> void:
-	var w: float = radius * 1.75
-	var h: float = radius * 1.30
+	var w: float = radius * 2.15
+	var h: float = radius * 1.62
 	var left: float = center.x - w * 0.5
 	var right: float = center.x + w * 0.5
 	var bot: float = center.y + h * 0.48
 	var top: float = center.y - h * 0.52
+	var sh_off := Vector2(0, 2.5)
+	var pts_sh := PackedVector2Array([
+		Vector2(left + w * 0.08, bot) + sh_off,
+		Vector2(right - w * 0.08, bot) + sh_off,
+		Vector2(right, top + h * 0.12) + sh_off,
+		Vector2(center.x + w * 0.22, center.y + h * 0.05) + sh_off,
+		Vector2(center.x, top - h * 0.06) + sh_off,
+		Vector2(center.x - w * 0.22, center.y + h * 0.05) + sh_off,
+		Vector2(left, top + h * 0.12) + sh_off
+	])
+	canvas.draw_colored_polygon(pts_sh, Color(0.02, 0.04, 0.12, 0.35))
 	var pts := PackedVector2Array([
 		Vector2(left + w * 0.08, bot),
 		Vector2(right - w * 0.08, bot),
@@ -877,22 +941,67 @@ static func draw_crown_shape(canvas: CanvasItem, center: Vector2, radius: float,
 		Vector2(left, top + h * 0.12)
 	])
 	canvas.draw_colored_polygon(pts, col)
-	canvas.draw_circle(Vector2(left, top + h * 0.10), 2.6, Color(1.0, 0.98, 0.78, 1.0))
-	canvas.draw_circle(Vector2(center.x, top - h * 0.08), 3.0, Color(0.32, 0.96, 1.0, 1.0))
-	canvas.draw_circle(Vector2(right, top + h * 0.10), 2.6, Color(1.0, 0.98, 0.78, 1.0))
+	# Beveled base trim
+	canvas.draw_rect(Rect2(left + w * 0.08, bot - 5.0, w * 0.84, 5.0), Color(0.78, 0.46, 0.06, 0.95), true)
+	canvas.draw_rect(Rect2(left + w * 0.10, bot - 4.5, w * 0.80, 2.0), Color(1.0, 0.98, 0.75, 0.90), true)
+	# 3 crown jewels
+	canvas.draw_circle(Vector2(left, top + h * 0.10), 3.4, Color(1.0, 0.98, 0.78, 1.0))
+	canvas.draw_circle(Vector2(center.x, top - h * 0.08), 4.2, Color(0.32, 0.96, 1.0, 1.0))
+	canvas.draw_circle(Vector2(right, top + h * 0.10), 3.4, Color(1.0, 0.98, 0.78, 1.0))
 
 
 static func draw_gift_shape(canvas: CanvasItem, center: Vector2, radius: float) -> void:
-	var sz: float = radius * 1.55
-	var box_rect := Rect2(center - Vector2(sz * 0.5, sz * 0.38), Vector2(sz, sz * 0.82))
-	var lid_rect := Rect2(center - Vector2(sz * 0.56, sz * 0.52), Vector2(sz * 1.12, sz * 0.24))
-	canvas.draw_rect(box_rect, Color(0.96, 0.24, 0.48, 1.0), true)
-	canvas.draw_rect(lid_rect, Color(1.0, 0.36, 0.60, 1.0), true)
-	var rib_col := Color(1.0, 0.90, 0.28, 1.0)
-	canvas.draw_rect(Rect2(center.x - sz * 0.12, lid_rect.position.y, sz * 0.24, box_rect.size.y + sz * 0.14), rib_col, true)
-	canvas.draw_rect(Rect2(box_rect.position.x, center.y - sz * 0.04, box_rect.size.x, sz * 0.20), rib_col, true)
-	canvas.draw_arc(center + Vector2(-sz * 0.20, -sz * 0.58), sz * 0.18, 0.0, TAU, 12, rib_col, 2.5, true)
-	canvas.draw_arc(center + Vector2(sz * 0.20, -sz * 0.58), sz * 0.18, 0.0, TAU, 12, rib_col, 2.5, true)
+	var sz: float = radius * 1.85
+	var c := center
+	# 1. Subtle drop shadow
+	var sh_pts := PackedVector2Array()
+	for i in range(16):
+		var a_sh: float = float(i) * (TAU / 16.0)
+		sh_pts.append(c + Vector2(0.0, sz * 0.44) + Vector2(cos(a_sh) * sz * 0.48, sin(a_sh) * sz * 0.14))
+	canvas.draw_colored_polygon(sh_pts, Color(0.02, 0.04, 0.12, 0.42))
+
+	# 2. Chest Base / Body
+	var body_w: float = sz * 0.82
+	var body_h: float = sz * 0.48
+	var body_rect := Rect2(c.x - body_w * 0.5, c.y - sz * 0.06, body_w, body_h)
+	var body_col := Color(0.92, 0.18, 0.36, 1.0)
+	var trim_col := Color(1.0, 0.86, 0.26, 1.0)
+	var trim_dark := Color(0.72, 0.48, 0.10, 1.0)
+
+	canvas.draw_rect(body_rect, body_col, true)
+	canvas.draw_rect(Rect2(body_rect.position.x, body_rect.end.y - 3.5, body_rect.size.x, 3.5), trim_dark, true)
+	canvas.draw_rect(Rect2(body_rect.position.x, body_rect.position.y, 4.0, body_rect.size.y), trim_col, true)
+	canvas.draw_rect(Rect2(body_rect.end.x - 4.0, body_rect.position.y, 4.0, body_rect.size.y), trim_dark, true)
+
+	# 3. Arched Chest Lid
+	var lid_w: float = sz * 0.92
+	var lid_h: float = sz * 0.28
+	var lid_rect := Rect2(c.x - lid_w * 0.5, c.y - sz * 0.32, lid_w, lid_h)
+	canvas.draw_rect(lid_rect, Color(0.98, 0.28, 0.46, 1.0), true)
+	canvas.draw_rect(Rect2(lid_rect.position.x + 3.0, lid_rect.position.y + 2.0, lid_w - 6.0, 3.5), Color(1.0, 0.68, 0.82, 0.85), true)
+	canvas.draw_rect(Rect2(lid_rect.position.x, lid_rect.end.y - 3.0, lid_w, 3.0), trim_col, true)
+
+	# 4. Vertical Gold Ribbon
+	var rib_w: float = sz * 0.20
+	var rib_x: float = c.x - rib_w * 0.5
+	canvas.draw_rect(Rect2(rib_x, lid_rect.position.y, rib_w, lid_h + body_h + 2.0), trim_col, true)
+	canvas.draw_line(Vector2(c.x, lid_rect.position.y), Vector2(c.x, body_rect.end.y), Color(1.0, 0.98, 0.65, 0.90), 2.0)
+
+	# Center Clasp on Lid
+	canvas.draw_circle(c + Vector2(0.0, -sz * 0.06), 3.8, trim_dark)
+	canvas.draw_circle(c + Vector2(0.0, -sz * 0.06), 2.8, Color(1.0, 0.96, 0.55, 1.0))
+
+	# 5. Satin Ribbon Bow Loops & Knot on Top
+	var bow_y: float = lid_rect.position.y - 2.0
+	canvas.draw_arc(Vector2(c.x - sz * 0.16, bow_y - sz * 0.10), sz * 0.14, -PI * 0.9, PI * 0.6, 12, trim_col, 3.8, true)
+	canvas.draw_arc(Vector2(c.x + sz * 0.16, bow_y - sz * 0.10), sz * 0.14, PI * 0.4, PI * 1.9, 12, trim_col, 3.8, true)
+	canvas.draw_circle(Vector2(c.x, bow_y - 2.0), 4.2, trim_dark)
+	canvas.draw_circle(Vector2(c.x, bow_y - 2.0), 3.4, Color(1.0, 0.96, 0.60, 1.0))
+
+	# 6. Subtle Twinkling Golden Sparkles
+	draw_sparkle_glint(canvas, c + Vector2(-sz * 0.42, -sz * 0.36), sz * 0.12, Color(1.0, 0.96, 0.52, 0.95))
+	draw_sparkle_glint(canvas, c + Vector2(sz * 0.44, -sz * 0.26), sz * 0.14, Color(1.0, 0.96, 0.52, 0.95))
+	draw_sparkle_glint(canvas, c + Vector2(sz * 0.18, -sz * 0.50), sz * 0.09, Color(1.0, 0.98, 0.72, 0.90))
 
 
 static func draw_lock_shape(canvas: CanvasItem, center: Vector2, radius: float, unlocked_state: bool = false) -> void:
@@ -931,9 +1040,9 @@ func _draw() -> void:
 		"gear":
 			draw_gear_shape(self, c, r, primary_color, secondary_color)
 		"crown":
-			draw_crown_shape(self, c, r, primary_color)
-		"gift":
-			draw_gift_shape(self, c, r)
+			draw_crown_shape(self, c, minf(size.x, size.y) * 0.47, primary_color)
+		"gift", "gift_chest":
+			draw_gift_shape(self, c, minf(size.x, size.y) * 0.47)
 		"globe":
 			draw_circle(c, r, Color(0.14, 0.48, 0.88, 0.95))
 			draw_arc(c, r, 0.0, TAU, 24, primary_color, 2.2, true)
@@ -1167,15 +1276,32 @@ func _draw() -> void:
 			draw_rect(ear_l, primary_color, true)
 			draw_rect(ear_r, primary_color, true)
 		"bolt", "energy", "lightning":
+			var bw: float = size.x * 0.70
+			var bh: float = size.y * 0.94
+			var sh_off := Vector2(0, 2.5)
 			var b_pts := PackedVector2Array([
-				c + Vector2(r * 0.15, -r * 0.82),
-				c + Vector2(-r * 0.52, r * 0.05),
-				c + Vector2(r * 0.02, r * 0.05),
-				c + Vector2(-r * 0.18, r * 0.82),
-				c + Vector2(r * 0.52, -r * 0.08),
-				c + Vector2(-r * 0.02, -r * 0.08)
+				c + Vector2(bw * 0.16, -bh * 0.48),
+				c + Vector2(-bw * 0.48, bh * 0.04),
+				c + Vector2(bw * 0.04, bh * 0.04),
+				c + Vector2(-bw * 0.20, bh * 0.48),
+				c + Vector2(bw * 0.48, -bh * 0.06),
+				c + Vector2(-bw * 0.04, -bh * 0.06)
 			])
-			draw_colored_polygon(b_pts, Color(1.0, 0.92, 0.24, 1.0))
+			var b_sh := PackedVector2Array()
+			for pt in b_pts:
+				b_sh.append(pt + sh_off)
+			draw_colored_polygon(b_sh, Color(0.04, 0.10, 0.02, 0.40))
+			draw_colored_polygon(b_pts, Color(0.78, 0.52, 0.06, 1.0))
+			var inner_pts := PackedVector2Array([
+				c + Vector2(bw * 0.14, -bh * 0.44),
+				c + Vector2(-bw * 0.42, bh * 0.02),
+				c + Vector2(bw * 0.02, bh * 0.02),
+				c + Vector2(-bw * 0.16, bh * 0.44),
+				c + Vector2(bw * 0.42, -bh * 0.04),
+				c + Vector2(-bw * 0.02, -bh * 0.04)
+			])
+			draw_colored_polygon(inner_pts, Color(1.0, 0.92, 0.24, 1.0))
+			draw_line(c + Vector2(bw * 0.10, -bh * 0.38), c + Vector2(-bw * 0.20, -bh * 0.02), Color(1.0, 1.0, 0.78, 0.95), 2.6)
 		"plus", "add":
 			var arm: float = r * 0.62
 			var thick: float = maxf(3.2, r * 0.34)
@@ -1186,11 +1312,35 @@ func _draw() -> void:
 			draw_line(c - Vector2(arm, 0.0), c + Vector2(arm, 0.0), primary_color, thick, true)
 			draw_line(c - Vector2(0.0, arm), c + Vector2(0.0, arm), primary_color, thick, true)
 		"extra_life", "heart":
-			var hc := c + Vector2(0, r * 0.08)
+			var hc := c + Vector2(0, size.y * 0.02)
 			var hcol := primary_color if primary_color != Color(1.0, 0.94, 0.42, 1.0) else Color(0.98, 0.24, 0.48, 1.0)
-			draw_circle(hc + Vector2(-r * 0.34, -r * 0.24), r * 0.40, hcol)
-			draw_circle(hc + Vector2(r * 0.34, -r * 0.24), r * 0.40, hcol)
-			draw_colored_polygon(PackedVector2Array([hc + Vector2(-r * 0.72, -r * 0.08), hc + Vector2(r * 0.72, -r * 0.08), hc + Vector2(0.0, r * 0.72)]), hcol)
+			var lobe_r: float = size.x * 0.28
+			var lobe_dx: float = size.x * 0.23
+			var lobe_dy: float = -size.y * 0.16
+			var sh_off := Vector2(0, 2.5)
+			# Drop shadow
+			draw_circle(hc + Vector2(-lobe_dx, lobe_dy) + sh_off, lobe_r, Color(0.04, 0.02, 0.08, 0.35))
+			draw_circle(hc + Vector2(lobe_dx, lobe_dy) + sh_off, lobe_r, Color(0.04, 0.02, 0.08, 0.35))
+			draw_colored_polygon(PackedVector2Array([
+				hc + Vector2(-size.x * 0.49, -size.y * 0.04) + sh_off,
+				hc + Vector2(size.x * 0.49, -size.y * 0.04) + sh_off,
+				hc + Vector2(0.0, size.y * 0.48) + sh_off
+			]), Color(0.04, 0.02, 0.08, 0.35))
+			# Heart body
+			draw_circle(hc + Vector2(-lobe_dx, lobe_dy), lobe_r, hcol)
+			draw_circle(hc + Vector2(lobe_dx, lobe_dy), lobe_r, hcol)
+			draw_colored_polygon(PackedVector2Array([
+				hc + Vector2(-size.x * 0.49, -size.y * 0.04),
+				hc + Vector2(size.x * 0.49, -size.y * 0.04),
+				hc + Vector2(0.0, size.y * 0.48)
+			]), hcol)
+			# Specular highlight on left lobe
+			draw_circle(hc + Vector2(-lobe_dx - 2.0, lobe_dy - 2.0), lobe_r * 0.45, Color(1.0, 0.88, 0.94, 0.75))
+			# Clean recovery plus emblem in center
+			var plus_sz: float = size.x * 0.16
+			var plus_thick: float = 3.2
+			draw_rect(Rect2(hc.x - plus_thick * 0.5, hc.y - plus_sz * 0.5, plus_thick, plus_sz), Color(1.0, 0.98, 0.92, 0.96), true)
+			draw_rect(Rect2(hc.x - plus_sz * 0.5, hc.y - plus_thick * 0.5, plus_sz, plus_thick), Color(1.0, 0.98, 0.92, 0.96), true)
 		"close", "cancel", "exit":
 			draw_circle(c, r * 0.88, Color(0.62, 0.08, 0.14, 0.85))
 			draw_arc(c, r * 0.88, 0.0, TAU, 20, primary_color, 2.0, true)

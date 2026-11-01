@@ -526,8 +526,8 @@ func _ensure_energy_header_control() -> void:
 		bolt_icon.name = "EnergyIcon"
 		bolt_icon.align_mode = "none"
 		bolt_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bolt_icon.custom_minimum_size = Vector2(46, 46)
-		bolt_icon.size = Vector2(46, 46)
+		bolt_icon.custom_minimum_size = Vector2(54, 54)
+		bolt_icon.size = Vector2(54, 54)
 		hbox.add_child(bolt_icon)
 
 		var empty_sb := StyleBoxEmpty.new()
@@ -802,8 +802,8 @@ func _ensure_life_header_control() -> void:
 		life_icon.name = "LifeHeartIcon"
 		life_icon.align_mode = "none"
 		life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		life_icon.custom_minimum_size = Vector2(46, 46)
-		life_icon.size = Vector2(46, 46)
+		life_icon.custom_minimum_size = Vector2(54, 54)
+		life_icon.size = Vector2(54, 54)
 		life_icon.primary_color = Color(1.0, 0.28, 0.44, 1.0)
 		hbox.add_child(life_icon)
 
@@ -1166,7 +1166,7 @@ func _setup_vector_icons() -> void:
 			gear_icon.secondary_color = Color(0.20, 0.24, 0.35, 1.0)
 	if btn_top_level:
 		_apply_level_button_progress_style()
-		UIIconScript.attach_to_button(btn_top_level, "crown", Vector2(50, 50), "left", Color(1.0, 0.94, 0.32, 1.0))
+		UIIconScript.attach_to_button(btn_top_level, "crown", Vector2(56, 56), "left", Color(1.0, 0.94, 0.32, 1.0))
 	if btn_daily_gift:
 		btn_daily_gift.text = ""
 		btn_daily_gift.flat = true
@@ -1177,7 +1177,7 @@ func _setup_vector_icons() -> void:
 		btn_daily_gift.add_theme_stylebox_override("disabled", st_gift)
 		btn_daily_gift.add_theme_stylebox_override("focus", st_gift)
 		btn_daily_gift.add_theme_color_override("font_color", Color(1, 1, 1, 0))
-		var gift_icon := UIIconScript.attach_to_button(btn_daily_gift, "gift", Vector2(56, 56), "right", Color(1.0, 0.85, 0.20, 1.0))
+		var gift_icon := UIIconScript.attach_to_button(btn_daily_gift, "gift_chest", Vector2(56, 56), "right", Color(1.0, 0.85, 0.20, 1.0))
 		if gift_icon and "align_mode" in gift_icon:
 			gift_icon.align_mode = "right"
 		UIIconScript.remove_focus_outline(btn_daily_gift)
@@ -1213,13 +1213,13 @@ func _setup_vector_icons() -> void:
 		UIIconScript.attach_to_button(btn_how_to_play, "info", Vector2(26, 26), "left", Color(0.86, 0.98, 1.0, 1.0))
 	if btn_settings_account:
 		_apply_account_entry_button_style(btn_settings_account)
-		UIIconScript.attach_to_button(btn_settings_account, "account", Vector2(24, 24), "left", Color(0.72, 0.96, 1.0, 1.0))
+		UIIconScript.attach_to_button(btn_settings_account, "account", Vector2(24, 24), "left", Color.WHITE)
 	if btn_nav_account:
 		_apply_account_entry_button_style(btn_nav_account)
-		UIIconScript.attach_to_button(btn_nav_account, "account", Vector2(24, 24), "left", Color(0.72, 0.96, 1.0, 1.0))
+		UIIconScript.attach_to_button(btn_nav_account, "account", Vector2(24, 24), "left", Color.WHITE)
 	if btn_account and btn_account != btn_settings_account and btn_account != btn_nav_account:
 		_apply_account_entry_button_style(btn_account)
-		UIIconScript.attach_to_button(btn_account, "account", Vector2(24, 24), "left", Color(0.72, 0.96, 1.0, 1.0))
+		UIIconScript.attach_to_button(btn_account, "account", Vector2(24, 24), "left", Color.WHITE)
 	if btn_delete_data:
 		_apply_red_exit_style(btn_delete_data)
 		UIIconScript.attach_to_button(btn_delete_data, "trash", Vector2(22, 22), "left", Color(1.0, 0.94, 0.94, 1.0))
@@ -2024,7 +2024,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		btn_top_level.add_theme_font_size_override("font_size", 13 if is_very_compact else (14 if is_compact else 17))
 		var crown_icon := btn_top_level.get_node_or_null("VectorIcon") as Control
 		if crown_icon:
-			var cr_side: float = 38.0 if is_very_compact else (44.0 if is_compact else 50.0)
+			var cr_side: float = 42.0 if is_very_compact else (48.0 if is_compact else 56.0)
 			crown_icon.custom_minimum_size = Vector2(cr_side, cr_side)
 			crown_icon.size = Vector2(cr_side, cr_side)
 			crown_icon._on_parent_resized()
@@ -2046,7 +2046,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			ep_hbox.add_theme_constant_override("separation", 3 if is_very_compact else 4)
 		var ep_bolt := energy_panel.find_child("EnergyIcon", true, false) as Control
 		if ep_bolt:
-			var bolt_side: float = 34.0 if is_very_compact else (40.0 if is_compact else 46.0)
+			var bolt_side: float = 40.0 if is_very_compact else (46.0 if is_compact else 54.0)
 			if "align_mode" in ep_bolt:
 				ep_bolt.align_mode = "none"
 			ep_bolt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2099,7 +2099,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			lp_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			lp_hbox.add_theme_constant_override("separation", 4 if is_very_compact else 5)
 		if life_icon:
-			var li_side: float = 34.0 if is_very_compact else (40.0 if is_compact else 46.0)
+			var li_side: float = 40.0 if is_very_compact else (46.0 if is_compact else 54.0)
 			life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			life_icon.custom_minimum_size = Vector2(li_side, li_side)
 			life_icon.size = Vector2(li_side, li_side)
@@ -2141,6 +2141,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			gift_icon.size = Vector2(g_side, g_side)
 			if "align_mode" in gift_icon:
 				gift_icon.align_mode = "right"
+			gift_icon.set_meta("right_margin", 32.0 if is_very_compact else (38.0 if is_compact else 48.0))
 			if gift_icon.has_method("_on_parent_resized"):
 				gift_icon._on_parent_resized()
 	if btn_top_settings:
@@ -5490,63 +5491,8 @@ func _ensure_account_modal_structure() -> void:
 		lbl_local_desc.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
 		local_vbox.add_child(lbl_local_desc)
 
-		# 3 Clean Prominent Cards inside ScrollContainer
-		var scroll_cards := ScrollContainer.new()
-		scroll_cards.name = "StatsScrollContainer"
-		scroll_cards.custom_minimum_size.y = 120.0
-		scroll_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		scroll_cards.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		local_vbox.add_child(scroll_cards)
-
-		var cards_vbox := VBoxContainer.new()
-		cards_vbox.name = "CardsVBox"
-		cards_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cards_vbox.add_theme_constant_override("separation", 6)
-		scroll_cards.add_child(cards_vbox)
-
-		# 1. Progress Card
-		var card_prog := _create_clean_stat_card("ProgressCard", "PROGRESS")
-		cards_vbox.add_child(card_prog)
-		var prog_row: HBoxContainer = card_prog.find_child("CardStatsRow", true, false)
-		if prog_row:
-			_create_stat_item(prog_row, "LblCardLevelVal", "1", "Level")
-			_create_stat_item(prog_row, "LblCardStarsVal", "0", "Stars")
-			_create_stat_item(prog_row, "LblCardUnlockedVal", "1 / 500", "Unlocked")
-
-		# 2. Records Card
-		var card_rec := _create_clean_stat_card("RecordsCard", "RECORDS")
-		cards_vbox.add_child(card_rec)
-		var rec_row: HBoxContainer = card_rec.find_child("CardStatsRow", true, false)
-		if rec_row:
-			_create_stat_item(rec_row, "LblCardScoreVal", "0", "High Score")
-			_create_stat_item(rec_row, "LblCardLinesVal", "0", "Lines Cleared")
-
-		# 3. Resources Card
-		var card_res := _create_clean_stat_card("ResourcesCard", "RESOURCES")
-		cards_vbox.add_child(card_res)
-		var res_row: HBoxContainer = card_res.find_child("CardStatsRow", true, false)
-		if res_row:
-			_create_stat_item(res_row, "LblCardCoinsVal", "250", "Coins")
-			_create_stat_item(res_row, "LblCardEnergyVal", "24 / 24", "Energy")
-
 		if stats_box:
-			if stats_box.get_parent() != local_vbox:
-				stats_box.get_parent().remove_child(stats_box)
-				local_vbox.add_child(stats_box)
-			stats_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			stats_box.add_theme_constant_override("separation", 3)
-			if lbl_account_score:
-				lbl_account_score.add_theme_font_size_override("font_size", 14)
-				lbl_account_score.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
-				lbl_account_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			if lbl_account_lines:
-				lbl_account_lines.add_theme_font_size_override("font_size", 13)
-				lbl_account_lines.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
-				lbl_account_lines.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			if lbl_reward_status:
-				lbl_reward_status.add_theme_font_size_override("font_size", 14)
-				lbl_reward_status.add_theme_color_override("font_color", UIIconScript.COLOR_DARK_BROWN)
-				lbl_reward_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			stats_box.visible = false
 
 		btn_delete_data = Button.new()
 		btn_delete_data.name = "BtnDeleteData"
@@ -5724,7 +5670,7 @@ func _create_unavailable_provider_button(btn_name: String, label_txt: String, pr
 func _apply_account_entry_button_style(btn: Button) -> void:
 	if not btn:
 		return
-	UIIconScript.apply_config_game_button_style(btn, 20)
+	UIIconScript.apply_vivid_green_account_button_style(btn, 20)
 	GameTypographyScript.apply_secondary_button_typography(btn, 18)
 
 
@@ -6068,8 +6014,8 @@ func update_responsive_account_and_settings_modals(vp_size: Vector2 = Vector2(72
 	var acc_vbox := get_node_or_null("Modals/AccountModal/Panel/VBoxContainer") as VBoxContainer
 	var eff_plat: String = get_effective_account_platform()
 	var has_platform_id: bool = (eff_plat == "ios" or eff_plat == "android")
-	var desired_acc_h: float = (530.0 if has_platform_id else 476.0) if is_compact else (610.0 if has_platform_id else 550.0)
-	var acc_h: float = clampf(desired_acc_h, 430.0, max_modal_h)
+	var desired_acc_h: float = (420.0 if has_platform_id else 370.0) if is_compact else (490.0 if has_platform_id else 440.0)
+	var acc_h: float = clampf(desired_acc_h, 350.0, max_modal_h)
 	var a_pad: float = 16.0 if is_compact else 22.0
 	var a_top_y: float = maxf(top_safe_y, usable_center_y - acc_h * 0.5)
 	if acc_panel:
