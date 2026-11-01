@@ -339,22 +339,8 @@ func _apply_score_panel_progress_style() -> void:
 	var score_panel = get_node_or_null("MarginContainer/VBoxContainer/HeaderRow/ScorePanel") as PanelContainer
 	if not score_panel:
 		return
-	var cream_sb := StyleBoxFlat.new()
-	cream_sb.bg_color = UIIconScript.COLOR_CREAM_BASE
-	cream_sb.border_width_left = 2
-	cream_sb.border_width_top = 2
-	cream_sb.border_width_right = 2
-	cream_sb.border_width_bottom = 4
-	cream_sb.border_color = UIIconScript.COLOR_DARK_BROWN
-	cream_sb.set_corner_radius_all(18)
-	cream_sb.shadow_color = UIIconScript.COLOR_DARK_BROWN_SHADOW
-	cream_sb.shadow_size = 6
-	cream_sb.shadow_offset = Vector2(0, 2)
-	cream_sb.content_margin_left = 8.0
-	cream_sb.content_margin_right = 8.0
-	cream_sb.content_margin_top = 2.0
-	cream_sb.content_margin_bottom = 2.0
-	score_panel.add_theme_stylebox_override("panel", cream_sb)
+	var empty_sb := StyleBoxEmpty.new()
+	score_panel.add_theme_stylebox_override("panel", empty_sb)
 	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	score_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	
@@ -1208,11 +1194,11 @@ func update_responsive_layout(vp_size: Vector2 = Vector2(720, 1280)) -> void:
 	var score_panel_node := get_node_or_null("MarginContainer/VBoxContainer/HeaderRow/ScorePanel") as PanelContainer
 	var header_row := get_node_or_null("MarginContainer/VBoxContainer/HeaderRow") as HBoxContainer
 	if header_row:
-		header_row.add_theme_constant_override("separation", 4 if is_ultra_narrow else (6 if is_compact else 8))
+		header_row.add_theme_constant_override("separation", 2 if is_ultra_narrow else (4 if is_compact else 6))
 	if level_panel:
 		level_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		level_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		level_panel.custom_minimum_size = Vector2(66.0 if is_ultra_narrow else (76.0 if is_compact else 110.0), header_ctrl_h)
+		level_panel.custom_minimum_size = Vector2(56.0 if is_ultra_narrow else (66.0 if is_compact else 96.0), header_ctrl_h)
 		level_panel.size.y = header_ctrl_h
 		var lvl_m := level_panel.get_node_or_null("Margin") as MarginContainer
 		if lvl_m:
