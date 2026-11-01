@@ -1183,13 +1183,13 @@ func _setup_vector_icons() -> void:
 		UIIconScript.remove_focus_outline(btn_daily_gift)
 		UIIconScript.setup_button_press_feedback(btn_daily_gift)
 	if btn_language_modal:
-		UIIconScript.apply_secondary_game_button_style(btn_language_modal, false, 22)
+		UIIconScript.apply_utility_game_button_style(btn_language_modal, true, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 20)
-		UIIconScript.attach_to_button(btn_language_modal, "globe", Vector2(24, 24), "left", Color(0.82, 0.98, 1.0, 1.0))
+		UIIconScript.attach_to_button(btn_language_modal, "globe", Vector2(24, 24), "left", Color(1.0, 0.95, 0.70, 1.0))
 	if btn_control_mode_modal:
-		UIIconScript.apply_secondary_game_button_style(btn_control_mode_modal, false, 22)
+		UIIconScript.apply_utility_game_button_style(btn_control_mode_modal, true, 22)
 		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 20)
-		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop", Vector2(24, 24), "left", Color(0.82, 0.98, 1.0, 1.0))
+		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop", Vector2(24, 24), "left", Color(1.0, 0.95, 0.70, 1.0))
 	if btn_classic:
 		UIIconScript.attach_to_button(btn_classic, "crown", Vector2(30, 30), "left", Color(1.0, 0.90, 0.28, 1.0))
 	if btn_modern:
@@ -2017,11 +2017,13 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		top_bar.add_theme_constant_override("separation", 3 if is_very_compact else (4 if is_compact else 8))
 	if btn_top_level:
 		btn_top_level.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var lvl_w: float = 94.0 if is_very_compact else (104.0 if is_compact else 140.0)
+		var lvl_w: float = 102.0 if is_very_compact else (118.0 if is_compact else 152.0)
 		btn_top_level.custom_minimum_size = Vector2(lvl_w, top_btn_h)
 		btn_top_level.size.y = top_btn_h
 		btn_top_level.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		btn_top_level.add_theme_font_size_override("font_size", 13 if is_very_compact else (14 if is_compact else 17))
+		var lvl_f_sz: int = 16 if is_very_compact else (18 if is_compact else 21)
+		btn_top_level.add_theme_font_size_override("font_size", lvl_f_sz)
+		GameTypographyScript.apply_secondary_button_typography(btn_top_level, lvl_f_sz)
 		var crown_icon := btn_top_level.get_node_or_null("VectorIcon") as Control
 		if crown_icon:
 			var cr_side: float = 42.0 if is_very_compact else (48.0 if is_compact else 56.0)
@@ -2029,7 +2031,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			crown_icon.size = Vector2(cr_side, cr_side)
 			crown_icon._on_parent_resized()
 	if energy_panel:
-		var ep_w: float = 108.0 if is_very_compact else (124.0 if is_compact else 152.0)
+		var ep_w: float = 116.0 if is_very_compact else (134.0 if is_compact else 164.0)
 		energy_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var ep_sb := energy_panel.get_theme_stylebox("panel") as StyleBoxFlat
 		if ep_sb:
@@ -2057,9 +2059,9 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			lbl_energy.clip_text = true
 			lbl_energy.custom_minimum_size = Vector2.ZERO
 			lbl_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			var e_f_sz: int = 14 if is_very_compact else (16 if is_compact else 18)
+			var e_f_sz: int = 16 if is_very_compact else (18 if is_compact else 22)
 			lbl_energy.add_theme_font_size_override("font_size", e_f_sz)
-			GameTypographyScript.apply_energy_typography(lbl_energy, e_f_sz)
+			GameTypographyScript.apply_heading_typography(lbl_energy, e_f_sz, true)
 			lbl_energy.update_minimum_size()
 		if btn_energy_plus:
 			var inner_plus_w: float = 22.0 if is_very_compact else (26.0 if is_compact else 28.0)
@@ -2085,7 +2087,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		energy_panel.update_minimum_size()
 		energy_panel.size = Vector2(ep_w, top_btn_h)
 	if life_panel:
-		var lp_w: float = 78.0 if is_very_compact else (88.0 if is_compact else 104.0)
+		var lp_w: float = 84.0 if is_very_compact else (96.0 if is_compact else 114.0)
 		life_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var lp_sb := life_panel.get_theme_stylebox("panel") as StyleBoxFlat
 		if lp_sb:
@@ -2106,7 +2108,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		if lbl_life:
 			lbl_life.custom_minimum_size = Vector2.ZERO
 			lbl_life.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			var l_f_sz: int = 16 if is_very_compact else (18 if is_compact else 20)
+			var l_f_sz: int = 18 if is_very_compact else (20 if is_compact else 24)
 			lbl_life.add_theme_font_size_override("font_size", l_f_sz)
 			GameTypographyScript.apply_heading_typography(lbl_life, l_f_sz, true)
 			lbl_life.update_minimum_size()
@@ -2207,6 +2209,10 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		btn_start.custom_minimum_size = Vector2(start_btn_w, start_btn_h)
 		btn_start.size = Vector2(start_btn_w, start_btn_h)
 		btn_start.add_theme_font_size_override("font_size", 36 if is_compact else 44)
+	if btn_how_to_play:
+		var htp_h: float = 72.0 if is_very_compact else (78.0 if is_compact else 84.0)
+		btn_how_to_play.custom_minimum_size.y = htp_h
+		GameTypographyScript.apply_secondary_button_typography(btn_how_to_play, 22 if is_compact else 24)
 	
 	var y_title: float = y_header_end + (title_zone_h - title_h) * 0.5
 	var x_title: float = (vp_w - title_w) * 0.5
@@ -6379,35 +6385,35 @@ func _update_settings_buttons() -> void:
 		var v_label: String = state_mgr.get_voice_button_label() if (state_mgr and state_mgr.has_method("get_voice_button_label")) else ("VOICE: " + ("Male" if v_mode == "male" else ("Female" if v_mode == "female" else "OFF")))
 		btn_toggle_voice.text = "   " + v_label
 		UIIconScript.apply_voice_button_identity_style(btn_toggle_voice)
-		UIIconScript.attach_to_button(btn_toggle_voice, "sound_on", Vector2(22, 22), "left", Color(0.52, 0.98, 1.0, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_toggle_voice, 18)
+		UIIconScript.attach_to_button(btn_toggle_voice, "sound_on", Vector2(22, 22), "left", Color(1.0, 0.90, 0.95, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_toggle_voice, 18, Color.WHITE)
 
 	if btn_toggle_haptics:
 		var h_on: bool = state_mgr.haptics_enabled if (state_mgr and "haptics_enabled" in state_mgr) else true
 		btn_toggle_haptics.text = "   " + (_tr("haptics_on") if h_on else _tr("haptics_off"))
 		UIIconScript.apply_voice_button_identity_style(btn_toggle_haptics)
-		UIIconScript.attach_to_button(btn_toggle_haptics, "haptic", Vector2(22, 22), "left", Color(1.0, 0.90, 0.38, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_toggle_haptics, 18)
+		UIIconScript.attach_to_button(btn_toggle_haptics, "haptic", Vector2(22, 22), "left", Color(1.0, 0.90, 0.95, 1.0))
+		GameTypographyScript.apply_secondary_button_typography(btn_toggle_haptics, 18, Color.WHITE)
 
 	if btn_language_modal:
 		btn_language_modal.text = "   " + _tr("language_label")
-		UIIconScript.apply_utility_game_button_style(btn_language_modal, false, 22)
+		UIIconScript.apply_utility_game_button_style(btn_language_modal, true, 22)
 		UIIconScript.attach_to_button(btn_language_modal, "globe", Vector2(22, 22), "left", Color(1.0, 0.95, 0.70, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 18, UIIconScript.COLOR_DARK_BROWN)
+		GameTypographyScript.apply_secondary_button_typography(btn_language_modal, 18, Color.WHITE)
 
 	if btn_control_mode_modal:
 		var is_gesture: bool = state_mgr.is_gesture_control() if (state_mgr and state_mgr.has_method("is_gesture_control")) else false
 		var ctrl_key := "control_mode_gesture" if is_gesture else "control_mode_button"
 		btn_control_mode_modal.text = "   " + _tr(ctrl_key)
-		UIIconScript.apply_utility_game_button_style(btn_control_mode_modal, false, 22)
+		UIIconScript.apply_utility_game_button_style(btn_control_mode_modal, true, 22)
 		UIIconScript.attach_to_button(btn_control_mode_modal, "drag_drop" if not is_gesture else "turn", Vector2(22, 22), "left", Color(1.0, 0.95, 0.70, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 18, UIIconScript.COLOR_DARK_BROWN)
+		GameTypographyScript.apply_secondary_button_typography(btn_control_mode_modal, 18, Color.WHITE)
 
 	if btn_settings_account:
 		btn_settings_account.text = "    " + _tr("btn_account")
-		UIIconScript.apply_config_game_button_style(btn_settings_account, 22)
-		UIIconScript.attach_to_button(btn_settings_account, "account", Vector2(24, 24), "left", Color(0.82, 1.0, 0.88, 1.0))
-		GameTypographyScript.apply_secondary_button_typography(btn_settings_account, 19, UIIconScript.COLOR_DARK_BROWN)
+		_apply_account_entry_button_style(btn_settings_account)
+		UIIconScript.attach_to_button(btn_settings_account, "account", Vector2(24, 24), "left", Color.WHITE)
+		GameTypographyScript.apply_secondary_button_typography(btn_settings_account, 19, Color.WHITE)
 
 
 	if btn_close_settings:

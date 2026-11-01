@@ -69,9 +69,9 @@ func _ready() -> void:
 		UIIconScript.attach_to_button(btn_haptics, "haptic", Vector2(22, 22), "left", Color(1.0, 0.90, 0.38, 1.0))
 		btn_haptics.pressed.connect(_on_btn_haptics_pressed)
 	if btn_restart:
-		UIIconScript.apply_utility_game_button_style(btn_restart, false, 24)
-		GameTypographyScript.apply_secondary_button_typography(btn_restart, 24)
-		UIIconScript.attach_to_button(btn_restart, "restart", Vector2(28, 28), "left")
+		UIIconScript.apply_utility_game_button_style(btn_restart, true, 24)
+		GameTypographyScript.apply_secondary_button_typography(btn_restart, 24, Color.WHITE)
+		UIIconScript.attach_to_button(btn_restart, "restart", Vector2(28, 28), "left", Color(1.0, 0.95, 0.70, 1.0))
 		btn_restart.pressed.connect(_on_btn_restart_pressed)
 	if btn_resume:
 		UIIconScript.apply_primary_game_button_style(btn_resume, 24)

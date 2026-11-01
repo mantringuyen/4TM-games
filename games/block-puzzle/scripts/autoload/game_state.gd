@@ -361,7 +361,7 @@ var current_mode: GameMode = GameMode.CLASSIC
 var current_play_style: PlayStyle = PlayStyle.FALLING
 var _play_style_explicit: bool = false
 var current_language: String = "en"
-var current_control_mode: int = ControlMode.BUTTON
+var current_control_mode: int = ControlMode.GESTURE
 
 var score: int = 0
 var high_score: int = 0
@@ -1134,9 +1134,9 @@ func load_progression(custom_path: String = PROGRESSION_SAVE_PATH) -> bool:
 	if saved_lang == "vi" or saved_lang == "en":
 		current_language = saved_lang
 	if cfg.has_section_key("settings", "control_mode"):
-		set_control_mode(int(cfg.get_value("settings", "control_mode", int(ControlMode.BUTTON))), false)
+		set_control_mode(int(cfg.get_value("settings", "control_mode", int(ControlMode.GESTURE))), false)
 	else:
-		current_control_mode = ControlMode.BUTTON
+		current_control_mode = ControlMode.GESTURE
 	var saved_mode: int = int(cfg.get_value("settings", "selected_game_mode", int(GameMode.CLASSIC)))
 	var saved_style: int = int(cfg.get_value("settings", "selected_play_style", int(PlayStyle.FALLING)))
 	current_mode = GameMode.MODERN_DRAG_AND_DROP if saved_mode == int(GameMode.MODERN_DRAG_AND_DROP) else GameMode.CLASSIC

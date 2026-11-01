@@ -339,8 +339,22 @@ func _apply_score_panel_progress_style() -> void:
 	var score_panel = get_node_or_null("MarginContainer/VBoxContainer/HeaderRow/ScorePanel") as PanelContainer
 	if not score_panel:
 		return
-	var empty_sb := StyleBoxEmpty.new()
-	score_panel.add_theme_stylebox_override("panel", empty_sb)
+	var cream_sb := StyleBoxFlat.new()
+	cream_sb.bg_color = UIIconScript.COLOR_CREAM_BASE
+	cream_sb.border_width_left = 2
+	cream_sb.border_width_top = 2
+	cream_sb.border_width_right = 2
+	cream_sb.border_width_bottom = 4
+	cream_sb.border_color = UIIconScript.COLOR_DARK_BROWN
+	cream_sb.set_corner_radius_all(18)
+	cream_sb.shadow_color = UIIconScript.COLOR_DARK_BROWN_SHADOW
+	cream_sb.shadow_size = 6
+	cream_sb.shadow_offset = Vector2(0, 2)
+	cream_sb.content_margin_left = 8.0
+	cream_sb.content_margin_right = 8.0
+	cream_sb.content_margin_top = 2.0
+	cream_sb.content_margin_bottom = 2.0
+	score_panel.add_theme_stylebox_override("panel", cream_sb)
 	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	score_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	

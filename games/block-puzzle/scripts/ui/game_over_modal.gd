@@ -79,15 +79,15 @@ func _ready() -> void:
 		UIIconScript.apply_cream_panel_style(panel_container)
 	_rewarded_ad = RewardedAdScript.new()
 	if btn_extra_life:
-		UIIconScript.apply_secondary_game_button_style(btn_extra_life, false, 22)
-		GameTypographyScript.apply_secondary_button_typography(btn_extra_life, 22)
-		UIIconScript.attach_to_button(btn_extra_life, "extra_life", Vector2(28, 28), "left")
+		UIIconScript.apply_utility_game_button_style(btn_extra_life, true, 22)
+		GameTypographyScript.apply_secondary_button_typography(btn_extra_life, 22, Color.WHITE)
+		UIIconScript.attach_to_button(btn_extra_life, "extra_life", Vector2(28, 28), "left", Color(1.0, 0.95, 0.70, 1.0))
 		if not btn_extra_life.pressed.is_connected(_on_btn_extra_life_pressed):
 			btn_extra_life.pressed.connect(_on_btn_extra_life_pressed)
 	if btn_watch_ad:
-		UIIconScript.apply_reward_game_button_style(btn_watch_ad, 22)
-		GameTypographyScript.apply_secondary_button_typography(btn_watch_ad, 22)
-		UIIconScript.attach_to_button(btn_watch_ad, "play", Vector2(26, 26), "left")
+		UIIconScript.apply_vivid_green_account_button_style(btn_watch_ad, 22)
+		GameTypographyScript.apply_secondary_button_typography(btn_watch_ad, 22, Color.WHITE)
+		UIIconScript.attach_to_button(btn_watch_ad, "play", Vector2(26, 26), "left", Color.WHITE)
 		if not btn_watch_ad.pressed.is_connected(_on_btn_watch_ad_pressed):
 			btn_watch_ad.pressed.connect(_on_btn_watch_ad_pressed)
 	if btn_next_level:
@@ -380,10 +380,16 @@ func _render_modal_state() -> void:
 			btn_extra_life.disabled = not can_use_el
 			btn_extra_life.modulate.a = 0.52 if (not can_use_el) else 1.0
 			btn_extra_life.text = state_mgr.tr_text("btn_use_extra_life") if state_mgr else "USE EXTRA LIFE"
+			UIIconScript.apply_utility_game_button_style(btn_extra_life, true, 22)
+			GameTypographyScript.apply_secondary_button_typography(btn_extra_life, 22, Color.WHITE)
+			UIIconScript.attach_to_button(btn_extra_life, "extra_life", Vector2(28, 28), "left", Color(1.0, 0.95, 0.70, 1.0))
 		if btn_watch_ad:
 			btn_watch_ad.visible = true
 			btn_watch_ad.disabled = false
 			btn_watch_ad.text = state_mgr.tr_text("btn_watch_ad") if state_mgr else "WATCH AD"
+			UIIconScript.apply_vivid_green_account_button_style(btn_watch_ad, 22)
+			GameTypographyScript.apply_secondary_button_typography(btn_watch_ad, 22, Color.WHITE)
+			UIIconScript.attach_to_button(btn_watch_ad, "play", Vector2(26, 26), "left", Color.WHITE)
 		if btn_next_level:
 			btn_next_level.visible = false
 		if btn_retry:

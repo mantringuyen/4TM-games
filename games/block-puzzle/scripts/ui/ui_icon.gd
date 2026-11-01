@@ -167,7 +167,10 @@ const COLOR_ACCOUNT_GREEN_HI: Color = Color(0.48, 0.94, 0.64, 1.0)     # Radiant
 const COLOR_ACCOUNT_GREEN_DARK: Color = Color(0.06, 0.40, 0.18, 1.0)   # #0F662E Dark Green Rim / Extrusion
 const COLOR_ACCOUNT_GREEN_HOVER: Color = Color(0.18, 0.82, 0.42, 1.0)  # Bright Hover Green
 const COLOR_ACCOUNT_GREEN_PRESS: Color = Color(0.08, 0.60, 0.28, 1.0)  # Pressed Green
-
+# Pink Utility Button (Voice & Haptics)
+const COLOR_PINK_VOICE: Color = Color(0.92, 0.32, 0.58, 1.0)        # #EA5294 Vivid Rose-Pink
+const COLOR_PINK_VOICE_HI: Color = Color(1.0, 0.68, 0.84, 1.0)     # Specular Light Pink Top
+const COLOR_PINK_VOICE_DARK: Color = Color(0.56, 0.12, 0.32, 1.0)   # Dark Rose-Plum Extrusion
 
 static func apply_cream_panel_style(panel: Control, corner_r: int = 32) -> void:
 	if not panel:
@@ -217,8 +220,28 @@ static func apply_audio_toggle_button_identity_style(btn: Button) -> void:
 	setup_button_press_feedback(btn, false)
 
 
+static func apply_pink_utility_button_style(btn: Button, corner_r: int = 22) -> void:
+	if not btn:
+		return
+	apply_game_button_style(
+		btn,
+		COLOR_PINK_VOICE,
+		COLOR_PINK_VOICE_HI,
+		7,
+		corner_r,
+		10,
+		Vector2(0, 4)
+	)
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.94, 0.96, 1.0))
+	btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
+	btn.add_theme_constant_override("outline_size", 4)
+	setup_button_press_feedback(btn, false)
+
+
 static func apply_voice_button_identity_style(btn: Button) -> void:
-	apply_audio_toggle_button_identity_style(btn)
+	apply_pink_utility_button_style(btn, 20)
 
 
 static func apply_game_button_style(
@@ -953,55 +976,68 @@ static func draw_crown_shape(canvas: CanvasItem, center: Vector2, radius: float,
 static func draw_gift_shape(canvas: CanvasItem, center: Vector2, radius: float) -> void:
 	var sz: float = radius * 1.85
 	var c := center
-	# 1. Subtle drop shadow
+	# 1. Soft contact shadow
 	var sh_pts := PackedVector2Array()
 	for i in range(16):
 		var a_sh: float = float(i) * (TAU / 16.0)
 		sh_pts.append(c + Vector2(0.0, sz * 0.44) + Vector2(cos(a_sh) * sz * 0.48, sin(a_sh) * sz * 0.14))
-	canvas.draw_colored_polygon(sh_pts, Color(0.02, 0.04, 0.12, 0.42))
+	canvas.draw_colored_polygon(sh_pts, Color(0.02, 0.04, 0.12, 0.35))
 
-	# 2. Chest Base / Body
-	var body_w: float = sz * 0.82
-	var body_h: float = sz * 0.48
-	var body_rect := Rect2(c.x - body_w * 0.5, c.y - sz * 0.06, body_w, body_h)
-	var body_col := Color(0.92, 0.18, 0.36, 1.0)
-	var trim_col := Color(1.0, 0.86, 0.26, 1.0)
-	var trim_dark := Color(0.72, 0.48, 0.10, 1.0)
+	# 2. Main Gift Box Body (Square box with 3D bevels)
+	var box_w: float = sz * 0.72
+	var box_h: float = sz * 0.60
+	var box_rect := Rect2(c.x - box_w * 0.5, c.y - sz * 0.12, box_w, box_h)
+	var box_col := Color(0.94, 0.20, 0.38, 1.0)       # Bright Ruby Gift Red
+	var box_dark := Color(0.72, 0.10, 0.26, 1.0)      # Shadowed Right Edge
+	var ribbon_col := Color(1.0, 0.88, 0.24, 1.0)    # Radiant Gold Ribbon
+	var ribbon_hi := Color(1.0, 0.98, 0.65, 1.0)     # Specular Ribbon Highlight
+	var ribbon_dark := Color(0.76, 0.52, 0.08, 1.0)  # Ribbon Edge
 
-	canvas.draw_rect(body_rect, body_col, true)
-	canvas.draw_rect(Rect2(body_rect.position.x, body_rect.end.y - 3.5, body_rect.size.x, 3.5), trim_dark, true)
-	canvas.draw_rect(Rect2(body_rect.position.x, body_rect.position.y, 4.0, body_rect.size.y), trim_col, true)
-	canvas.draw_rect(Rect2(body_rect.end.x - 4.0, body_rect.position.y, 4.0, body_rect.size.y), trim_dark, true)
+	# Draw Box Face & Bevels
+	canvas.draw_rect(box_rect, box_col, true)
+	canvas.draw_rect(Rect2(box_rect.position.x, box_rect.position.y, box_w * 0.5, box_h), box_col.lightened(0.08), true)
+	canvas.draw_rect(Rect2(c.x, box_rect.position.y, box_w * 0.5, box_h), box_dark, true)
+	canvas.draw_rect(box_rect, COLOR_DARK_BROWN, false, 2.0)
 
-	# 3. Arched Chest Lid
-	var lid_w: float = sz * 0.92
-	var lid_h: float = sz * 0.28
-	var lid_rect := Rect2(c.x - lid_w * 0.5, c.y - sz * 0.32, lid_w, lid_h)
+	# 3. Horizontal and Vertical Crossed Ribbons on Box Body
+	var rib_w: float = sz * 0.16
+	# Vertical Ribbon
+	var v_rib := Rect2(c.x - rib_w * 0.5, box_rect.position.y, rib_w, box_h)
+	canvas.draw_rect(v_rib, ribbon_col, true)
+	canvas.draw_line(Vector2(c.x, v_rib.position.y), Vector2(c.x, v_rib.end.y), ribbon_hi, 1.8)
+	canvas.draw_rect(v_rib, ribbon_dark, false, 1.2)
+
+	# Horizontal Ribbon
+	var h_rib := Rect2(box_rect.position.x, c.y + sz * 0.14, box_w, rib_w)
+	canvas.draw_rect(h_rib, ribbon_col, true)
+	canvas.draw_line(Vector2(h_rib.position.x, c.y + sz * 0.14 + rib_w * 0.5), Vector2(h_rib.end.x, c.y + sz * 0.14 + rib_w * 0.5), ribbon_hi, 1.8)
+	canvas.draw_rect(h_rib, ribbon_dark, false, 1.2)
+
+	# 4. Box Lid (Overhanging Cap)
+	var lid_w: float = sz * 0.82
+	var lid_h: float = sz * 0.22
+	var lid_rect := Rect2(c.x - lid_w * 0.5, box_rect.position.y - lid_h * 0.75, lid_w, lid_h)
 	canvas.draw_rect(lid_rect, Color(0.98, 0.28, 0.46, 1.0), true)
-	canvas.draw_rect(Rect2(lid_rect.position.x + 3.0, lid_rect.position.y + 2.0, lid_w - 6.0, 3.5), Color(1.0, 0.68, 0.82, 0.85), true)
-	canvas.draw_rect(Rect2(lid_rect.position.x, lid_rect.end.y - 3.0, lid_w, 3.0), trim_col, true)
+	canvas.draw_rect(Rect2(lid_rect.position.x, lid_rect.position.y, lid_w * 0.5, lid_h), Color(1.0, 0.38, 0.56, 1.0), true)
+	canvas.draw_rect(lid_rect, COLOR_DARK_BROWN, false, 2.0)
 
-	# 4. Vertical Gold Ribbon
-	var rib_w: float = sz * 0.20
-	var rib_x: float = c.x - rib_w * 0.5
-	canvas.draw_rect(Rect2(rib_x, lid_rect.position.y, rib_w, lid_h + body_h + 2.0), trim_col, true)
-	canvas.draw_line(Vector2(c.x, lid_rect.position.y), Vector2(c.x, body_rect.end.y), Color(1.0, 0.98, 0.65, 0.90), 2.0)
+	# Vertical Ribbon on Lid
+	var lid_v_rib := Rect2(c.x - rib_w * 0.5, lid_rect.position.y, rib_w, lid_h)
+	canvas.draw_rect(lid_v_rib, ribbon_col, true)
+	canvas.draw_line(Vector2(c.x, lid_v_rib.position.y), Vector2(c.x, lid_v_rib.end.y), ribbon_hi, 1.8)
 
-	# Center Clasp on Lid
-	canvas.draw_circle(c + Vector2(0.0, -sz * 0.06), 3.8, trim_dark)
-	canvas.draw_circle(c + Vector2(0.0, -sz * 0.06), 2.8, Color(1.0, 0.96, 0.55, 1.0))
+	# 5. Fluffy Ribbon Bow Loops & Center Knot on Top of Lid
+	var bow_y: float = lid_rect.position.y - sz * 0.02
+	canvas.draw_arc(Vector2(c.x - sz * 0.18, bow_y - sz * 0.12), sz * 0.16, -PI * 0.95, PI * 0.55, 12, ribbon_col, 4.2, true)
+	canvas.draw_arc(Vector2(c.x + sz * 0.18, bow_y - sz * 0.12), sz * 0.16, PI * 0.45, PI * 1.95, 12, ribbon_col, 4.2, true)
+	canvas.draw_circle(Vector2(c.x, bow_y - sz * 0.02), 4.8, ribbon_dark)
+	canvas.draw_circle(Vector2(c.x, bow_y - sz * 0.02), 3.6, ribbon_col)
+	canvas.draw_circle(Vector2(c.x - 1.0, bow_y - sz * 0.02 - 1.0), 1.6, ribbon_hi)
 
-	# 5. Satin Ribbon Bow Loops & Knot on Top
-	var bow_y: float = lid_rect.position.y - 2.0
-	canvas.draw_arc(Vector2(c.x - sz * 0.16, bow_y - sz * 0.10), sz * 0.14, -PI * 0.9, PI * 0.6, 12, trim_col, 3.8, true)
-	canvas.draw_arc(Vector2(c.x + sz * 0.16, bow_y - sz * 0.10), sz * 0.14, PI * 0.4, PI * 1.9, 12, trim_col, 3.8, true)
-	canvas.draw_circle(Vector2(c.x, bow_y - 2.0), 4.2, trim_dark)
-	canvas.draw_circle(Vector2(c.x, bow_y - 2.0), 3.4, Color(1.0, 0.96, 0.60, 1.0))
-
-	# 6. Subtle Twinkling Golden Sparkles
-	draw_sparkle_glint(canvas, c + Vector2(-sz * 0.42, -sz * 0.36), sz * 0.12, Color(1.0, 0.96, 0.52, 0.95))
-	draw_sparkle_glint(canvas, c + Vector2(sz * 0.44, -sz * 0.26), sz * 0.14, Color(1.0, 0.96, 0.52, 0.95))
-	draw_sparkle_glint(canvas, c + Vector2(sz * 0.18, -sz * 0.50), sz * 0.09, Color(1.0, 0.98, 0.72, 0.90))
+	# 6. Sparkle Glints
+	draw_sparkle_glint(canvas, c + Vector2(-sz * 0.42, -sz * 0.38), sz * 0.12, Color(1.0, 0.98, 0.60, 0.95))
+	draw_sparkle_glint(canvas, c + Vector2(sz * 0.44, -sz * 0.28), sz * 0.14, Color(1.0, 0.98, 0.60, 0.95))
+	draw_sparkle_glint(canvas, c + Vector2(sz * 0.22, -sz * 0.52), sz * 0.10, Color(1.0, 1.0, 0.80, 0.90))
 
 
 static func draw_lock_shape(canvas: CanvasItem, center: Vector2, radius: float, unlocked_state: bool = false) -> void:
