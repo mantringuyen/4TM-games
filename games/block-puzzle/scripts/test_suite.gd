@@ -2325,6 +2325,8 @@ func _ready() -> void:
 	# =========================================================================
 	# TEST 75: Drag & Drop — Rotate Pieces While Dragging (90° Tetromino Rotation + Cancel Restoration)
 	# =========================================================================
+	var prev_control_75: int = game_state.get_control_mode()
+	game_state.set_control_mode(GameStateScript.ControlMode.BUTTON, false)
 	game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP)
 	var dd75 = ModernModeScript.new()
 	dd75.configure_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP)
@@ -2411,6 +2413,7 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	dd75.queue_free()
+	game_state.set_control_mode(prev_control_75, false)
 	print("[TEST 75/76] Drag & Drop active piece 90° rotation, immediate preview update, rotated placement & cancel restoration: PASSED")
 
 	# =========================================================================
@@ -4035,6 +4038,8 @@ func _ready() -> void:
 	#   5. Cancel drag -> original expected orientation is restored
 	#   6. Both mouse and touch-equivalent input paths verified
 	# =========================================================================
+	var prev_control_103: int = game_state.get_control_mode()
+	game_state.set_control_mode(GameStateScript.ControlMode.BUTTON, false)
 	game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP, 1)
 	var dd103 = ModernModeScript.new()
 	dd103.configure_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP)
@@ -4249,6 +4254,7 @@ func _ready() -> void:
 			return
 
 	dd103.queue_free()
+	game_state.set_control_mode(prev_control_103, false)
 	print("[TEST 103/104] Drag & Drop accidental rotation fix (zero overlap rotation, intentional 90° rotate, drag continuation, cancel restore, mouse & touch): PASSED")
 
 	# =========================================================================
@@ -5711,6 +5717,8 @@ func _ready() -> void:
 	#   6. Tapping another interactive UI button (e.g. Change Block / Settings) while dragging works normally and is not swallowed
 	#   7. Verified across 360x800, 390x844, and 720x1280 viewports
 	# =========================================================================
+	var prev_control_111: int = game_state.get_control_mode()
+	game_state.set_control_mode(GameStateScript.ControlMode.BUTTON, false)
 	for vp111 in [Vector2(360, 800), Vector2(390, 844), Vector2(720, 1280)]:
 		game_state.set_energy(24, false)
 		game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP, 1)
@@ -5913,6 +5921,7 @@ func _ready() -> void:
 
 		dd111.queue_free()
 
+	game_state.set_control_mode(prev_control_111, false)
 	game_state.reset_progression(true)
 	print("[TEST 111/112] Full-Screen Drag & Drop Pointer/Touch Capture & Explicit UI Button Priority (360x800, 390x844, 720x1280): PASSED")
 
@@ -5934,6 +5943,8 @@ func _ready() -> void:
 	#   14. Verify single-finger drag remains functional.
 	#   15. Verify across 360x800, 390x844, and 720x1280 viewports.
 	# =========================================================================
+	var prev_control_112: int = game_state.get_control_mode()
+	game_state.set_control_mode(GameStateScript.ControlMode.BUTTON, false)
 	for vp112 in [Vector2(360, 800), Vector2(390, 844), Vector2(720, 1280)]:
 		game_state.set_energy(24, false)
 		game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP, 1)
@@ -6185,6 +6196,7 @@ func _ready() -> void:
 
 		dd112.queue_free()
 
+	game_state.set_control_mode(prev_control_112, false)
 	game_state.reset_progression(true)
 	print("[TEST 112/113] Simultaneous Multi-Pointer Drag + Rotate (Pointer A Drag Ownership vs Pointer B ROTATE Tap across 360x800, 390x844, 720x1280): PASSED")
 
@@ -6206,6 +6218,8 @@ func _ready() -> void:
 	#   14. Mouse still works.
 	#   15. Verified at 360x800, 390x844, and 720x1280.
 	# =========================================================================
+	var prev_control_113: int = game_state.get_control_mode()
+	game_state.set_control_mode(GameStateScript.ControlMode.BUTTON, false)
 	for vp113 in [Vector2(360, 800), Vector2(390, 844), Vector2(720, 1280)]:
 		game_state.set_energy(24, false)
 		game_state.start_game_combination(GameStateScript.GameMode.MODERN_DRAG_AND_DROP, GameStateScript.PlayStyle.DRAG_AND_DROP, 1)
@@ -6433,6 +6447,7 @@ func _ready() -> void:
 
 		dd113.queue_free()
 
+	game_state.set_control_mode(prev_control_113, false)
 	game_state.reset_progression(true)
 	print("[TEST 113/114] Strict 3-Category Pointer Separation (Drag Pointer vs ROTATE-Button Pointer vs Free Secondary Tap Pointer across 360x800, 390x844, 720x1280): PASSED")
 
