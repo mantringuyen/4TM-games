@@ -115,10 +115,10 @@ const COLOR_GREEN_PRIMARY: Color = Color(0.149, 0.788, 0.420, 1.0)      # #26C96
 const COLOR_GREEN_HIGHLIGHT: Color = Color(0.408, 0.886, 0.616, 1.0)    # #68E29D Primary Top Highlight
 const COLOR_YELLOW_ACCENT: Color = Color(0.957, 0.784, 0.290, 1.0)      # #F4C84A Warm Yellow Accent / Rewards
 const COLOR_YELLOW_LIGHT: Color = Color(0.988, 0.918, 0.647, 1.0)       # #FCEAA5
-const COLOR_ORANGE_UTILITY: Color = Color(0.914, 0.545, 0.263, 1.0)     # #E98B43 Coral/Orange Utility
-const COLOR_ORANGE_LIGHT: Color = Color(0.973, 0.714, 0.510, 1.0)        # #F8B682
-const COLOR_ORANGE_UNSELECTED: Color = Color(0.820, 0.460, 0.200, 1.0)  # #D17533 Muted Orange Utility Face
-const COLOR_ORANGE_UNSEL_LIGHT: Color = Color(0.920, 0.600, 0.350, 1.0)
+const COLOR_ORANGE_UTILITY: Color = Color(0.98, 0.52, 0.14, 1.0)        # Bright Vivid Golden Orange Selected
+const COLOR_ORANGE_LIGHT: Color = Color(1.0, 0.88, 0.58, 1.0)          # Strong Specular Highlight Border
+const COLOR_ORANGE_UNSELECTED: Color = Color(0.52, 0.28, 0.12, 0.95)     # Dark Muted Amber-Brown Unselected
+const COLOR_ORANGE_UNSEL_LIGHT: Color = Color(0.68, 0.42, 0.22, 0.85)
 const COLOR_CORAL_SECONDARY: Color = Color(0.914, 0.545, 0.263, 1.0)    # #E98B43
 const COLOR_CORAL_LIGHT: Color = Color(0.973, 0.714, 0.510, 1.0)
 const COLOR_BLUE_CONFIG: Color = Color(0.145, 0.502, 0.910, 1.0)        # #2580E8 Settings & Config Blue
@@ -128,11 +128,11 @@ const COLOR_RED_LIGHT: Color = Color(0.984, 0.478, 0.522, 1.0)          # #FB7A8
 const COLOR_DARK_BROWN: Color = Color(0.333, 0.231, 0.196, 1.0)        # #553B32 Dark Brown Outline/Text
 const COLOR_DARK_BROWN_SHADOW: Color = Color(0.20, 0.12, 0.08, 0.45)
 
-# Mode Group 1: Classic & Modern (Deep Ocean Blue family - high contrast vs navy #293D8A)
-const COLOR_OCEAN_BLUE_SEL: Color = Color(0.14, 0.52, 0.94, 1.0)        # Bright Vivid Ocean Blue Selected
-const COLOR_OCEAN_BLUE_SEL_HI: Color = Color(0.58, 0.86, 1.0, 1.0)     # Specular Ocean Blue Highlight
-const COLOR_OCEAN_BLUE_UNSEL: Color = Color(0.22, 0.38, 0.65, 0.98)      # Saturated Medium Ocean Blue Unselected (clearly visible on navy)
-const COLOR_OCEAN_BLUE_UNSEL_HI: Color = Color(0.44, 0.64, 0.90, 0.95)
+# Mode Group 2: Falling & Drag & Drop (Ocean Blue family)
+const COLOR_OCEAN_BLUE_SEL: Color = Color(0.12, 0.58, 0.98, 1.0)         # Bright Vivid Azure Ocean Blue Selected
+const COLOR_OCEAN_BLUE_SEL_HI: Color = Color(0.68, 0.92, 1.0, 1.0)       # Strong Cyan-Blue Specular Highlight Border
+const COLOR_OCEAN_BLUE_UNSEL: Color = Color(0.14, 0.26, 0.46, 0.95)       # Dark Muted Slate Blue Unselected
+const COLOR_OCEAN_BLUE_UNSEL_HI: Color = Color(0.28, 0.42, 0.65, 0.85)
 
 # Mode Group 2: Falling & Drag & Drop (Vivid Emerald Green - strong contrast vs #293D8A navy background)
 const COLOR_EMERALD_STYLE_SEL: Color = Color(0.10, 0.78, 0.52, 1.0)      # Vivid Glowing Emerald Green Selected
@@ -340,13 +340,13 @@ static func apply_ocean_blue_mode_button_style(btn: Button, is_selected: bool = 
 		btn,
 		bg_col,
 		hi_col,
-		9 if is_selected else 6,
+		10 if is_selected else 4,
 		corner_r,
-		14 if is_selected else 9,
-		Vector2(0, 6) if is_selected else Vector2(0, 3)
+		16 if is_selected else 6,
+		Vector2(0, 7) if is_selected else Vector2(0, 2)
 	)
 	if btn:
-		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.95, 1.0) if is_selected else Color(0.85, 0.92, 1.0, 0.88))
+		btn.add_theme_color_override("font_color", Color(1.0, 0.99, 0.95, 1.0) if is_selected else Color(0.78, 0.86, 0.96, 0.78))
 		btn.add_theme_color_override("font_hover_color", Color.WHITE)
 		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
 		btn.add_theme_constant_override("outline_size", 4)
@@ -359,13 +359,13 @@ static func apply_orange_mode_button_style(btn: Button, is_selected: bool = fals
 		btn,
 		bg_col,
 		hi_col,
-		9 if is_selected else 6,
+		10 if is_selected else 4,
 		corner_r,
-		14 if is_selected else 9,
-		Vector2(0, 6) if is_selected else Vector2(0, 3)
+		16 if is_selected else 6,
+		Vector2(0, 7) if is_selected else Vector2(0, 2)
 	)
 	if btn:
-		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.95, 1.0) if is_selected else Color(1.0, 0.92, 0.82, 0.88))
+		btn.add_theme_color_override("font_color", Color(1.0, 0.99, 0.95, 1.0) if is_selected else Color(0.92, 0.82, 0.74, 0.78))
 		btn.add_theme_color_override("font_hover_color", Color.WHITE)
 		btn.add_theme_color_override("font_outline_color", COLOR_DARK_BROWN)
 		btn.add_theme_constant_override("outline_size", 4)

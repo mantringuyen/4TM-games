@@ -526,8 +526,8 @@ func _ensure_energy_header_control() -> void:
 		bolt_icon.name = "EnergyIcon"
 		bolt_icon.align_mode = "none"
 		bolt_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bolt_icon.custom_minimum_size = Vector2(30, 30)
-		bolt_icon.size = Vector2(30, 30)
+		bolt_icon.custom_minimum_size = Vector2(46, 46)
+		bolt_icon.size = Vector2(46, 46)
 		hbox.add_child(bolt_icon)
 
 		var empty_sb := StyleBoxEmpty.new()
@@ -802,8 +802,8 @@ func _ensure_life_header_control() -> void:
 		life_icon.name = "LifeHeartIcon"
 		life_icon.align_mode = "none"
 		life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		life_icon.custom_minimum_size = Vector2(30, 30)
-		life_icon.size = Vector2(30, 30)
+		life_icon.custom_minimum_size = Vector2(46, 46)
+		life_icon.size = Vector2(46, 46)
 		life_icon.primary_color = Color(1.0, 0.28, 0.44, 1.0)
 		hbox.add_child(life_icon)
 
@@ -1166,7 +1166,7 @@ func _setup_vector_icons() -> void:
 			gear_icon.secondary_color = Color(0.20, 0.24, 0.35, 1.0)
 	if btn_top_level:
 		_apply_level_button_progress_style()
-		UIIconScript.attach_to_button(btn_top_level, "crown", Vector2(36, 36), "left", Color(1.0, 0.94, 0.32, 1.0))
+		UIIconScript.attach_to_button(btn_top_level, "crown", Vector2(50, 50), "left", Color(1.0, 0.94, 0.32, 1.0))
 	if btn_daily_gift:
 		btn_daily_gift.text = ""
 		btn_daily_gift.flat = true
@@ -1177,7 +1177,7 @@ func _setup_vector_icons() -> void:
 		btn_daily_gift.add_theme_stylebox_override("disabled", st_gift)
 		btn_daily_gift.add_theme_stylebox_override("focus", st_gift)
 		btn_daily_gift.add_theme_color_override("font_color", Color(1, 1, 1, 0))
-		UIIconScript.attach_to_button(btn_daily_gift, "gift", Vector2(44, 44), "center", Color(1.0, 0.85, 0.20, 1.0))
+		UIIconScript.attach_to_button(btn_daily_gift, "gift", Vector2(56, 56), "center", Color(1.0, 0.85, 0.20, 1.0))
 		UIIconScript.remove_focus_outline(btn_daily_gift)
 		UIIconScript.setup_button_press_feedback(btn_daily_gift)
 	if btn_language_modal:
@@ -2022,12 +2022,12 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		btn_top_level.add_theme_font_size_override("font_size", 13 if is_very_compact else (14 if is_compact else 17))
 		var crown_icon := btn_top_level.get_node_or_null("VectorIcon") as Control
 		if crown_icon:
-			var cr_side: float = 28.0 if is_very_compact else (32.0 if is_compact else 36.0)
+			var cr_side: float = 38.0 if is_very_compact else (44.0 if is_compact else 50.0)
 			crown_icon.custom_minimum_size = Vector2(cr_side, cr_side)
 			crown_icon.size = Vector2(cr_side, cr_side)
 			crown_icon._on_parent_resized()
 	if energy_panel:
-		var ep_w: float = 104.0 if is_very_compact else (114.0 if is_compact else 138.0)
+		var ep_w: float = 108.0 if is_very_compact else (124.0 if is_compact else 152.0)
 		energy_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var ep_sb := energy_panel.get_theme_stylebox("panel") as StyleBoxFlat
 		if ep_sb:
@@ -2044,7 +2044,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			ep_hbox.add_theme_constant_override("separation", 3 if is_very_compact else 4)
 		var ep_bolt := energy_panel.find_child("EnergyIcon", true, false) as Control
 		if ep_bolt:
-			var bolt_side: float = 24.0 if is_very_compact else (26.0 if is_compact else 30.0)
+			var bolt_side: float = 34.0 if is_very_compact else (40.0 if is_compact else 46.0)
 			if "align_mode" in ep_bolt:
 				ep_bolt.align_mode = "none"
 			ep_bolt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2060,8 +2060,8 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			GameTypographyScript.apply_energy_typography(lbl_energy, e_f_sz)
 			lbl_energy.update_minimum_size()
 		if btn_energy_plus:
-			var inner_plus_w: float = 24.0 if is_very_compact else (26.0 if is_compact else 28.0)
-			var inner_plus_h: float = 24.0 if is_very_compact else (26.0 if is_compact else 28.0)
+			var inner_plus_w: float = 22.0 if is_very_compact else (26.0 if is_compact else 28.0)
+			var inner_plus_h: float = 22.0 if is_very_compact else (26.0 if is_compact else 28.0)
 			btn_energy_plus.text = ""
 			btn_energy_plus.clip_text = true
 			btn_energy_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2083,7 +2083,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		energy_panel.update_minimum_size()
 		energy_panel.size = Vector2(ep_w, top_btn_h)
 	if life_panel:
-		var lp_w: float = 76.0 if is_very_compact else (82.0 if is_compact else 92.0)
+		var lp_w: float = 78.0 if is_very_compact else (88.0 if is_compact else 104.0)
 		life_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var lp_sb := life_panel.get_theme_stylebox("panel") as StyleBoxFlat
 		if lp_sb:
@@ -2097,7 +2097,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			lp_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			lp_hbox.add_theme_constant_override("separation", 4 if is_very_compact else 5)
 		if life_icon:
-			var li_side: float = 24.0 if is_very_compact else (26.0 if is_compact else 30.0)
+			var li_side: float = 34.0 if is_very_compact else (40.0 if is_compact else 46.0)
 			life_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			life_icon.custom_minimum_size = Vector2(li_side, li_side)
 			life_icon.size = Vector2(li_side, li_side)
@@ -2109,7 +2109,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			GameTypographyScript.apply_heading_typography(lbl_life, l_f_sz, true)
 			lbl_life.update_minimum_size()
 		if btn_life_plus:
-			var lp_plus_side: float = 24.0 if is_very_compact else (26.0 if is_compact else 28.0)
+			var lp_plus_side: float = 22.0 if is_very_compact else (26.0 if is_compact else 28.0)
 			btn_life_plus.custom_minimum_size = Vector2(lp_plus_side, lp_plus_side)
 			btn_life_plus.size = Vector2(lp_plus_side, lp_plus_side)
 			btn_life_plus.add_theme_font_size_override("font_size", 20 if is_very_compact else (22 if is_compact else 24))
@@ -2126,15 +2126,15 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		life_panel.size = Vector2(lp_w, top_btn_h)
 	if btn_daily_gift:
 		btn_daily_gift.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var gift_w: float = 126.0 if is_very_compact else (136.0 if is_compact else 184.0)
+		var gift_w: float = top_btn_h
 		btn_daily_gift.custom_minimum_size = Vector2(gift_w, top_btn_h)
-		btn_daily_gift.size.y = top_btn_h
+		btn_daily_gift.size = Vector2(gift_w, top_btn_h)
 		btn_daily_gift.clip_text = false
 		btn_daily_gift.text = ""
 		btn_daily_gift.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var gift_icon := btn_daily_gift.get_node_or_null("VectorIcon") as Control
 		if gift_icon:
-			var g_side: float = 36.0 if is_very_compact else (40.0 if is_compact else 44.0)
+			var g_side: float = 44.0 if is_very_compact else (48.0 if is_compact else 56.0)
 			gift_icon.custom_minimum_size = Vector2(g_side, g_side)
 			gift_icon.size = Vector2(g_side, g_side)
 			if "align_mode" in gift_icon:
