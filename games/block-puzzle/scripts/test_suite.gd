@@ -3880,10 +3880,13 @@ func _ready() -> void:
 			printerr("[FAIL Test 102.2] Energy '+' button must NOT have a separate background/frame of its own! Got: ", plus_sb)
 			get_tree().quit(1)
 			return
-	if ep_plus102.get_theme_font_size("font_size") < 20:
-		printerr("[FAIL Test 102.2] Energy '+' button font size must be significantly larger for easy tap/read!")
-		get_tree().quit(1)
-		return
+	for vp102_plus in [Vector2(360, 800), Vector2(390, 844), Vector2(720, 1280)]:
+		menu102.update_responsive_menu_layout(vp102_plus)
+		var plus_icon102 = ep_plus102.get_node_or_null("VectorIcon") as Control
+		if not plus_icon102 or plus_icon102.size.y < 22.0 or ep_plus102.custom_minimum_size.y < 22.0:
+			printerr("[FAIL Test 102.2] Energy '+' button VectorIcon or button minimum size too small at viewport ", vp102_plus, "! icon_h=", plus_icon102.size.y if plus_icon102 else -1.0, " btn_min_h=", ep_plus102.custom_minimum_size.y)
+			get_tree().quit(1)
+			return
 	var mm_id_metrics: Dictionary = menu102.get_level_and_energy_visual_identity_metrics()
 	if not bool(mm_id_metrics.get("are_clearly_distinct", false)):
 		printerr("[FAIL Test 102.2] Main Menu LV button and Energy control must have clearly different visual identities/colors! Got: ", mm_id_metrics)

@@ -2065,15 +2065,13 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			GameTypographyScript.apply_energy_typography(lbl_energy, e_f_sz)
 			lbl_energy.update_minimum_size()
 		if btn_energy_plus:
-			var inner_plus_w: float = 22.0 if is_very_compact else (26.0 if is_compact else 28.0)
-			var inner_plus_h: float = 22.0 if is_very_compact else (26.0 if is_compact else 28.0)
+			var inner_plus_w: float = 24.0 if is_very_compact else (26.0 if is_compact else 28.0)
+			var inner_plus_h: float = 24.0 if is_very_compact else (26.0 if is_compact else 28.0)
 			btn_energy_plus.text = ""
 			btn_energy_plus.clip_text = true
 			btn_energy_plus.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			btn_energy_plus.custom_minimum_size = Vector2(inner_plus_w, inner_plus_h)
 			btn_energy_plus.size = Vector2(inner_plus_w, inner_plus_h)
-			btn_energy_plus.add_theme_font_override("font", GameTypographyScript.get_ui_font(0.16, 1))
-			btn_energy_plus.add_theme_font_size_override("font_size", 16)
 			var plus_icon := btn_energy_plus.get_node_or_null("VectorIcon") as Control
 			if plus_icon:
 				plus_icon.custom_minimum_size = Vector2(inner_plus_w, inner_plus_h)
