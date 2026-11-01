@@ -513,10 +513,7 @@ func _ensure_energy_header_control() -> void:
 		ep_sb.expand_margin_bottom = 0.0
 		energy_panel.add_theme_stylebox_override("panel", ep_sb)
 		energy_panel.set_meta("visual_identity", "electric_teal_stamina")
-		var ep_script := GDScript.new()
-		ep_script.source_code = "extends PanelContainer\nfunc _get_minimum_size() -> Vector2:\n\treturn Vector2(custom_minimum_size.x, 56.0)\n"
-		ep_script.reload()
-		energy_panel.set_script(ep_script)
+
 
 		var hbox := HBoxContainer.new()
 		hbox.name = "HBox"
@@ -2052,7 +2049,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			ep_hbox.add_theme_constant_override("separation", 3 if is_very_compact else 4)
 		var ep_bolt := energy_panel.find_child("EnergyIcon", true, false) as Control
 		if ep_bolt:
-			var bolt_side: float = 34.0 if is_very_compact else (38.0 if is_compact else 42.0)
+			var bolt_side: float = 32.0 if is_very_compact else (36.0 if is_compact else 40.0)
 			if "align_mode" in ep_bolt:
 				ep_bolt.align_mode = "none"
 			ep_bolt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2063,7 +2060,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			lbl_energy.clip_text = true
 			lbl_energy.custom_minimum_size = Vector2.ZERO
 			lbl_energy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			var e_f_sz: int = 15 if is_very_compact else (17 if is_compact else 20)
+			var e_f_sz: int = 13 if is_very_compact else (14 if is_compact else 15)
 			lbl_energy.add_theme_font_size_override("font_size", e_f_sz)
 			GameTypographyScript.apply_energy_typography(lbl_energy, e_f_sz)
 			lbl_energy.update_minimum_size()

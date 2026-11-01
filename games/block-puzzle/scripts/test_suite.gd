@@ -3853,11 +3853,6 @@ func _ready() -> void:
 		var energy_h: float = menu102.energy_panel.custom_minimum_size.y
 		var energy_comb_h: float = menu102.energy_panel.get_combined_minimum_size().y
 		var gift_h: float = menu102.btn_daily_gift.custom_minimum_size.y
-		print("DIAGNOSTIC vp=", vp102, " energy_comb_h=", energy_comb_h,
-			" hbox_comb=", menu102.energy_panel.get_node("HBox").get_combined_minimum_size().y,
-			" bolt_comb=", menu102.energy_panel.find_child("EnergyIcon", true, false).get_combined_minimum_size().y,
-			" lbl_comb=", menu102.lbl_energy.get_combined_minimum_size().y,
-			" plus_comb=", menu102.btn_energy_plus.get_combined_minimum_size().y)
 		if not is_equal_approx(gear_h, top_lvl_h) or not is_equal_approx(gear_h, energy_h) or not is_equal_approx(gear_h, energy_comb_h) or not is_equal_approx(gear_h, gift_h):
 			printerr("[FAIL Test 102.1] Header gear button height must match top level, energy, and gift controls! gear=", gear_h, " lvl=", top_lvl_h, " energy=", energy_h, " energy_comb=", energy_comb_h, " gift=", gift_h)
 			get_tree().quit(1)
