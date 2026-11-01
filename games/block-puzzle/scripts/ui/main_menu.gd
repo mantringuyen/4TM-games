@@ -1177,7 +1177,9 @@ func _setup_vector_icons() -> void:
 		btn_daily_gift.add_theme_stylebox_override("disabled", st_gift)
 		btn_daily_gift.add_theme_stylebox_override("focus", st_gift)
 		btn_daily_gift.add_theme_color_override("font_color", Color(1, 1, 1, 0))
-		UIIconScript.attach_to_button(btn_daily_gift, "gift", Vector2(56, 56), "center", Color(1.0, 0.85, 0.20, 1.0))
+		var gift_icon := UIIconScript.attach_to_button(btn_daily_gift, "gift", Vector2(56, 56), "right", Color(1.0, 0.85, 0.20, 1.0))
+		if gift_icon and "align_mode" in gift_icon:
+			gift_icon.align_mode = "right"
 		UIIconScript.remove_focus_outline(btn_daily_gift)
 		UIIconScript.setup_button_press_feedback(btn_daily_gift)
 	if btn_language_modal:
@@ -2126,7 +2128,7 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 		life_panel.size = Vector2(lp_w, top_btn_h)
 	if btn_daily_gift:
 		btn_daily_gift.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var gift_w: float = top_btn_h
+		var gift_w: float = 126.0 if is_very_compact else (136.0 if is_compact else 184.0)
 		btn_daily_gift.custom_minimum_size = Vector2(gift_w, top_btn_h)
 		btn_daily_gift.size = Vector2(gift_w, top_btn_h)
 		btn_daily_gift.clip_text = false
@@ -2138,8 +2140,9 @@ func update_responsive_menu_layout(vp_size: Vector2 = Vector2(720, 1280)) -> Dic
 			gift_icon.custom_minimum_size = Vector2(g_side, g_side)
 			gift_icon.size = Vector2(g_side, g_side)
 			if "align_mode" in gift_icon:
-				gift_icon.align_mode = "center"
-			gift_icon._on_parent_resized()
+				gift_icon.align_mode = "right"
+			if gift_icon.has_method("_on_parent_resized"):
+				gift_icon._on_parent_resized()
 	if btn_top_settings:
 		btn_top_settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn_top_settings.custom_minimum_size = Vector2(top_btn_h, top_btn_h)
