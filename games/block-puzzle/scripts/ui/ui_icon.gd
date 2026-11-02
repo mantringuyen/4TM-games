@@ -60,6 +60,15 @@ func _on_parent_resized() -> void:
 const OFFICIAL_4TM_LOGO_PATH: String = "res://assets/branding/4tm_logo.svg"
 const OFFICIAL_4TM_LOGO_PNG_PATH: String = "res://assets/branding/4tm_logo.png"
 static var _cached_4tm_logo_tex: Texture2D = null
+
+const OFFICIAL_GAMES_LOGO_PATH: String = "res://assets/branding/games_logo.svg"
+const OFFICIAL_GAMES_LOGO_PNG_PATH: String = "res://assets/branding/games_logo.png"
+static var _cached_games_logo_tex: Texture2D = null
+
+const OFFICIAL_BLOCK_PUZZLE_LOGO_PATH: String = "res://assets/branding/block_puzzle_logo.svg"
+const OFFICIAL_BLOCK_PUZZLE_LOGO_PNG_PATH: String = "res://assets/branding/block_puzzle_logo.png"
+static var _cached_block_puzzle_logo_tex: Texture2D = null
+
 static var _empty_focus_style: StyleBoxEmpty = null
 
 
@@ -75,6 +84,8 @@ static func get_empty_focus_stylebox() -> StyleBoxEmpty:
 
 static func cleanup_static_resources() -> void:
 	_cached_4tm_logo_tex = null
+	_cached_games_logo_tex = null
+	_cached_block_puzzle_logo_tex = null
 	_empty_focus_style = null
 
 
@@ -594,6 +605,76 @@ static func load_official_4tm_logo_texture() -> Texture2D:
 	return null
 
 
+static func load_official_games_logo_texture() -> Texture2D:
+	if _cached_games_logo_tex != null:
+		return _cached_games_logo_tex
+	if FileAccess.file_exists(OFFICIAL_GAMES_LOGO_PNG_PATH):
+		var bytes := FileAccess.get_file_as_bytes(OFFICIAL_GAMES_LOGO_PNG_PATH)
+		if not bytes.is_empty():
+			var img := Image.new()
+			if img.load_png_from_buffer(bytes) == OK and img.get_width() > 0:
+				_cached_games_logo_tex = ImageTexture.create_from_image(img)
+				return _cached_games_logo_tex
+	if ResourceLoader.exists(OFFICIAL_GAMES_LOGO_PNG_PATH):
+		var loaded_png := ResourceLoader.load(OFFICIAL_GAMES_LOGO_PNG_PATH) as Texture2D
+		if loaded_png:
+			_cached_games_logo_tex = loaded_png
+			return _cached_games_logo_tex
+	if FileAccess.file_exists(OFFICIAL_GAMES_LOGO_PATH):
+		var bytes := FileAccess.get_file_as_bytes(OFFICIAL_GAMES_LOGO_PATH)
+		if not bytes.is_empty():
+			var img := Image.new()
+			if img.load_png_from_buffer(bytes) == OK and img.get_width() > 0:
+				_cached_games_logo_tex = ImageTexture.create_from_image(img)
+				return _cached_games_logo_tex
+			var svg_str := bytes.get_string_from_utf8()
+			if not svg_str.is_empty():
+				if img.load_svg_from_string(svg_str, 4.0) == OK and img.get_width() > 0:
+					_cached_games_logo_tex = ImageTexture.create_from_image(img)
+					return _cached_games_logo_tex
+	if ResourceLoader.exists(OFFICIAL_GAMES_LOGO_PATH):
+		var loaded := ResourceLoader.load(OFFICIAL_GAMES_LOGO_PATH) as Texture2D
+		if loaded:
+			_cached_games_logo_tex = loaded
+			return _cached_games_logo_tex
+	return null
+
+
+static func load_official_block_puzzle_logo_texture() -> Texture2D:
+	if _cached_block_puzzle_logo_tex != null:
+		return _cached_block_puzzle_logo_tex
+	if FileAccess.file_exists(OFFICIAL_BLOCK_PUZZLE_LOGO_PNG_PATH):
+		var bytes := FileAccess.get_file_as_bytes(OFFICIAL_BLOCK_PUZZLE_LOGO_PNG_PATH)
+		if not bytes.is_empty():
+			var img := Image.new()
+			if img.load_png_from_buffer(bytes) == OK and img.get_width() > 0:
+				_cached_block_puzzle_logo_tex = ImageTexture.create_from_image(img)
+				return _cached_block_puzzle_logo_tex
+	if ResourceLoader.exists(OFFICIAL_BLOCK_PUZZLE_LOGO_PNG_PATH):
+		var loaded_png := ResourceLoader.load(OFFICIAL_BLOCK_PUZZLE_LOGO_PNG_PATH) as Texture2D
+		if loaded_png:
+			_cached_block_puzzle_logo_tex = loaded_png
+			return _cached_block_puzzle_logo_tex
+	if FileAccess.file_exists(OFFICIAL_BLOCK_PUZZLE_LOGO_PATH):
+		var bytes := FileAccess.get_file_as_bytes(OFFICIAL_BLOCK_PUZZLE_LOGO_PATH)
+		if not bytes.is_empty():
+			var img := Image.new()
+			if img.load_png_from_buffer(bytes) == OK and img.get_width() > 0:
+				_cached_block_puzzle_logo_tex = ImageTexture.create_from_image(img)
+				return _cached_block_puzzle_logo_tex
+			var svg_str := bytes.get_string_from_utf8()
+			if not svg_str.is_empty():
+				if img.load_svg_from_string(svg_str, 4.0) == OK and img.get_width() > 0:
+					_cached_block_puzzle_logo_tex = ImageTexture.create_from_image(img)
+					return _cached_block_puzzle_logo_tex
+	if ResourceLoader.exists(OFFICIAL_BLOCK_PUZZLE_LOGO_PATH):
+		var loaded := ResourceLoader.load(OFFICIAL_BLOCK_PUZZLE_LOGO_PATH) as Texture2D
+		if loaded:
+			_cached_block_puzzle_logo_tex = loaded
+			return _cached_block_puzzle_logo_tex
+	return null
+
+
 static func setup_button_press_feedback(btn: Button, is_persistent_toggle: bool = false) -> void:
 	if not btn or btn.has_meta("_press_feedback_initialized"):
 		return
@@ -796,6 +877,50 @@ static func setup_4tm_games_branding(brand_bar: HBoxContainer) -> Dictionary:
 		"logo": logo_tex_rect,
 		"games_label": lbl_games,
 		"domain_label": lbl_domain
+	}
+
+
+static func setup_block_puzzle_branding(brand_bar: HBoxContainer) -> Dictionary:
+	if not brand_bar:
+		return {}
+	brand_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	brand_bar.add_theme_constant_override("separation", 8)
+	var existing_logo := brand_bar.get_node_or_null("LogoBlockPuzzle")
+	var logo_tex_rect: TextureRect = null
+	if existing_logo and not (existing_logo is TextureRect):
+		brand_bar.remove_child(existing_logo)
+		existing_logo.queue_free()
+	else:
+		logo_tex_rect = existing_logo as TextureRect
+	if not logo_tex_rect:
+		logo_tex_rect = TextureRect.new()
+		logo_tex_rect.name = "LogoBlockPuzzle"
+		brand_bar.add_child(logo_tex_rect)
+		brand_bar.move_child(logo_tex_rect, 0)
+	for ch in logo_tex_rect.get_children():
+		logo_tex_rect.remove_child(ch)
+		ch.queue_free()
+	logo_tex_rect.custom_minimum_size = Vector2(24, 24)
+	logo_tex_rect.size = Vector2(24, 24)
+	logo_tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo_tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo_tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	logo_tex_rect.texture = load_official_block_puzzle_logo_texture()
+	logo_tex_rect.set_meta("asset_path", OFFICIAL_BLOCK_PUZZLE_LOGO_PATH)
+	logo_tex_rect.set_meta("uses_official_asset", true)
+
+	var lbl_name := brand_bar.get_node_or_null("LblBrandGame") as Label
+	if not lbl_name:
+		lbl_name = Label.new()
+		lbl_name.name = "LblBrandGame"
+		brand_bar.add_child(lbl_name)
+	lbl_name.text = "BLOCK PUZZLE"
+	lbl_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl_name.add_theme_font_size_override("font_size", 14)
+	lbl_name.add_theme_color_override("font_color", Color(1.0, 0.92, 0.36, 0.98))
+	return {
+		"logo": logo_tex_rect,
+		"game_label": lbl_name
 	}
 
 
@@ -1385,6 +1510,16 @@ func _draw() -> void:
 			draw_line(c + Vector2(d_len, -d_len), c + Vector2(-d_len, d_len), Color(1.0, 0.96, 0.96, 1.0), 3.0, true)
 		"4tm_logo":
 			var tex := load_official_4tm_logo_texture()
+			if tex:
+				var badge_rect := Rect2(Vector2.ZERO, Vector2(maxf(20.0, size.x), maxf(20.0, size.y)))
+				draw_texture_rect(tex, badge_rect, false)
+		"block_puzzle_logo", "block-puzzle-logo":
+			var tex := load_official_block_puzzle_logo_texture()
+			if tex:
+				var badge_rect := Rect2(Vector2.ZERO, Vector2(maxf(20.0, size.x), maxf(20.0, size.y)))
+				draw_texture_rect(tex, badge_rect, false)
+		"games_logo", "games-logo":
+			var tex := load_official_games_logo_texture()
 			if tex:
 				var badge_rect := Rect2(Vector2.ZERO, Vector2(maxf(20.0, size.x), maxf(20.0, size.y)))
 				draw_texture_rect(tex, badge_rect, false)

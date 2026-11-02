@@ -14,13 +14,15 @@ def main():
     branding_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets/branding")
     if not os.path.exists(branding_dir):
         branding_dir = "games/block-puzzle/assets/branding"
-    if os.path.exists(branding_dir):
         brand_files = [
             "4tm_logo.svg", "4tm-logo.svg", "4tm_favicon.svg", "4tm-favicon.svg",
             "4tm_logo.png", "4tm_favicon.png", "games_logo.png", "games_favicon.png",
+            "games-logo.png", "games-favicon.png",
             "games-logo.svg", "games-favicon.svg", "games_logo.svg", "games_favicon.svg",
             "block-puzzle-logo.svg", "block-puzzle-favicon.svg",
-            "block_puzzle_logo.svg", "block_puzzle_favicon.svg"
+            "block_puzzle_logo.svg", "block_puzzle_favicon.svg",
+            "block-puzzle-logo.png", "block_puzzle_logo.png",
+            "block-puzzle-favicon.png", "block_puzzle_favicon.png"
         ]
         for brand_file in brand_files:
             src_file = os.path.join(branding_dir, brand_file)
@@ -88,12 +90,12 @@ def main():
         css_replacement = (
             "<style>\n"
             "html, body, #canvas {\n\tmargin: 0;\n\tpadding: 0;\n\tborder: 0;\n}\n\n"
-            "html, body {\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #000000;\n\toverflow: hidden;\n\toverscroll-behavior: none;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
-            "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100%;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #000000;\n}\n\n"
+            "html, body {\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tmin-height: 100vh;\n\tmin-height: 100dvh;\n\tmin-height: -webkit-fill-available;\n\tcolor: white;\n\tbackground-color: #050B1A;\n\toverflow: hidden;\n\toverscroll-behavior: none;\n\ttouch-action: none;\n\t-webkit-touch-callout: none;\n\t-webkit-user-select: none;\n\tuser-select: none;\n}\n\n"
+            "#canvas {\n\tdisplay: block;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\twidth: 100vw;\n\twidth: 100dvw;\n\theight: 100%;\n\theight: 100vh;\n\theight: 100dvh;\n\tbackground-color: #050B1A;\n}\n\n"
             "#canvas:focus {\n\toutline: none;\n}\n\n"
-            "#status {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tbackground-color: #000000;\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: center;\n\talign-items: center;\n\tvisibility: hidden;\n\tz-index: 10;\n}\n\n"
+            "#status {\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\tright: 0;\n\tbottom: 0;\n\twidth: 100%;\n\theight: 100%;\n\theight: 100dvh;\n\tbackground-color: #050B1A;\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: center;\n\talign-items: center;\n\tvisibility: hidden;\n\tz-index: 10;\n}\n\n"
             "#status-container {\n\tposition: relative;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-items: center;\n\twidth: 150px;\n\theight: 150px;\n}\n\n"
-            "#status-logo {\n\twidth: 100px;\n\theight: 100px;\n\tborder-radius: 20px;\n\tz-index: 2;\n}\n\n"
+            "#status-logo {\n\twidth: 100px;\n\theight: 100px;\n\tobject-fit: contain;\n\tz-index: 2;\n}\n\n"
             "#status-ring {\n\tposition: absolute;\n\twidth: 150px;\n\theight: 150px;\n\tborder-radius: 50%;\n\tbackground: conic-gradient(\n\t\t#ff0000 0%, #ff7f00 14%, #ffff00 28%, #00ff00 42%, \n\t\t#0000ff 56%, #4b0082 70%, #9400d3 84%, #ff0000 100%\n\t);\n\t-webkit-mask: radial-gradient(transparent 75%, #000 76%);\n\tmask: radial-gradient(transparent 75%, #000 76%);\n\tanimation: rotate 2s linear infinite;\n\tz-index: 1;\n}\n\n"
             "@keyframes rotate {\n\tfrom { transform: rotate(0deg); }\n\tto { transform: rotate(360deg); }\n}\n\n"
             "#status-progress, #status-notice {\n\tdisplay: none;\n}\n\n"
@@ -939,8 +941,10 @@ def main():
         content = re.sub(r'<script>\s*// Standards-safe iOS.*?syncViewport.*?</script>\s*', '', content, flags=re.DOTALL)
         content = re.sub(r'<script>\s*// Standards-safe iOS.*?\[4TM-DIAG.*?</script>\s*', '', content, flags=re.DOTALL)
         content = re.sub(r'<script\s+src="index\.js(?:\?[^"]*)?"></script>\s*', '', content)
+        # Remove any previous status-container or status-logo remnants so repeated post_build runs don't duplicate it
+        content = re.sub(r'(?:<div id="status-container">.*?</div>|<img id="status-logo"[^>]*></div>)\s*', '', content, flags=re.DOTALL)
         if '<div id="status">' in content:
-            content = content.replace('<div id="status">', f'{pwa_script}\n\t\t<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="4tm_logo.svg"></div>')
+            content = content.replace('<div id="status">', f'{pwa_script}\n\t\t<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="games_logo.svg" alt="4TM Games"></div>')
         elif '</body>' in content:
             content = content.replace('</body>', f'{pwa_script}\n</body>')
 
@@ -1002,8 +1006,8 @@ def main():
         "start_url": "./",
         "scope": "./",
         "display": "standalone",
-        "background_color": "#414141",
-        "theme_color": "#414141",
+        "background_color": "#050B1A",
+        "theme_color": "#050B1A",
         "orientation": "portrait",
         "icons": [
             {

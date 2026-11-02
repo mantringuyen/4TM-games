@@ -16,7 +16,6 @@ import {
   Volume2,
   VolumeX,
   ArrowLeft,
-  LayoutGrid,
   Code2,
   Globe,
   Layers,
@@ -159,7 +158,7 @@ export default function App() {
                     </div>
 
                     <h2 className="text-2xl font-extrabold text-white sm:text-3xl flex items-center gap-3">
-                      <LayoutGrid className="h-7 w-7 text-amber-400" />
+                      <img src="/block-puzzle-logo.svg" alt="Block Puzzle" className="h-8 w-8 object-contain" />
                       Xếp Gạch — 4TM
                     </h2>
 

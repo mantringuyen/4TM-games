@@ -40,7 +40,11 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onSelect, onPlayDirect
                 : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
             }`}
           >
-            <IconComponent className="h-6 w-6" />
+            {game.id === 'block-puzzle' ? (
+              <img src="/block-puzzle-logo.svg" alt="Block Puzzle" className="h-7 w-7 object-contain" />
+            ) : (
+              <IconComponent className="h-6 w-6" />
+            )}
           </div>
 
           <div className="flex flex-col items-end gap-1">

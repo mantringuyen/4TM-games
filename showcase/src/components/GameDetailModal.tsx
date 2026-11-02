@@ -42,7 +42,11 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                 : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
             }`}
           >
-            <Sparkles className="h-7 w-7" />
+            {game.id === 'block-puzzle' ? (
+              <img src="/block-puzzle-logo.svg" alt="Block Puzzle" className="h-8 w-8 object-contain" />
+            ) : (
+              <Sparkles className="h-7 w-7" />
+            )}
           </div>
 
           <div>
