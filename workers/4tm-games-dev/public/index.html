@@ -159,10 +159,19 @@
       align-items: center;
       gap: 12px;
     }
-    .game-card-icon {
+    .game-card-icon-wrap {
       width: 28px;
       height: 28px;
       flex-shrink: 0;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .game-card-icon {
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
       object-fit: contain;
       display: block;
@@ -260,7 +269,13 @@
       <div class="game-card active">
         <div class="game-header">
           <div class="game-title-wrap">
-            <img class="game-card-icon" src="/block-puzzle/block-puzzle-logo.svg" alt="Block Puzzle" width="28" height="28" onerror="this.onerror=null;this.src='/block-puzzle/block-puzzle-logo.png';">
+            <div class="game-card-icon-wrap">
+              <picture id="bp-card-picture">
+                <source id="bp-card-dark" srcset="/block-puzzle/block-puzzle-logo-dark.svg" media="(prefers-color-scheme: dark)">
+                <source id="bp-card-light" srcset="/block-puzzle/block-puzzle-logo-light.svg" media="(prefers-color-scheme: light)">
+                <img id="bp-card-img" class="game-card-icon" src="/block-puzzle/block-puzzle-logo-dark.svg" alt="Block Puzzle" width="28" height="28" onerror="this.onerror=null;this.src='/block-puzzle/block-puzzle-logo.png';">
+              </picture>
+            </div>
             <div class="game-title">Block Puzzle — 4TM</div>
           </div>
           <span class="status-pill status-ready">Active Test Build</span>
@@ -315,6 +330,9 @@
       var brandLogoDark = document.getElementById('brand-logo-dark');
       var brandLogoLight = document.getElementById('brand-logo-light');
       var brandLogoImg = document.getElementById('brand-logo-img');
+      var bpCardDark = document.getElementById('bp-card-dark');
+      var bpCardLight = document.getElementById('bp-card-light');
+      var bpCardImg = document.getElementById('bp-card-img');
 
       function getSystemTheme() {
         return (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
@@ -335,6 +353,9 @@
           if (brandLogoImg) brandLogoImg.src = '/games-logo-light.svg';
           if (brandLogoDark) brandLogoDark.srcset = '/games-logo-light.svg';
           if (brandLogoLight) brandLogoLight.srcset = '/games-logo-light.svg';
+          if (bpCardImg) bpCardImg.src = '/block-puzzle/block-puzzle-logo-light.svg';
+          if (bpCardDark) bpCardDark.srcset = '/block-puzzle/block-puzzle-logo-light.svg';
+          if (bpCardLight) bpCardLight.srcset = '/block-puzzle/block-puzzle-logo-light.svg';
           if (themeIcon) themeIcon.textContent = '🌙';
           if (themeLabel) themeLabel.textContent = 'Dark';
         } else {
@@ -343,6 +364,9 @@
           if (brandLogoImg) brandLogoImg.src = '/games-logo-dark.svg';
           if (brandLogoDark) brandLogoDark.srcset = '/games-logo-dark.svg';
           if (brandLogoLight) brandLogoLight.srcset = '/games-logo-dark.svg';
+          if (bpCardImg) bpCardImg.src = '/block-puzzle/block-puzzle-logo-dark.svg';
+          if (bpCardDark) bpCardDark.srcset = '/block-puzzle/block-puzzle-logo-dark.svg';
+          if (bpCardLight) bpCardLight.srcset = '/block-puzzle/block-puzzle-logo-dark.svg';
           if (themeIcon) themeIcon.textContent = '☀️';
           if (themeLabel) themeLabel.textContent = 'Light';
         }

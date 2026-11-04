@@ -12,44 +12,75 @@ def main():
     
     print(f"Running post-build processing on target directory: {target_dir}")
 
-    # 1. Copy 4TM branding assets reliably (runs unconditionally whether branding_dir exists in root or games)
-    branding_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets/branding")
+    # Determine paths for assets/branding, root public dir, and target block-puzzle dir
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_dir = os.path.dirname(script_dir) # games/block-puzzle
+    repo_root = os.path.dirname(os.path.dirname(project_dir)) # repo root
+    
+    branding_dir = os.path.join(project_dir, "assets/branding")
     if not os.path.exists(branding_dir):
-        branding_dir = "games/block-puzzle/assets/branding"
+        branding_dir = os.path.join(repo_root, "games/block-puzzle/assets/branding")
 
-    brand_files = [
-        "4tm_logo.svg", "4tm-logo.svg", "4tm_favicon.svg", "4tm-favicon.svg",
-        "4tm_logo.png", "4tm_favicon.png",
-        "games_logo.png", "games_favicon.png", "games-logo.png", "games-favicon.png",
-        "games-logo-1024.png", "games-logo-dark.png", "games-logo-light.png",
-        "games_logo_dark.png", "games_logo_light.png",
-        "games-logo.svg", "games-favicon.svg", "games_logo.svg", "games_favicon.svg",
-        "games-logo-dark.svg", "games-logo-light.svg", "games_logo_dark.svg", "games_logo_light.svg",
+    dev_root_public = os.path.join(repo_root, "workers/4tm-games-dev/public")
+
+    # 1. Copy root-level branding assets to workers/4tm-games-dev/public
+    root_brand_files = [
+        "games-logo-light.svg", "games_logo_light.svg",
+        "games-logo-dark.svg", "games_logo_dark.svg", "games-logo.svg",
+        "games-logo-light.png", "games_logo_light.png",
+        "games-logo-dark.png", "games_logo_dark.png", "games-logo-1024.png",
+        "games-favicon.svg", "favicon.svg",
+        "games-favicon-32.png", "favicon.png",
+        "apple-touch-icon.png",
+        "block-puzzle-logo-light.svg", "block_puzzle_logo_light.svg",
+        "block-puzzle-logo-dark.svg", "block_puzzle_logo_dark.svg", "block-puzzle-logo.svg",
+        "block-puzzle-logo-light.png", "block_puzzle_logo_light.png",
+        "block-puzzle-logo-dark.png", "block_puzzle_logo_dark.png", "block-puzzle-logo.png", "block-puzzle-logo-1024.png",
+        "block-puzzle-favicon.svg", "block-puzzle-favicon-32.png"
+    ]
+
+    if os.path.exists(dev_root_public) and os.path.exists(branding_dir):
+        root_copied = 0
+        for fname in root_brand_files:
+            src = os.path.join(branding_dir, fname)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(dev_root_public, fname))
+                root_copied += 1
+        print(f"Synchronized {root_copied} root branding assets to {dev_root_public}")
+
+    # 2. Copy game-specific branding assets to target_dir (workers/4tm-games-dev/public/block-puzzle)
+    game_brand_files = [
+        "games_logo.png", "games-logo.png", "games-logo-1024.png", "games-logo-dark.png", "games_logo_dark.png",
+        "games-logo-light.png", "games_logo_light.png", "index.png",
+        "games_logo.svg", "games-logo.svg", "games-logo-dark.svg", "games_logo_dark.svg",
+        "games-logo-light.svg", "games_logo_light.svg",
+        "games_favicon.svg", "games-favicon.svg", "games_favicon.png", "games-favicon.png",
         "games_favicon-32.png", "games-favicon-32.png",
-        "block-puzzle-logo.svg", "block-puzzle-favicon.svg",
-        "block_puzzle_logo.svg", "block_puzzle_favicon.svg",
-        "block-puzzle-logo.png", "block_puzzle_logo.png", "block-puzzle-logo-1024.png",
-        "block-puzzle-favicon.png", "block_puzzle_favicon.png",
+        "block-puzzle-logo.svg", "block_puzzle_logo.svg", "block-puzzle-logo-dark.svg", "block_puzzle_logo_dark.svg",
+        "block-puzzle-logo-light.svg", "block_puzzle_logo_light.svg",
+        "block-puzzle-logo.png", "block_puzzle_logo.png", "block-puzzle-logo-1024.png", "block-puzzle-logo-dark.png", "block_puzzle_logo_dark.png",
+        "block-puzzle-logo-light.png", "block_puzzle_logo_light.png",
+        "block-puzzle-favicon.svg", "block_puzzle_favicon.svg",
+        "block-puzzle-favicon.png", "block_puzzle_favicon.png", "pwa-512.png", "pwa-192.png",
+        "pwa-maskable-512.png", "pwa-maskable-192.png",
         "block-puzzle-favicon-32.png", "block_puzzle_favicon-32.png",
-        "index.apple-touch-icon.png", "index.icon.png", "apple-touch-icon.png"
+        "index.apple-touch-icon.png", "apple-touch-icon.png", "index.icon.png"
     ]
 
     os.makedirs(target_dir, exist_ok=True)
-    copied_count = 0
     if os.path.exists(branding_dir):
-        for brand_file in brand_files:
-            src_file = os.path.join(branding_dir, brand_file)
-            if os.path.exists(src_file):
-                shutil.copy2(src_file, os.path.join(target_dir, brand_file))
-                copied_count += 1
-        print(f"Synchronized {copied_count} branding files from {branding_dir} to {target_dir}")
-    else:
-        print(f"Warning: Branding directory not found at {branding_dir}")
+        game_copied = 0
+        for fname in game_brand_files:
+            src = os.path.join(branding_dir, fname)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(target_dir, fname))
+                game_copied += 1
+        print(f"Synchronized {game_copied} branding files to {target_dir}")
 
     html_path = os.path.join(target_dir, "index.html")
     pck_path = os.path.join(target_dir, "index.pck")
 
-    # 2. Ensure clean and correct Godot engine package configuration & idempotent head links
+    # 3. Ensure clean and correct Godot engine package configuration & idempotent head links
     if os.path.exists(html_path):
         with open(html_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -104,7 +135,7 @@ def main():
             else:
                 content = content.replace("<head>", f"<head>{meta_tags}")
 
-        # 3. Ensure edge-to-edge full viewport CSS styling without artificial gaps or color mismatches
+        # 4. Ensure edge-to-edge full viewport CSS styling without artificial gaps or color mismatches
         css_replacement = (
             "<style>\n"
             "html, body, #canvas {\n\tmargin: 0;\n\tpadding: 0;\n\tborder: 0;\n}\n\n"
@@ -125,7 +156,7 @@ def main():
         if "<style>" in content:
             content = re.sub(r'<style>.*?</style>', css_replacement, content, flags=re.DOTALL)
 
-        # 4. Inject standards-safe iOS viewport height sync script and diagnostic HUD before index.js
+        # 5. Inject standards-safe iOS viewport height sync script and diagnostic HUD before index.js
         pwa_script = (
             "\t\t<script>\n"
             "\t\t// Standards-safe iOS viewport height normalization and settled resize trigger\n"
@@ -263,6 +294,7 @@ def main():
         # Remove any previous status-container or status-logo remnants so repeated post_build runs don't duplicate it
         content = re.sub(r'(?:<div id="status-container">.*?</div>|<img id="status-logo"[^>]*></div>)\s*', "", content, flags=re.DOTALL)
 
+        # Loading screen exclusively uses the Dark Games logo (games_logo.svg -> games-logo-dark.svg)
         if '<div id="status">' in content:
             content = content.replace('<div id="status">', f'{pwa_script}\n\t\t<div id="status"><div id="status-container"><div id="status-ring"></div><img id="status-logo" src="games_logo.svg" alt="4TM Games"></div>')
         elif "</body>" in content:
@@ -275,7 +307,7 @@ def main():
         print(f"Error: index.html not found at {html_path}")
         sys.exit(1)
 
-    # 5. Patch Godot 4.3 Web index.js to resolve iOS standalone PWA canvas height discrepancy
+    # 6. Patch Godot 4.3 Web index.js to resolve iOS standalone PWA canvas height discrepancy
     js_path = os.path.join(target_dir, "index.js")
     if os.path.exists(js_path):
         with open(js_path, "r", encoding="utf-8") as f:
@@ -312,7 +344,7 @@ def main():
         else:
             print(f"Notice: Godot canvas sizing target pattern not found in {js_path} (may be custom build).")
 
-    # 6. Generate Web App Manifest for complete metadata compliance
+    # 7. Generate Web App Manifest for complete metadata compliance with maskable & any purposes
     manifest_path = os.path.join(target_dir, "manifest.json")
     manifest_data = {
         "name": "Block Puzzle — 4TM",
@@ -331,9 +363,28 @@ def main():
                 "type": "image/svg+xml"
             },
             {
-                "src": "index.icon.png",
+                "src": "pwa-192.png",
                 "sizes": "192x192",
-                "type": "image/png"
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "pwa-512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "pwa-maskable-192.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "maskable"
+            },
+            {
+                "src": "pwa-maskable-512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "maskable"
             },
             {
                 "src": "index.apple-touch-icon.png",
@@ -346,14 +397,14 @@ def main():
         json.dump(manifest_data, f, indent=2)
     print(f"Generated manifest.json at {manifest_path}")
 
-    # 7. Safely remove index.pck from the worker public staging directory to stay under individual file size limits
+    # 8. Safely remove index.pck from the worker public staging directory to stay under individual file size limits
     if os.path.exists(pck_path):
         os.remove(pck_path)
         print("Successfully removed index.pck from Workers Static Assets staging directory (served via R2).")
     else:
         print("Notice: index.pck already absent from staging directory.")
 
-    # 8. Inject robust loading error reporting, unhandled rejection catchers, and stall watchdog into index.html
+    # 9. Inject robust loading error reporting, unhandled rejection catchers, and stall watchdog into index.html
     if os.path.exists(html_path):
         with open(html_path, "r", encoding="utf-8") as f:
             html_content = f.read()
