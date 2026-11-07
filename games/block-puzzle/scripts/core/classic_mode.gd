@@ -40,6 +40,9 @@ var touch_last_pos: Vector2 = Vector2.ZERO
 var touch_start_time: float = 0.0
 var touch_accumulated: Vector2 = Vector2.ZERO
 var is_touch_active: bool = false
+var touch_pointer_id: int = -1
+var touch_drag_moves_x: int = 0
+var touch_drag_moves_y: int = 0
 const TOUCH_STEP_X: float = 34.0
 const TOUCH_STEP_Y: float = 38.0
 const QUICK_DROP_SEPARATION_COMPACT: float = 24.0
@@ -156,6 +159,8 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_active:
 		return
+	if event.device == InputEvent.DEVICE_ID_EMULATION:
+		return
 	var state_mgr = _get_game_state()
 	if state_mgr and state_mgr.current_state != GameStateScript.State.PLAYING:
 		return
@@ -202,46 +207,63 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var touch_ev = event as InputEventScreenTouch
 		if touch_ev.pressed:
-			is_touch_active = true
-			touch_start_pos = touch_ev.position
-			touch_last_pos = touch_ev.position
-			touch_accumulated = Vector2.ZERO
-			touch_start_time = Time.get_ticks_msec() / 1000.0
+			if not is_touch_active:
+				is_touch_active = true
+				touch_pointer_id = touch_ev.index
+				touch_start_pos = touch_ev.position
+				touch_last_pos = touch_ev.position
+				touch_accumulated = Vector2.ZERO
+				touch_drag_moves_x = 0
+				touch_drag_moves_y = 0
+				touch_start_time = Time.get_ticks_msec() / 1000.0
 		else:
-			if is_touch_active:
+			if is_touch_active and touch_ev.index == touch_pointer_id:
 				is_touch_active = false
+				touch_pointer_id = -1
 				var dist = (touch_ev.position - touch_start_pos).length()
 				var elapsed = (Time.get_ticks_msec() / 1000.0) - touch_start_time
+				# Tap-to-rotate: preserve quick tap rotation without interfering with swipes (>40px)
 				if dist < 22.0 and elapsed < 0.35:
 					rotate_piece()
 					
 	elif event is InputEventScreenDrag and is_touch_active:
 		var drag_ev = event as InputEventScreenDrag
-		var delta = drag_ev.position - touch_last_pos
-		touch_last_pos = drag_ev.position
-		touch_accumulated += delta
-		
-		while touch_accumulated.x <= -TOUCH_STEP_X:
-			move_left()
-			touch_accumulated.x += TOUCH_STEP_X
-		while touch_accumulated.x >= TOUCH_STEP_X:
-			move_right()
-			touch_accumulated.x -= TOUCH_STEP_X
+		if drag_ev.index == touch_pointer_id:
+			var delta = drag_ev.position - touch_last_pos
+			touch_last_pos = drag_ev.position
+			touch_accumulated += delta
 			
-		while touch_accumulated.y >= TOUCH_STEP_Y:
-			_step_down()
-			touch_accumulated.y -= TOUCH_STEP_Y
+			while touch_accumulated.x <= -TOUCH_STEP_X:
+				move_left()
+				touch_accumulated.x += TOUCH_STEP_X
+				touch_drag_moves_x -= 1
+			while touch_accumulated.x >= TOUCH_STEP_X:
+				move_right()
+				touch_accumulated.x -= TOUCH_STEP_X
+				touch_drag_moves_x += 1
+				
+			while touch_accumulated.y >= TOUCH_STEP_Y:
+				_step_down()
+				touch_accumulated.y -= TOUCH_STEP_Y
+				touch_drag_moves_y += 1
 
 
 func _on_swipe(direction: Vector2) -> void:
 	if not is_active or not is_falling:
 		return
 	if direction.x < -0.5:
-		move_left()
+		# If the physical drag already moved left during this gesture, do not duplicate
+		if touch_drag_moves_x >= 0:
+			move_left()
+		touch_drag_moves_x = 0
 	elif direction.x > 0.5:
-		move_right()
+		# If the physical drag already moved right during this gesture, do not duplicate
+		if touch_drag_moves_x <= 0:
+			move_right()
+		touch_drag_moves_x = 0
 	elif direction.y > 0.5:
 		quick_drop()
+		touch_drag_moves_y = 0
 	elif direction.y < -0.5:
 		rotate_piece()
 
@@ -946,6 +968,7 @@ func _refresh_control_labels() -> void:
 
 func _create_control_button(text: String, bg_col: Color, border_col: Color, extrusion: int = 8) -> Button:
 	var btn = Button.new()
+	btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn.text = text
 	btn.add_theme_font_override("font", GameTypographyScript.get_hud_number_font(0.20, 1))
 	btn.add_theme_font_size_override("font_size", 18)

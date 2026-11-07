@@ -270,15 +270,19 @@ func get_dimensions_cells() -> Vector2i:
 	return Vector2i(max_x + 1, max_y + 1)
 
 
+var _cached_shape_pixel_size: Vector2 = Vector2.ZERO
+
+
 func _update_dimensions() -> void:
-	var shape_sz = get_shape_pixel_size()
-	custom_minimum_size = shape_sz
-	size = shape_sz
+	_cached_shape_pixel_size = get_shape_pixel_size()
+	custom_minimum_size = _cached_shape_pixel_size
+	size = _cached_shape_pixel_size
 	pivot_offset = Vector2.ZERO
 
 
 func get_visual_center_offset() -> Vector2:
-	return (get_shape_pixel_size() * current_scale) * 0.5
+	var base_sz := _cached_shape_pixel_size if _cached_shape_pixel_size != Vector2.ZERO else get_shape_pixel_size()
+	return (base_sz * current_scale) * 0.5
 
 
 func get_visual_center_global() -> Vector2:
@@ -654,8 +658,9 @@ func _move_drag(pointer_pos: Vector2) -> void:
 
 
 func _update_drag_position(pointer_pos: Vector2) -> void:
-	var shape_sz = get_shape_pixel_size() * current_scale
-	var target_pos = pointer_pos - Vector2(shape_sz.x * 0.5, shape_sz.y * 0.5 + TOUCH_Y_OFFSET)
+	var base_sz := _cached_shape_pixel_size if _cached_shape_pixel_size != Vector2.ZERO else get_shape_pixel_size()
+	var shape_sz := base_sz * current_scale
+	var target_pos := pointer_pos - Vector2(shape_sz.x * 0.5, shape_sz.y * 0.5 + TOUCH_Y_OFFSET)
 	global_position = target_pos
 
 

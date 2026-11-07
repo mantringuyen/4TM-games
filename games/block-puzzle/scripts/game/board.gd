@@ -82,6 +82,150 @@ const EMPTY_CELL_ALPHA_ODD: float = 0.05
 const EMPTY_CELL_BORDER_ALPHA: float = 0.45
 var custom_level_grid_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 
+# Reusable cached StyleBox resources (eliminates duplicate allocations on board redraws)
+var _cached_outer_cabinet: StyleBoxFlat = null
+var _cached_outer_contour: StyleBoxFlat = null
+var _cached_inner_well: StyleBoxFlat = null
+var _cached_empty_socket_even: StyleBoxFlat = null
+var _cached_empty_socket_odd: StyleBoxFlat = null
+var _cached_empty_socket_glass_rim: StyleBoxFlat = null
+var _cached_bomb_reticle: StyleBoxFlat = null
+var _cached_burst_box: StyleBoxFlat = null
+var _cached_ghost_box: StyleBoxFlat = null
+var _board_style_cache_valid: bool = false
+var _cached_cell_rad: int = -1
+var _cached_inner_rad: int = -1
+var _cached_ghost_color: Color = Color(0, 0, 0, 0)
+
+
+func _invalidate_board_style_cache() -> void:
+	_board_style_cache_valid = false
+	PolyominoLib.clear_stylebox_cache()
+
+
+func _refresh_board_style_cache() -> void:
+	var cell_rad = int(clamp(CELL_SIZE * 0.18, 4.0, 9.0))
+	var inner_rad = maxi(3, cell_rad - 1)
+	_cached_cell_rad = cell_rad
+	_cached_inner_rad = inner_rad
+
+	# Outer cabinet
+	_cached_outer_cabinet = StyleBoxFlat.new()
+	_cached_outer_cabinet.bg_color = Color(0.04, 0.09, 0.26, BOARD_CABINET_ALPHA)
+	_cached_outer_cabinet.border_width_left = 3
+	_cached_outer_cabinet.border_width_top = 3
+	_cached_outer_cabinet.border_width_right = 3
+	_cached_outer_cabinet.border_width_bottom = 6
+	_cached_outer_cabinet.border_color = Color(0.957, 0.847, 0.541, 0.90) # Warm cream-gold #F4D88A
+	_cached_outer_cabinet.corner_radius_top_left = 22
+	_cached_outer_cabinet.corner_radius_top_right = 22
+	_cached_outer_cabinet.corner_radius_bottom_right = 22
+	_cached_outer_cabinet.corner_radius_bottom_left = 22
+	_cached_outer_cabinet.shadow_color = Color(0.18, 0.12, 0.08, 0.35)
+	_cached_outer_cabinet.shadow_size = 12
+	_cached_outer_cabinet.shadow_offset = Vector2(0, 4)
+
+	# Outer contour
+	_cached_outer_contour = StyleBoxFlat.new()
+	_cached_outer_contour.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	_cached_outer_contour.border_width_left = 1
+	_cached_outer_contour.border_width_top = 1
+	_cached_outer_contour.border_width_right = 1
+	_cached_outer_contour.border_width_bottom = 1
+	_cached_outer_contour.border_color = Color(0.333, 0.231, 0.196, 0.60) # Dark Brown contour #553B32
+	_cached_outer_contour.corner_radius_top_left = 23
+	_cached_outer_contour.corner_radius_top_right = 23
+	_cached_outer_contour.corner_radius_bottom_right = 23
+	_cached_outer_contour.corner_radius_bottom_left = 23
+
+	# Deep navy board well
+	_cached_inner_well = StyleBoxFlat.new()
+	_cached_inner_well.bg_color = Color(0.03, 0.07, 0.20, BOARD_SURFACE_ALPHA)
+	_cached_inner_well.border_width_left = 2
+	_cached_inner_well.border_width_top = 2
+	_cached_inner_well.border_width_right = 2
+	_cached_inner_well.border_width_bottom = 2
+	_cached_inner_well.border_color = Color(0.957, 0.847, 0.541, 0.60)
+	_cached_inner_well.corner_radius_top_left = 18
+	_cached_inner_well.corner_radius_top_right = 18
+	_cached_inner_well.corner_radius_bottom_right = 18
+	_cached_inner_well.corner_radius_bottom_left = 18
+
+	# Empty sockets
+	_cached_empty_socket_even = StyleBoxFlat.new()
+	_cached_empty_socket_even.bg_color = Color(0.03, 0.07, 0.18, EMPTY_CELL_ALPHA_EVEN)
+	_cached_empty_socket_even.border_width_left = 1
+	_cached_empty_socket_even.border_width_top = 1
+	_cached_empty_socket_even.border_width_right = 1
+	_cached_empty_socket_even.border_width_bottom = 1
+	_cached_empty_socket_even.border_color = Color(0.90, 0.86, 0.74, EMPTY_CELL_BORDER_ALPHA)
+	_cached_empty_socket_even.corner_radius_top_left = cell_rad
+	_cached_empty_socket_even.corner_radius_top_right = cell_rad
+	_cached_empty_socket_even.corner_radius_bottom_right = cell_rad
+	_cached_empty_socket_even.corner_radius_bottom_left = cell_rad
+
+	_cached_empty_socket_odd = StyleBoxFlat.new()
+	_cached_empty_socket_odd.bg_color = Color(0.02, 0.05, 0.14, EMPTY_CELL_ALPHA_ODD)
+	_cached_empty_socket_odd.border_width_left = 1
+	_cached_empty_socket_odd.border_width_top = 1
+	_cached_empty_socket_odd.border_width_right = 1
+	_cached_empty_socket_odd.border_width_bottom = 1
+	_cached_empty_socket_odd.border_color = Color(0.90, 0.86, 0.74, EMPTY_CELL_BORDER_ALPHA)
+	_cached_empty_socket_odd.corner_radius_top_left = cell_rad
+	_cached_empty_socket_odd.corner_radius_top_right = cell_rad
+	_cached_empty_socket_odd.corner_radius_bottom_right = cell_rad
+	_cached_empty_socket_odd.corner_radius_bottom_left = cell_rad
+
+	_cached_empty_socket_glass_rim = StyleBoxFlat.new()
+	_cached_empty_socket_glass_rim.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	_cached_empty_socket_glass_rim.border_width_left = 1
+	_cached_empty_socket_glass_rim.border_width_top = 1
+	_cached_empty_socket_glass_rim.border_width_right = 1
+	_cached_empty_socket_glass_rim.border_width_bottom = 1
+	_cached_empty_socket_glass_rim.border_color = Color(0.90, 0.86, 0.74, EMPTY_CELL_BORDER_ALPHA * 0.72)
+	_cached_empty_socket_glass_rim.corner_radius_top_left = inner_rad
+	_cached_empty_socket_glass_rim.corner_radius_top_right = inner_rad
+	_cached_empty_socket_glass_rim.corner_radius_bottom_right = inner_rad
+	_cached_empty_socket_glass_rim.corner_radius_bottom_left = inner_rad
+
+	# Bomb reticle
+	_cached_bomb_reticle = StyleBoxFlat.new()
+	_cached_bomb_reticle.bg_color = Color(1.0, 0.28, 0.36, 0.42)
+	_cached_bomb_reticle.border_width_left = 3
+	_cached_bomb_reticle.border_width_top = 3
+	_cached_bomb_reticle.border_width_right = 3
+	_cached_bomb_reticle.border_width_bottom = 3
+	_cached_bomb_reticle.border_color = Color(1.0, 0.92, 0.28, 0.98)
+	_cached_bomb_reticle.corner_radius_top_left = cell_rad
+	_cached_bomb_reticle.corner_radius_top_right = cell_rad
+	_cached_bomb_reticle.corner_radius_bottom_right = cell_rad
+	_cached_bomb_reticle.corner_radius_bottom_left = cell_rad
+
+	# Burst box
+	_cached_burst_box = StyleBoxFlat.new()
+	_cached_burst_box.border_width_left = 2
+	_cached_burst_box.border_width_top = 2
+	_cached_burst_box.border_width_right = 2
+	_cached_burst_box.border_width_bottom = 2
+	_cached_burst_box.corner_radius_top_left = cell_rad + 2
+	_cached_burst_box.corner_radius_top_right = cell_rad + 2
+	_cached_burst_box.corner_radius_bottom_right = cell_rad + 2
+	_cached_burst_box.corner_radius_bottom_left = cell_rad + 2
+
+	# Ghost box
+	_cached_ghost_box = StyleBoxFlat.new()
+	_cached_ghost_box.border_width_left = 2
+	_cached_ghost_box.border_width_top = 2
+	_cached_ghost_box.border_width_right = 2
+	_cached_ghost_box.border_width_bottom = 3
+	_cached_ghost_box.corner_radius_top_left = cell_rad
+	_cached_ghost_box.corner_radius_top_right = cell_rad
+	_cached_ghost_box.corner_radius_bottom_right = cell_rad
+	_cached_ghost_box.corner_radius_bottom_left = cell_rad
+	_cached_ghost_color = Color(0, 0, 0, 0)
+
+	_board_style_cache_valid = true
+
 # Line Clear Visual Feedback & Celebratory Particles State
 const BURST_PARTICLES_PER_CELL: int = 6
 const BURST_PARTICLE_MIN_RADIUS: float = 7.5
@@ -124,6 +268,7 @@ var floating_texts: Array:
 func apply_level_environment_tint(env: Dictionary) -> void:
 	var b_col: Color = env.get("board_border_col", env.get("accent", Color(0.76, 0.94, 1.0, 1.0)))
 	custom_level_grid_tint = Color(b_col.r, b_col.g, b_col.b, 1.0)
+	_invalidate_board_style_cache()
 	queue_redraw()
 
 
@@ -229,6 +374,7 @@ func configure_grid_dimensions(cols: int = DEFAULT_GRID_COLS, rows: int = DEFAUL
 		clampi(GRID_HEIGHT / 2, 0, GRID_HEIGHT - 1)
 	)
 	_init_grid_data()
+	_invalidate_board_style_cache()
 	queue_redraw()
 
 
@@ -382,6 +528,7 @@ func trigger_board_callout_popup(callout_text: String, custom_pos: Vector2 = Vec
 ## Sets whether the board renders with the Modern (Crystal-Neon) or Classic (Royal Gold) theme
 func set_visual_mode(is_modern: bool) -> void:
 	is_modern_visual_theme = is_modern
+	_invalidate_board_style_cache()
 	queue_redraw()
 
 
@@ -404,6 +551,7 @@ func update_responsive_layout(available_width: float = 720.0, custom_board_width
 	PADDING = 8.0 * scale_factor
 	CELL_GAP = 4.0 * scale_factor
 	CELL_SIZE = (target_board_width - (PADDING * 2.0) - (CELL_GAP * float(GRID_WIDTH - 1))) / float(GRID_WIDTH)
+	_invalidate_board_style_cache()
 	queue_redraw()
 	return get_board_pixel_size()
 
@@ -1201,91 +1349,22 @@ func clear_preview() -> void:
 
 
 func _draw() -> void:
+	if not _board_style_cache_valid or _cached_outer_cabinet == null:
+		_refresh_board_style_cache()
+
 	var board_size = get_board_pixel_size()
 	var bg_rect = Rect2(Vector2.ZERO, board_size)
 	var gs = _get_game_state()
 	var cur_lvl: int = gs.active_level if (gs and "active_level" in gs) else 1
 	
 	# 1. Ultra-Transparent Glass Perimeter Rim (Level environment shines directly through empty cells)
-	var lvl_accent := Color(0.62, 0.94, 1.0, 1.0) if is_modern_visual_theme else Color(1.0, 0.90, 0.52, 1.0)
-	if custom_level_grid_tint.a > 0.1:
-		lvl_accent = custom_level_grid_tint
-	elif gs and gs.has_method("get_level_visual_theme"):
-		var l_theme: Dictionary = gs.get_level_visual_theme(cur_lvl)
-		lvl_accent = l_theme.get("grid_tint", lvl_accent)
-
-	var outer_cabinet = StyleBoxFlat.new()
-	outer_cabinet.bg_color = Color(0.04, 0.09, 0.26, BOARD_CABINET_ALPHA)
-	outer_cabinet.border_width_left = 3
-	outer_cabinet.border_width_top = 3
-	outer_cabinet.border_width_right = 3
-	outer_cabinet.border_width_bottom = 6
-	outer_cabinet.border_color = Color(0.957, 0.847, 0.541, 0.90) # Warm cream-gold #F4D88A
-	outer_cabinet.corner_radius_top_left = 22
-	outer_cabinet.corner_radius_top_right = 22
-	outer_cabinet.corner_radius_bottom_right = 22
-	outer_cabinet.corner_radius_bottom_left = 22
-	outer_cabinet.shadow_color = Color(0.18, 0.12, 0.08, 0.35)
-	outer_cabinet.shadow_size = 12
-	outer_cabinet.shadow_offset = Vector2(0, 4)
-	draw_style_box(outer_cabinet, bg_rect.grow(2.0))
+	draw_style_box(_cached_outer_cabinet, bg_rect.grow(2.0))
 
 	# Outer dark contour rim so cabinet edge is sharp
-	var outer_contour = StyleBoxFlat.new()
-	outer_contour.bg_color = Color(0.0, 0.0, 0.0, 0.0)
-	outer_contour.border_width_left = 1
-	outer_contour.border_width_top = 1
-	outer_contour.border_width_right = 1
-	outer_contour.border_width_bottom = 1
-	outer_contour.border_color = Color(0.333, 0.231, 0.196, 0.60) # Dark Brown contour #553B32
-	outer_contour.corner_radius_top_left = 23
-	outer_contour.corner_radius_top_right = 23
-	outer_contour.corner_radius_bottom_right = 23
-	outer_contour.corner_radius_bottom_left = 23
-	draw_style_box(outer_contour, bg_rect.grow(3.0))
+	draw_style_box(_cached_outer_contour, bg_rect.grow(3.0))
 	
 	# Deep navy board well
-	var inner_well = StyleBoxFlat.new()
-	inner_well.bg_color = Color(0.03, 0.07, 0.20, BOARD_SURFACE_ALPHA)
-	inner_well.border_width_left = 2
-	inner_well.border_width_top = 2
-	inner_well.border_width_right = 2
-	inner_well.border_width_bottom = 2
-	inner_well.border_color = Color(0.957, 0.847, 0.541, 0.60)
-	inner_well.corner_radius_top_left = 18
-	inner_well.corner_radius_top_right = 18
-	inner_well.corner_radius_bottom_right = 18
-	inner_well.corner_radius_bottom_left = 18
-	draw_style_box(inner_well, bg_rect)
-	
-	var cell_rad = int(clamp(CELL_SIZE * 0.18, 4.0, 9.0))
-	var inner_rad = maxi(3, cell_rad - 1)
-	var empty_socket_even = StyleBoxFlat.new()
-	empty_socket_even.bg_color = Color(0.03, 0.07, 0.18, EMPTY_CELL_ALPHA_EVEN)
-	empty_socket_even.border_width_left = 1
-	empty_socket_even.border_width_top = 1
-	empty_socket_even.border_width_right = 1
-	empty_socket_even.border_width_bottom = 1
-	empty_socket_even.border_color = Color(0.90, 0.86, 0.74, EMPTY_CELL_BORDER_ALPHA) # Slightly brighter warm outline
-	empty_socket_even.corner_radius_top_left = cell_rad
-	empty_socket_even.corner_radius_top_right = cell_rad
-	empty_socket_even.corner_radius_bottom_right = cell_rad
-	empty_socket_even.corner_radius_bottom_left = cell_rad
-
-	var empty_socket_odd = empty_socket_even.duplicate()
-	empty_socket_odd.bg_color = Color(0.02, 0.05, 0.14, EMPTY_CELL_ALPHA_ODD)
-
-	var empty_socket_glass_rim = StyleBoxFlat.new()
-	empty_socket_glass_rim.bg_color = Color(0.0, 0.0, 0.0, 0.0)
-	empty_socket_glass_rim.border_width_left = 1
-	empty_socket_glass_rim.border_width_top = 1
-	empty_socket_glass_rim.border_width_right = 1
-	empty_socket_glass_rim.border_width_bottom = 1
-	empty_socket_glass_rim.border_color = Color(0.90, 0.86, 0.74, EMPTY_CELL_BORDER_ALPHA * 0.72)
-	empty_socket_glass_rim.corner_radius_top_left = inner_rad
-	empty_socket_glass_rim.corner_radius_top_right = inner_rad
-	empty_socket_glass_rim.corner_radius_bottom_right = inner_rad
-	empty_socket_glass_rim.corner_radius_bottom_left = inner_rad
+	draw_style_box(_cached_inner_well, bg_rect)
 	
 	# 2. Draw 12x10 Crisp Glass Cell Outlines and High-Contrast Occupied 4TM Material Blocks
 	for y in range(GRID_HEIGHT):
@@ -1296,9 +1375,9 @@ func _draw() -> void:
 			var cell_val = grid_data[y][x]
 			
 			if cell_val == 0:
-				var sock = empty_socket_even if ((x + y) % 2 == 0) else empty_socket_odd
+				var sock = _cached_empty_socket_even if ((x + y) % 2 == 0) else _cached_empty_socket_odd
 				draw_style_box(sock, cell_rect)
-				draw_style_box(empty_socket_glass_rim, cell_rect.grow(-1.0))
+				draw_style_box(_cached_empty_socket_glass_rim, cell_rect.grow(-1.0))
 			else:
 				var block_color = COLOR_MAP.get(cell_val, COLOR_MAP[1])
 				var cell_mat_id: String = String(grid_materials[y][x])
@@ -1307,17 +1386,11 @@ func _draw() -> void:
 	
 	# 3. Draw Ghost Placement Preview / Active Falling Piece
 	if preview_active and not preview_shape.is_empty():
-		var ghost_box = StyleBoxFlat.new()
-		ghost_box.bg_color = preview_color
-		ghost_box.border_width_left = 2
-		ghost_box.border_width_top = 2
-		ghost_box.border_width_right = 2
-		ghost_box.border_width_bottom = 3
-		ghost_box.border_color = Color(preview_color.r, preview_color.g, preview_color.b, 0.98).lightened(0.35)
-		ghost_box.corner_radius_top_left = cell_rad
-		ghost_box.corner_radius_top_right = cell_rad
-		ghost_box.corner_radius_bottom_right = cell_rad
-		ghost_box.corner_radius_bottom_left = cell_rad
+		if not preview_is_valid:
+			if not _cached_ghost_color.is_equal_approx(preview_color):
+				_cached_ghost_color = preview_color
+				_cached_ghost_box.bg_color = preview_color
+				_cached_ghost_box.border_color = Color(preview_color.r, preview_color.g, preview_color.b, 0.98).lightened(0.35)
 
 		var active_color_id: int = preview_color_id if preview_color_id >= 1 else 1
 		var active_mat_id: String = preview_material_id if not preview_material_id.is_empty() else PolyominoLib.get_material_id_for_block(active_color_id, cur_lvl)
@@ -1331,27 +1404,16 @@ func _draw() -> void:
 				if preview_is_valid:
 					_draw_block_cell(p_cell_rect, preview_color, active_color_id, cur_lvl, active_mat_id)
 				else:
-					draw_style_box(ghost_box, p_cell_rect)
+					draw_style_box(_cached_ghost_box, p_cell_rect)
 					var inner_pip = Rect2(p_cell_pos + Vector2(4, 3), Vector2(p_cell_rect.size.x * 0.36, p_cell_rect.size.y * 0.20))
 					draw_rect(inner_pip, Color(1, 1, 1, 0.54), true)
 	
 	# 4. Draw Interactive 3x3 Bomb Target Reticle Highlight
 	if bomb_target_active and is_valid_cell(bomb_target_center):
-		var bomb_reticle = StyleBoxFlat.new()
-		bomb_reticle.bg_color = Color(1.0, 0.28, 0.36, 0.42)
-		bomb_reticle.border_width_left = 3
-		bomb_reticle.border_width_top = 3
-		bomb_reticle.border_width_right = 3
-		bomb_reticle.border_width_bottom = 3
-		bomb_reticle.border_color = Color(1.0, 0.92, 0.28, 0.98)
-		bomb_reticle.corner_radius_top_left = cell_rad
-		bomb_reticle.corner_radius_top_right = cell_rad
-		bomb_reticle.corner_radius_bottom_right = cell_rad
-		bomb_reticle.corner_radius_bottom_left = cell_rad
 		for b_cell in get_bomb_target_cells(bomb_target_center):
 			var c_pos = grid_to_local(b_cell)
 			var c_rect = Rect2(c_pos, Vector2(CELL_SIZE, CELL_SIZE))
-			draw_style_box(bomb_reticle, c_rect.grow(2.0))
+			draw_style_box(_cached_bomb_reticle, c_rect.grow(2.0))
 	
 	# 5. Draw Full-Line Clear Light Beams & Cell Flash Burst
 	for beam in clear_light_beams:
@@ -1364,22 +1426,13 @@ func _draw() -> void:
 			draw_rect(b_rect, Color(1.0, 1.0, 1.0, b_ratio * 0.85), true)
 
 	if flash_alpha > 0.0 and not flash_cells.is_empty():
-		var burst_box = StyleBoxFlat.new()
-		burst_box.bg_color = Color(1.0, 0.94, 0.42, flash_alpha * 0.96)
-		burst_box.border_width_left = 2
-		burst_box.border_width_top = 2
-		burst_box.border_width_right = 2
-		burst_box.border_width_bottom = 2
-		burst_box.border_color = Color(1.0, 1.0, 1.0, flash_alpha)
-		burst_box.corner_radius_top_left = cell_rad + 2
-		burst_box.corner_radius_top_right = cell_rad + 2
-		burst_box.corner_radius_bottom_right = cell_rad + 2
-		burst_box.corner_radius_bottom_left = cell_rad + 2
+		_cached_burst_box.bg_color = Color(1.0, 0.94, 0.42, flash_alpha * 0.96)
+		_cached_burst_box.border_color = Color(1.0, 1.0, 1.0, flash_alpha)
 		for coord in flash_cells:
 			if is_valid_cell(coord):
 				var f_cell_pos = grid_to_local(coord)
 				var f_cell_rect = Rect2(f_cell_pos, Vector2(CELL_SIZE, CELL_SIZE))
-				draw_style_box(burst_box, f_cell_rect.grow(4.5 * flash_alpha))
+				draw_style_box(_cached_burst_box, f_cell_rect.grow(4.5 * flash_alpha))
 				draw_circle(f_cell_rect.position + f_cell_rect.size * 0.5, (CELL_SIZE * 0.40) * flash_alpha, Color(1, 1, 1, flash_alpha))
 	
 	# 6. Draw Celebratory Impact Ripple Rings & Starburst Confetti Particles

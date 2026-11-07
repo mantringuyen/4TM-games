@@ -20,6 +20,7 @@ var is_dragging: bool = false
 var pointer_down_position: Vector2 = Vector2.ZERO
 var pointer_current_position: Vector2 = Vector2.ZERO
 var pointer_down_time: float = 0.0
+var active_touch_index: int = -1
 
 
 func _ready() -> void:
@@ -27,28 +28,39 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.device == InputEvent.DEVICE_ID_EMULATION:
+		return
+
 	if event is InputEventMouseButton:
 		var mouse_event := event as InputEventMouseButton
 		if mouse_event.button_index == MOUSE_BUTTON_LEFT:
 			if mouse_event.pressed:
+				active_touch_index = -1
 				_on_pointer_press(mouse_event.position, false)
 			else:
-				_on_pointer_release(mouse_event.position, false)
+				if active_touch_index == -1:
+					_on_pointer_release(mouse_event.position, false)
 				
 	elif event is InputEventMouseMotion:
 		var motion_event := event as InputEventMouseMotion
-		_on_pointer_move(motion_event.position, motion_event.relative)
+		if active_touch_index == -1:
+			_on_pointer_move(motion_event.position, motion_event.relative)
 		
 	elif event is InputEventScreenTouch:
 		var touch_event := event as InputEventScreenTouch
 		if touch_event.pressed:
-			_on_pointer_press(touch_event.position, true)
+			if not is_pointer_down:
+				active_touch_index = touch_event.index
+				_on_pointer_press(touch_event.position, true)
 		else:
-			_on_pointer_release(touch_event.position, true)
+			if is_pointer_down and touch_event.index == active_touch_index:
+				_on_pointer_release(touch_event.position, true)
+				active_touch_index = -1
 			
 	elif event is InputEventScreenDrag:
 		var drag_event := event as InputEventScreenDrag
-		_on_pointer_move(drag_event.position, drag_event.relative)
+		if is_pointer_down and drag_event.index == active_touch_index:
+			_on_pointer_move(drag_event.position, drag_event.relative)
 
 
 func _on_pointer_press(pos: Vector2, is_touch: bool) -> void:
@@ -81,14 +93,17 @@ func _on_pointer_release(pos: Vector2, is_touch: bool) -> void:
 	
 	var offset := pos - pointer_down_position
 	var elapsed_time := (Time.get_ticks_msec() / 1000.0) - pointer_down_time
+	var was_dragging := is_dragging
 	
-	if is_dragging:
-		drag_ended.emit(pos)
-		is_dragging = false
-	elif offset.length() > SWIPE_THRESHOLD and elapsed_time < 0.4:
-		# Rapid swipe gesture
+	# Rapid directional swipe detection (reliable swipe classification)
+	var is_swipe := offset.length() >= SWIPE_THRESHOLD and elapsed_time <= 0.4
+	if is_swipe:
 		var direction := offset.normalized()
 		swipe_detected.emit(direction)
+	
+	if was_dragging:
+		drag_ended.emit(pos)
+		is_dragging = false
 	
 	is_pointer_down = false
 	pointer_released.emit(pos, is_touch)

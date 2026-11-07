@@ -19,6 +19,25 @@ var board: Node2D = null
 var piece_tray: Control = null
 var pending_special_item: String = ""
 
+# Drag evaluation cache (eliminates redundant can_place_piece & redraw calculations during drag)
+var _drag_cache_in_zone: bool = false
+var _drag_cache_piece: Control = null
+var _drag_cache_origin: Vector2i = Vector2i(-9999, -9999)
+var _drag_cache_cells: Array = []
+var _drag_cache_mat: String = ""
+var _drag_cache_cid: int = -1
+var _drag_cache_can_place: bool = false
+
+
+func _clear_drag_evaluation_cache() -> void:
+	_drag_cache_in_zone = false
+	_drag_cache_piece = null
+	_drag_cache_origin = Vector2i(-9999, -9999)
+	_drag_cache_cells.clear()
+	_drag_cache_mat = ""
+	_drag_cache_cid = -1
+	_drag_cache_can_place = false
+
 
 func _init() -> void:
 	mode_type = GameStateScript.GameMode.MODERN_DRAG_AND_DROP
@@ -89,6 +108,8 @@ func _setup_board_and_tray() -> void:
 			piece_tray.piece_drag_cancelled.connect(_on_piece_drag_cancelled)
 		if piece_tray.has_signal("piece_selected_for_change"):
 			piece_tray.piece_selected_for_change.connect(_on_piece_selected_for_change)
+		if piece_tray.has_signal("piece_rotated"):
+			piece_tray.piece_rotated.connect(_on_tray_piece_rotated)
 	
 	_update_layout()
 
@@ -222,9 +243,16 @@ func get_drag_rotate_button() -> Button:
 
 
 func rotate_dragged_piece() -> bool:
+	_clear_drag_evaluation_cache()
 	if piece_tray and piece_tray.has_method("rotate_active_dragged_piece"):
 		return piece_tray.rotate_active_dragged_piece()
 	return false
+
+
+func _on_tray_piece_rotated(piece: Control) -> void:
+	_clear_drag_evaluation_cache()
+	if piece and is_instance_valid(piece) and "active_pointer_pos" in piece:
+		_on_piece_drag_moved(piece, piece.active_pointer_pos)
 
 
 func _get_piece_visual_center_world(piece: Control, fallback_pointer_pos: Vector2) -> Vector2:
@@ -264,6 +292,7 @@ func _is_pointer_in_valid_board_drop_zone(pointer_pos: Vector2, piece: Control =
 
 
 func _restore_dragged_piece(piece: Control) -> void:
+	_clear_drag_evaluation_cache()
 	if piece and is_instance_valid(piece) and piece.has_method("set_snapped_to_board_preview"):
 		piece.set_snapped_to_board_preview(false)
 	if piece_tray and piece_tray.has_method("restore_piece_to_slot"):
@@ -286,6 +315,7 @@ func has_duplicate_drag_visual() -> bool:
 
 
 func _on_piece_drag_started(piece: Control) -> void:
+	_clear_drag_evaluation_cache()
 	if board and piece and is_instance_valid(piece) and piece.has_method("set_board_cell_metrics"):
 		if not is_equal_approx(float(piece.cell_size), board.CELL_SIZE) or not is_equal_approx(float(piece.cell_gap), board.CELL_GAP):
 			piece.set_board_cell_metrics(board.CELL_SIZE, board.CELL_GAP)
@@ -308,28 +338,56 @@ func _on_piece_drag_started(piece: Control) -> void:
 
 
 func _on_piece_drag_cancelled(piece: Control, _reason: String) -> void:
+	_clear_drag_evaluation_cache()
 	_restore_dragged_piece(piece)
 
 
 func _on_piece_drag_moved(piece: Control, release_pointer_pos: Vector2) -> void:
 	if not board or not is_instance_valid(piece):
+		_clear_drag_evaluation_cache()
 		return
 	
-	if not _is_pointer_in_valid_board_drop_zone(release_pointer_pos, piece):
-		if piece.has_method("set_snapped_to_board_preview"):
-			piece.set_snapped_to_board_preview(false)
-		board.clear_preview()
+	var in_zone: bool = _is_pointer_in_valid_board_drop_zone(release_pointer_pos, piece)
+	if not in_zone:
+		if _drag_cache_in_zone:
+			_clear_drag_evaluation_cache()
+			if piece.has_method("set_snapped_to_board_preview"):
+				piece.set_snapped_to_board_preview(false)
+			board.clear_preview()
 		return
 	
 	var origin_coord: Vector2i = _resolve_drop_grid_origin(piece, release_pointer_pos)
-	var can_place: bool = board.can_place_piece(piece.cells, origin_coord)
 	var p_mat: String = String(piece.material_id) if "material_id" in piece else ""
-	board.set_preview(piece.cells, origin_coord, can_place, piece.color, piece.color_id, p_mat)
+	var p_cid: int = int(piece.color_id) if "color_id" in piece else 1
+	var p_cells: Array = piece.cells
+	
+	# Skip redundant calculations and preview queueing if piece stays in the same cell with identical state
+	if (
+		_drag_cache_in_zone
+		and _drag_cache_piece == piece
+		and _drag_cache_origin == origin_coord
+		and _drag_cache_mat == p_mat
+		and _drag_cache_cid == p_cid
+		and _drag_cache_cells == p_cells
+	):
+		return
+	
+	_drag_cache_in_zone = true
+	_drag_cache_piece = piece
+	_drag_cache_origin = origin_coord
+	_drag_cache_mat = p_mat
+	_drag_cache_cid = p_cid
+	_drag_cache_cells = p_cells.duplicate()
+	
+	var can_place: bool = board.can_place_piece(p_cells, origin_coord)
+	_drag_cache_can_place = can_place
+	board.set_preview(p_cells, origin_coord, can_place, piece.color, p_cid, p_mat)
 	if piece.has_method("set_snapped_to_board_preview"):
 		piece.set_snapped_to_board_preview(can_place)
 
 
 func _on_piece_drag_ended(piece: Control, release_pointer_pos: Vector2) -> void:
+	_clear_drag_evaluation_cache()
 	if not board or not is_instance_valid(piece):
 		return
 	if piece.has_method("set_snapped_to_board_preview"):
